@@ -5,18 +5,24 @@ type IconName =
   | "arrow"
   | "bell"
   | "building"
+  | "bus"
   | "calendar"
+  | "car"
   | "check"
   | "chevron"
   | "cloud"
   | "community"
   | "contact"
   | "dumbbell"
+  | "door"
   | "elevator"
   | "eye"
   | "home"
+  | "bridge"
   | "location"
+  | "lock"
   | "map"
+  | "market"
   | "notice"
   | "phone"
   | "plus"
@@ -25,9 +31,11 @@ type IconName =
   | "search"
   | "services"
   | "shield"
+  | "snowflake"
   | "swap"
   | "umbrella"
   | "user"
+  | "walk"
   | "wheelchair";
 
 const paths: Record<IconName, ReactNode> = {
@@ -35,18 +43,24 @@ const paths: Record<IconName, ReactNode> = {
   arrow: <path d="m9 18 6-6-6-6" />,
   bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></>,
   building: <><path d="M4 21V4h11v17M15 9h5v12M8 8h3m-3 4h3m-3 4h3m7-3h2m-2 4h2M2 21h20" /></>,
+  bus: <><rect x="4" y="3" width="16" height="16" rx="3" /><path d="M7 19v2m10-2v2M4 11h16M8 15h.01M16 15h.01M8 7h8" /></>,
   calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></>,
+  car: <><path d="m5 11 2-5h10l2 5M3 12h18v6H3z" /><path d="M6 18v2m12-2v2M7 15h.01M17 15h.01" /></>,
   check: <path d="m5 12 4 4L19 6" />,
   chevron: <path d="m6 9 6 6 6-6" />,
   cloud: <><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6.2 8.8 4.6 4.6 0 0 0 7 18Z" /><path d="M8 21h.01m4-.01h.01M16 21h.01" /></>,
   community: <><circle cx="8" cy="9" r="3" /><circle cx="17" cy="8" r="2.5" /><path d="M2.5 20c.3-4 2.1-6 5.5-6s5.2 2 5.5 6M14 14c4.4-.7 6.8 1.3 7.2 5" /></>,
   contact: <><circle cx="9" cy="8" r="3" /><path d="M3 20c.3-4.3 2.3-6.5 6-6.5s5.7 2.2 6 6.5M16 7h5m-5 4h5m-4 4h4" /></>,
   dumbbell: <><path d="M4 9v6m3-8v10m10-10v10m3-8v6M7 12h10M2 10v4m20-4v4" /></>,
+  door: <><path d="M5 21V3h13v18M5 21h15M14 12h.01" /><path d="M8 6h7v15H8z" /></>,
   elevator: <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="m8 9 2-2 2 2m-2-2v5m6 3-2 2-2-2m2 2v-5" /></>,
   eye: <><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /></>,
   home: <><path d="m3 11 9-8 9 8" /><path d="M5 10v10h14V10M9 20v-6h6v6" /></>,
+  bridge: <><path d="M3 19h18M5 19V9m14 10V9M5 12c3 0 4-5 7-5s4 5 7 5M8 19v-5m8 5v-5" /></>,
   location: <><path d="M20 10c0 5.5-8 12-8 12S4 15.5 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
+  lock: <><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3" /></>,
   map: <><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" /><path d="M9 3v15m6-12v15" /></>,
+  market: <><path d="M4 10v11h16V10M3 4h18l-1 6a3 3 0 0 1-5 1 3.5 3.5 0 0 1-6 0 3 3 0 0 1-5-1L3 4Z" /><path d="M9 21v-6h6v6" /></>,
   notice: <><path d="M4 5h16v14H4z" /><path d="M8 9h8m-8 4h5" /></>,
   phone: <path d="M6.6 3h3l1.5 4.2-2 1.6a16 16 0 0 0 6.1 6.1l1.6-2 4.2 1.5v3c0 2-1.6 3.6-3.6 3.4A16.5 16.5 0 0 1 3.2 6.6C3 4.6 4.6 3 6.6 3Z" />,
   plus: <path d="M12 5v14M5 12h14" />,
@@ -55,9 +69,11 @@ const paths: Record<IconName, ReactNode> = {
   search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></>,
   services: <><path d="M14 6a4 4 0 0 0-5 5L3 17l4 4 6-6a4 4 0 0 0 5-5l-3 3-3-3 2-4Z" /></>,
   shield: <><path d="M12 3 4.5 6v5.5c0 4.7 3.1 7.6 7.5 9.5 4.4-1.9 7.5-4.8 7.5-9.5V6L12 3Z" /><path d="m8.5 12 2.2 2.2 4.8-5" /></>,
+  snowflake: <><path d="M12 2v20M4 7l16 10M4 17 20 7" /><path d="m9 4 3 3 3-3M9 20l3-3 3 3M5 10l4 1-1-4m11 7-4-1 1 4M5 14l4-1-1 4m11-7-4 1 1-4" /></>,
   swap: <path d="M7 7h11l-3-3m2 13H6l3 3" />,
   umbrella: <><path d="M4 12a8 8 0 0 1 16 0H4Z" /><path d="M12 4v14a3 3 0 0 0 6 0" /></>,
   user: <><circle cx="12" cy="8" r="4" /><path d="M4 21c.5-5 3.2-7.5 8-7.5s7.5 2.5 8 7.5" /></>,
+  walk: <><circle cx="13" cy="4" r="2" /><path d="m10 9 3-2 2 3 3 1m-8-2-2 5-3 2m8-4-2 4-1 5m3-5 4 4" /></>,
   wheelchair: <><circle cx="10" cy="4" r="2" /><path d="M9 7v6h6l3 6m-9-8a5 5 0 1 0 5 6M8 9h5" /></>,
 };
 
@@ -75,8 +91,8 @@ function Button({ children, className = "", onClick, label, disabled }: {
   return <button type="button" className={className} onClick={onClick} aria-label={label} disabled={disabled}>{children}</button>;
 }
 
-type Tab = "home" | "community" | "safety" | "routes";
-type Sheet = "booking" | "report" | "suspicious" | "sos" | "contacts" | "notice" | "profile" | "services" | "forecast" | "history" | null;
+type Tab = "market" | "home" | "community" | "safety" | "routes";
+type Sheet = "service" | "offer" | "booking" | "report" | "suspicious" | "sos" | "contacts" | "notice" | "profile" | "services" | "forecast" | "history" | null;
 
 const quickActions: { title: string; subtitle: string; icon: IconName; tone: string; sheet?: Sheet }[] = [
   { title: "Contacts", subtitle: "People & management", icon: "contact", tone: "blue", sheet: "contacts" },
@@ -103,13 +119,17 @@ export default function App() {
   const [toast, setToast] = useState("");
   const [facility, setFacility] = useState("Gym");
   const [routeReady, setRouteReady] = useState(false);
+  const [travelMode, setTravelMode] = useState<"car" | "walk" | "bus">("walk");
+  const [mapFilter, setMapFilter] = useState<"bridge" | "bus" | "wheelchair">("wheelchair");
+  const [wheelchairMode, setWheelchairMode] = useState(true);
+  const [service, setService] = useState("Air conditioner");
   const [from, setFrom] = useState("My location");
   const [to, setTo] = useState("Community health center");
 
   const [bookings, setBookings, bookingError] = useStored<Booking[]>("cc-bookings", []);
   const [reports, setReports, reportError] = useStored<Report[]>("cc-reports", []);
   const [contacts, setContacts, contactError] = useStored<Contact[]>("cc-contacts", []);
-  const [profile, setProfile, profileError] = useStored("cc-profile", { name: "Alex", largeText: false, contrast: false });
+  const [profile, setProfile, profileError] = useStored("cc-profile", { name: "Byran", largeText: false, contrast: false });
   const [noticesRead, setNoticesRead] = useStored("cc-notices-read", false);
   const [date, setDate] = useState(today());
   const [time, setTime] = useState("10:30 AM");
@@ -118,6 +138,11 @@ export default function App() {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [search, setSearch] = useState("");
+  const [mapSearch, setMapSearch] = useState("");
+  const [offer, setOffer] = useState("Home cleaning");
+  const [serviceAddress, setServiceAddress] = useState("");
+  const [serviceRequests, setServiceRequests, serviceError] = useStored<{id:string; service:string; address:string; date:string; time:string}[]>("cc-service-requests", []);
+  useEffect(() => setRouteReady(false), [travelMode, wheelchairMode, from, to]);
   const timer = useRef<number | undefined>(undefined);
   const dialog = useRef<HTMLElement>(null);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -158,7 +183,7 @@ export default function App() {
   const openAction = (title: string, target?: Sheet) => {
     if (target) setSheet(target);
     else if (title === "Accessible map") setTab("routes");
-    else setSheet("services");
+    else setTab("market");
   };
 
   return (
@@ -175,7 +200,7 @@ export default function App() {
         </div>
 
         <main className="screen">
-          {(bookingError || reportError || contactError || profileError) && <div role="alert" className="demo-note">Storage unavailable: changes may be lost when you close this page.</div>}
+          {(bookingError || reportError || contactError || profileError || serviceError) && <div role="alert" className="demo-note">Storage unavailable: changes may be lost when you close this page.</div>}
           {tab === "home" && (
             <div className="screen-content">
               <section className="greeting">
@@ -208,6 +233,24 @@ export default function App() {
                 <Button className="sos-small" onClick={() => setSheet("sos")}>SOS</Button>
               </section>
 
+              <section className="home-residential">
+                <div className="section-title-row"><div><div className="section-title">Residential area map</div><div className="section-note">Oak Residence · Sample facility status</div></div><Button onClick={() => setTab("routes")}>Open map</Button></div>
+                <div className="home-map">
+                  <span className="home-map-block block-a">TOWER A</span>
+                  <span className="home-map-block block-b">TOWER B</span>
+                  <span className="home-map-block block-c">TOWER C</span>
+                  <span className="home-map-road road-horizontal" />
+                  <span className="home-map-road road-vertical" />
+                  <span className="home-area-label">OAK RESIDENCE</span>
+                  <Button className="home-landmark guard" onClick={() => notify("Sample: Guard house · Open 24 hours. Status is not verified.")}><span><Icon name="shield" size="sm" /></span><small>Guard house</small><em>Open 24h</em></Button>
+                  <Button className="home-landmark office" onClick={() => notify("Sample: Management office · Open until 6 PM. Status is not verified.")}><span><Icon name="building" size="sm" /></span><small>Management</small><em>Open</em></Button>
+                  <Button className="home-facility restroom" onClick={() => notify("Sample: Accessible restroom · Available. Status is not verified.")}><Icon name="wheelchair" size="sm" /><span>Accessible WC</span></Button>
+                  <Button className="home-facility lift" onClick={() => notify("Sample: Lift A · Operating normally. Status is not verified.")}><Icon name="elevator" size="sm" /><span>Lift A</span><i /></Button>
+                  <span className="you-are-here"><i />Demo location</span>
+                </div>
+                <div className="home-map-legend"><span><i className="open" />Open now</span><span><i className="accessible" />Accessible facility</span><span><i className="location" />Your location</span></div>
+              </section>
+
               <section className="notice-preview">
                 <div className="section-title-row"><div className="section-title">Latest notice</div><Button onClick={() => setSheet("notice")}>See all</Button></div>
                 <Button className="notice-row" onClick={() => setSheet("notice")}>
@@ -233,7 +276,7 @@ export default function App() {
                   </Button>
                 ))}
               </section>
-              <Button className="outline-action" onClick={() => setSheet("history")}>My bookings & reports ({bookings.length + reports.length})</Button>
+              <Button className="outline-action" onClick={() => setSheet("history")}>My bookings & reports ({bookings.length + reports.length + serviceRequests.length})</Button>
               <section className="facility-preview">
                 <div className="section-title-row"><div><div className="section-title">Popular facilities</div><div className="section-note">Available today</div></div><Button onClick={() => setSheet("booking")}>Book now</Button></div>
                 <div className="facility-list">
@@ -241,6 +284,34 @@ export default function App() {
                   <Button onClick={() => setSheet("booking")}><span className="facility-pic sauna">°C</span><b>Sauna</b><small>4 slots available</small></Button>
                   <Button onClick={() => setSheet("booking")}><span className="facility-pic court">01</span><b>Court</b><small>Next slot · 2:30 PM</small></Button>
                 </div>
+              </section>
+            </div>
+          )}
+
+          {tab === "market" && (
+            <div className="screen-content market-screen">
+              <section className="page-heading"><div className="overline">COMMUNITY MARKETPLACE</div><div className="screen-title">Market</div><div className="muted">Sample offers and local home-service requests.</div></section>
+              <section className="market-ad">
+                <div className="ad-badge">SAMPLE OFFER</div>
+                <div className="ad-content"><div><small>WELCOME OFFER</small><b>20% off home cleaning</b><span>Exclusive for Oak Residence members this week.</span><Button onClick={() => { setOffer("Home cleaning"); setSheet("offer"); }}>View offer <Icon name="arrow" size="sm" /></Button></div><span className="ad-graphic"><Icon name="home" size="xl" /></span></div>
+                <div className="ad-dots"><i /><i /><i /></div>
+              </section>
+              <div className="sponsored-note"><Icon name="shield" size="sm" />Demo listings: providers and prices are not verified.</div>
+              <section>
+                <div className="section-title-row"><div><div className="section-title">Book a home service</div><div className="section-note">Demo providers · Sample pricing</div></div><Button onClick={() => setSheet("service")}>View all</Button></div>
+                <div className="service-grid">
+                  <Button onClick={() => { setService("Air conditioner"); setSheet("service"); }}><span className="service-icon aircon"><Icon name="snowflake" size="lg" /></span><b>Aircon repair</b><small>From $45</small><em>Today</em></Button>
+                  <Button onClick={() => { setService("Door repair"); setSheet("service"); }}><span className="service-icon doors"><Icon name="door" size="lg" /></span><b>Door repair</b><small>From $35</small><em>Tomorrow</em></Button>
+                  <Button onClick={() => { setService("Locksmith"); setSheet("service"); }}><span className="service-icon locks"><Icon name="lock" size="lg" /></span><b>Locksmith</b><small>From $30</small><em>24/7</em></Button>
+                  <Button onClick={() => { setService("General repair"); setSheet("service"); }}><span className="service-icon general"><Icon name="services" size="lg" /></span><b>General repair</b><small>From $25</small><em>May 21</em></Button>
+                </div>
+              </section>
+              <section className="market-provider">
+                <span><Icon name="shield" /></span><div><b>Community provider directory</b><small>Demo directory · Verification not connected</small></div><Icon name="arrow" size="sm" />
+              </section>
+              <section>
+                <div className="section-title-row"><div className="section-title">Popular near you</div><Button onClick={() => { setOffer("All offers"); setSheet("offer"); }}>See all</Button></div>
+                <Button className="popular-offer" onClick={() => { setOffer("FreshFold Laundry"); setSheet("offer"); }}><span className="popular-mark">F</span><span><b>FreshFold Laundry</b><small>Pickup & delivery · 4.8 rating</small></span><em>$8 off</em></Button>
               </section>
             </div>
           )}
@@ -286,10 +357,24 @@ export default function App() {
           )}
 
           {tab === "routes" && (
-            <div className="route-screen">
-              <div className="demo-note">Illustrative map · Route is not calculated from your entries</div><div className="route-header">
+            <div className={`route-screen ${wheelchairMode ? "wheelchair-route" : "standard-route"}`}>
+              <div className="demo-note">Illustrative map · Times and routes are sample data, not live navigation.</div><div className="route-header">
                 <div><div className="overline">ACCESSIBLE NAVIGATION</div><div className="screen-title">Find your route</div></div>
-                <Button className="round-button" label="Accessible facilities" onClick={() => notify("Demo facilities: Lift A and accessible WC. Availability is not verified.")}><Icon name="wheelchair" size="sm" /></Button>
+                <Button className={`round-button ${wheelchairMode ? "wheelchair-active" : ""}`} label="Accessible facilities" onClick={() => setWheelchairMode(!wheelchairMode)}><Icon name="wheelchair" size="sm" /></Button>
+              </div>
+              <div className="route-persona" aria-label="Route accessibility mode">
+                <Button className={!wheelchairMode ? "selected" : ""} onClick={() => setWheelchairMode(false)}>
+                  <span><Icon name="user" /></span><div><b>Standard route</b><small>Fastest available path</small></div>{!wheelchairMode && <i><Icon name="check" size="sm" /></i>}
+                </Button>
+                <Button className={wheelchairMode ? "selected" : ""} onClick={() => setWheelchairMode(true)}>
+                  <span><Icon name="wheelchair" /></span><div><b>Wheelchair route</b><small>Step-free & accessible</small></div>{wheelchairMode && <i><Icon name="check" size="sm" /></i>}
+                </Button>
+              </div>
+              <div className={`route-mode-note ${wheelchairMode ? "accessible" : "standard"}`}><Icon name={wheelchairMode ? "wheelchair" : "route"} size="sm" /><span><b>{wheelchairMode ? "Accessibility mode is on" : "Standard navigation mode"}</b>{wheelchairMode ? " Routes avoid stairs and prioritize working lifts, ramps, and smooth paths." : " Routes prioritize travel time, distance, and current traffic."}</span></div>
+              <div className="travel-modes" aria-label="Travel mode">
+                <Button className={travelMode === "car" ? "selected" : ""} onClick={() => setTravelMode("car")}><Icon name="car" /><span><b>Drive</b><small>6 min</small></span></Button>
+                <Button className={travelMode === "walk" ? "selected" : ""} onClick={() => setTravelMode("walk")}><Icon name="walk" /><span><b>Walk</b><small>14 min</small></span></Button>
+                <Button className={travelMode === "bus" ? "selected" : ""} onClick={() => setTravelMode("bus")}><Icon name="bus" /><span><b>Transit</b><small>11 min</small></span></Button>
               </div>
               <div className="route-fields">
                 <div className="route-markers"><i /><span /><i /></div>
@@ -300,24 +385,41 @@ export default function App() {
                 <Button label="Swap locations" onClick={() => { setFrom(to); setTo(from); }}><Icon name="swap" size="sm" /></Button>
               </div>
               <div className="preference-scroll">
-                <Button className="selected" onClick={() => notify("Demo route is shown as step-free; accessibility is not verified.")}><Icon name="wheelchair" size="sm" />Step-free</Button>
-                <Button onClick={() => notify("Lift status is sample data, not verified.")}><Icon name="elevator" size="sm" />Working lifts</Button>
-                <Button onClick={() => notify("Slope data is illustrative only.")}><Icon name="route" size="sm" />Gentle slope</Button>
+                {wheelchairMode ? (
+                  <><Button className="selected" onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="wheelchair" size="sm" />Step-free</Button><Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="elevator" size="sm" />Working lifts</Button><Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="route" size="sm" />Gentle slope</Button></>
+                ) : (
+                  <><Button className="selected" onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="route" size="sm" />Fastest</Button><Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="shield" size="sm" />Well-lit</Button><Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="map" size="sm" />Shortest</Button></>
+                )}
+              </div>
+              <div className="map-search">
+                <div><Icon name="search" size="sm" /><input value={mapSearch} onChange={e => setMapSearch(e.target.value)} aria-label="Search map facilities" placeholder="Search places and facilities" /></div>
+                <Button label="Map options" onClick={() => notify("Choose a travel mode and facility filter above the map.")}><Icon name="plus" size="sm" /></Button>
+              </div>
+              {mapSearch.trim() && <div className="map-results" role="status">{["Guard house", "Management office", "Working lift", "Accessible WC", "Ramp bridge", "Low-floor bus", "Accessible stop", "Visitor parking"].filter(x => x.toLowerCase().includes(mapSearch.toLowerCase())).map(place => <Button key={place} onClick={() => { setTo(place); setMapSearch(""); }}>{place} · Sample place</Button>)}{!["Guard house", "Management office", "Working lift", "Accessible WC", "Ramp bridge", "Low-floor bus", "Accessible stop", "Visitor parking"].some(x => x.toLowerCase().includes(mapSearch.toLowerCase())) && <p>No sample places found.</p>}</div>}
+              <div className="facility-filters">
+                {wheelchairMode ? (
+                  <><Button className={mapFilter === "bridge" ? "selected" : ""} onClick={() => setMapFilter("bridge")}><Icon name="bridge" size="sm" />Accessible bridges</Button><Button className={mapFilter === "bus" ? "selected" : ""} onClick={() => setMapFilter("bus")}><Icon name="bus" size="sm" />Low-floor bus</Button><Button className={mapFilter === "wheelchair" ? "selected" : ""} onClick={() => setMapFilter("wheelchair")}><Icon name="wheelchair" size="sm" />Accessible facilities</Button></>
+                ) : (
+                  <><Button className="selected" onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="car" size="sm" />Parking</Button><Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="bus" size="sm" />Bus stops</Button><Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="market" size="sm" />Nearby places</Button></>
+                )}
               </div>
               <div className="mobile-map">
                 <span className="map-green green-one" /><span className="map-green green-two" />
                 <span className="road road-one" /><span className="road road-two" /><span className="road road-three" />
-                <svg viewBox="0 0 400 420" preserveAspectRatio="none"><path className="route-halo" d="M70 350C92 300 55 250 130 220s110 30 145-35 45-55 80-115" /><path className="route-line-path" d="M70 350C92 300 55 250 130 220s110 30 145-35 45-55 80-115" /></svg>
+                <svg viewBox="0 0 400 420" preserveAspectRatio="none"><path className="route-halo" d={wheelchairMode ? "M70 350C92 300 55 250 130 220s110 30 145-35 45-55 80-115" : "M70 350C115 285 150 275 190 205s80-55 165-135"} /><path className="route-line-path" d={wheelchairMode ? "M70 350C92 300 55 250 130 220s110 30 145-35 45-55 80-115" : "M70 350C115 285 150 275 190 205s80-55 165-135"} /></svg>
                 <span className="start-dot" /><span className="destination-pin"><Icon name="location" size="sm" /></span>
-                <span className="map-place place-one"><Icon name="elevator" size="sm" />Lift A</span>
-                <span className="map-place place-two"><Icon name="wheelchair" size="sm" />Accessible WC</span>
+                {wheelchairMode ? <><span className="map-place place-one"><Icon name="elevator" size="sm" />Working lift</span><span className="map-place place-two"><Icon name="wheelchair" size="sm" />Accessible WC</span>{mapFilter === "bridge" && <span className="map-place bridge-place"><Icon name="bridge" size="sm" />Ramp bridge</span>}{mapFilter === "bus" && <><span className="map-place bus-place-one"><Icon name="bus" size="sm" />Low-floor bus</span><span className="map-place bus-place-two"><Icon name="bus" size="sm" />Accessible stop</span></>}</> : <><span className="map-place parking-place"><Icon name="car" size="sm" />Visitor parking</span><span className="map-place shortcut-place"><Icon name="route" size="sm" />Faster route</span></>}
+                <Button className="residential-poi guard-poi" onClick={() => notify("Sample: Guard house · Open 24 hours. Status is not verified.")}><span><Icon name="shield" size="sm" /></span><small>Guard house</small></Button>
+                <Button className="residential-poi office-poi" onClick={() => notify("Sample: Management office · Open until 6 PM. Status is not verified.")}><span><Icon name="building" size="sm" /></span><small>Management</small></Button>
                 <span className="map-label park-label">RIVERSIDE PARK</span>
-                <Button className="locate-button" label="Center my location" onClick={() => notify("Illustrative map: real positioning is not connected.")}><Icon name="location" /></Button>
+                <span className="map-label residence-label">OAK RESIDENCES</span>
+                <Button className="locate-button" label="Center my location" onClick={() => notify("This illustrative map cannot show your real location.")}><Icon name="location" /></Button>
               </div>
               <section className={`route-card ${routeReady ? "ready" : ""}`}>
-                <div className="route-card-top"><span className="route-duration"><b>14</b> min</span><span className="route-distance">0.6 miles · Mostly flat</span><span className="route-score"><Icon name="check" size="sm" />Best match</span></div>
-                <div className="route-features"><span><Icon name="elevator" size="sm" />2 lifts</span><span><Icon name="wheelchair" size="sm" />Step-free</span><span><Icon name="building" size="sm" />3 facilities</span></div>
-                <Button className="primary-action" onClick={() => { setRouteReady(true); notify("Demo route shown. This is not real navigation."); }}><Icon name="route" />{routeReady ? "Demo route displayed" : "Preview demo route"}</Button>
+                <div className="route-type-label"><Icon name={wheelchairMode ? "wheelchair" : "user"} size="sm" />{wheelchairMode ? "WHEELCHAIR-FRIENDLY ROUTE" : "STANDARD FASTEST ROUTE"}</div>
+                <div className="route-card-top"><span className="route-duration"><b>{travelMode === "car" ? "6" : travelMode === "bus" ? "11" : wheelchairMode ? "14" : "11"}</b> min</span><span className="route-distance">{travelMode === "walk" ? `0.6 miles · ${wheelchairMode ? "Mostly flat" : "Fastest"}` : travelMode === "car" ? "1.2 miles · Light traffic" : `2 stops · ${wheelchairMode ? "Low-floor bus" : "Fastest bus"}`}</span><span className="route-score"><Icon name="check" size="sm" />{wheelchairMode ? "Accessible" : "Fastest"}</span></div>
+                <div className="route-features"><span><Icon name={travelMode === "bus" ? "bus" : travelMode === "car" ? "shield" : wheelchairMode ? "elevator" : "walk"} size="sm" />{travelMode === "bus" ? wheelchairMode ? "Accessible bus" : "Direct bus" : travelMode === "car" ? "Guarded entry" : wheelchairMode ? "2 lifts" : "Direct path"}</span><span><Icon name={wheelchairMode ? "wheelchair" : "route"} size="sm" />{wheelchairMode ? "Step-free" : "Standard"}</span><span><Icon name="building" size="sm" />3 facilities</span></div>
+                <Button className="primary-action" onClick={() => { setRouteReady(true); notify("Demo route preview only. No real navigation started."); }}><Icon name={wheelchairMode ? "wheelchair" : "route"} />{routeReady ? "Demo route displayed" : wheelchairMode ? "Preview wheelchair route" : "Preview standard route"}</Button>
               </section>
             </div>
           )}
@@ -325,8 +427,9 @@ export default function App() {
 
         <nav className="bottom-nav" aria-label="App navigation">
           {([
-            ["home", "home", "Home"],
             ["community", "community", "Community"],
+            ["market", "market", "Market"],
+            ["home", "home", "Home"],
             ["safety", "shield", "Safety"],
             ["routes", "map", "Routes"],
           ] as [Tab, IconName, string][]).map(([value, icon, label]) => (
@@ -356,6 +459,29 @@ export default function App() {
                   }}>Save demo booking</Button>
                 </>
               )}
+              {sheet === "service" && (
+                <>
+                  <div className="sheet-title">Book a home service</div><div className="sheet-subtitle">Save a request locally. No provider is contacted.</div>
+                  <div className="service-choice">
+                    {[
+                      ["Air conditioner", "snowflake"],
+                      ["Door repair", "door"],
+                      ["Locksmith", "lock"],
+                      ["General repair", "services"],
+                    ].map(([name, icon]) => <Button className={service === name ? "selected" : ""} key={name} onClick={() => setService(name)}><Icon name={icon as IconName} /><span><b>{name}</b><small>{name === "Locksmith" ? "Demo provider" : "Demo provider"}</small></span><i /></Button>)}
+                  </div>
+                  <label className="form-field">Service address<input value={serviceAddress} onChange={e => setServiceAddress(e.target.value)} placeholder="Building, unit and street" maxLength={200} /></label>
+                  <label className="form-field">Appointment date<input type="date" min={today()} value={date} onChange={e => setDate(e.target.value)} /></label>
+                  <label className="form-field">Appointment time<select value={time} onChange={e => setTime(e.target.value)}>{["9:00 AM", "10:30 AM", "2:00 PM", "4:30 PM"].map(slot => <option key={slot}>{slot}</option>)}</select></label>
+                  <div className="booking-summary"><span>Sample call-out fee</span><b>{service === "Air conditioner" ? "$45" : service === "Door repair" ? "$35" : service === "Locksmith" ? "$30" : "$25"}</b></div>
+                  <Button className="primary-action" onClick={() => {
+                    if (!serviceAddress.trim() || !date || date < today()) { notify("Enter an address and choose today or a future date."); return; }
+                    if (serviceRequests.some(r => r.service === service && r.date === date && r.time === time)) { notify("You already saved this service appointment."); return; }
+                    setServiceRequests(prev => [...prev, {id:crypto.randomUUID(), service, address:serviceAddress.trim(), date, time}]); setSheet("history"); notify("Service request saved locally. No provider contacted.");
+                  }}>Save service request</Button>
+                </>
+              )}
+              {sheet === "offer" && <><div className="sheet-title">{offer}</div><p className="sheet-subtitle">Sample marketplace offers. These cannot be redeemed or purchased.</p><div className="record-list"><div><b>Home cleaning · 20% off</b><p>Example welcome offer for Oak Residence residents. Provider and terms are not connected.</p></div><div><b>FreshFold Laundry · $8 off</b><p>Example pickup and delivery offer. Availability and ratings are sample data.</p></div></div><Button className="primary-action" onClick={() => setSheet(null)}>Back to Market</Button></>}
               {sheet === "sos" && (
                 <><div className="sheet-alert-icon"><Icon name="alert" size="lg" /></div><div className="sheet-title centered">Send emergency SOS?</div><div className="sheet-subtitle centered">Demo only: no location or alert will be sent. Use your phone to call for real assistance.</div><Button className="danger-action" onClick={() => { setSheet(null); notify("SOS demo complete. No alert was sent."); }}>Test SOS demo</Button><Button className="cancel-action" onClick={() => setSheet(null)}>Cancel</Button></>
               )}
@@ -384,6 +510,7 @@ export default function App() {
               {sheet === "history" && <>
                 <div className="sheet-title">My bookings & reports</div><p className="sheet-subtitle">Local demo records. Not submitted to management.</p>
                 <div className="record-list"><h3>Bookings</h3>{!bookings.length && <p>No bookings yet.</p>}{bookings.map(b => <div key={b.id}><b>{b.facility}</b><span>{b.date} · {b.time}</span><Button onClick={() => setBookings(prev => prev.filter(x => x.id !== b.id))}>Cancel booking</Button></div>)}
+                <h3>Home-service requests</h3>{!serviceRequests.length && <p>No service requests yet.</p>}{serviceRequests.map(r => <div key={r.id}><b>{r.service}</b><span>{r.address}</span><span>{r.date} · {r.time} · Local request</span><Button onClick={() => setServiceRequests(prev => prev.filter(x => x.id !== r.id))}>Cancel service request</Button></div>)}
                 <h3>Reports</h3>{!reports.length && <p>No reports yet.</p>}{reports.map(r => <div key={r.id}><b>{r.category}</b><span>{r.created} · Local draft</span><p>{r.details}</p><Button onClick={() => setReports(prev => prev.filter(x => x.id !== r.id))}>Delete draft</Button></div>)}</div>
               </>}
               {sheet === "services" && <><div className="sheet-title">Community support</div><p className="sheet-subtitle">Contact your community team to arrange help.</p><div className="report-options">{["Shopping assistance", "Transport assistance", "Home maintenance", "Accessibility support"].map(name => <Button key={name} onClick={() => { setCategory("Accessibility barrier"); setDetails(`Request: ${name}. `); setSheet("report"); }}>{name}<Icon name="arrow" size="sm" /></Button>)}</div></>}
