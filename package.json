@@ -1,14 +1,19 @@
 {
   "name": "communitycare",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node --env-file-if-exists=.env scripts/dev.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "format": "oxfmt",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "server": "node --env-file-if-exists=.env server/index.mjs",
+    "start": "node --env-file-if-exists=.env server/index.mjs",
+    "admin:create": "node --env-file-if-exists=.env server/create-admin.mjs",
+    "test": "node --test tests/backend.test.mjs",
+    "password:reset": "node --env-file-if-exists=.env server/reset-password.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -26,6 +31,6 @@
     "vite": "^8.0.5"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=24.0.0"
   }
 }

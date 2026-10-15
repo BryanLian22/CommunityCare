@@ -1,0 +1,124 @@
+import http from 'node:http';
+import { randomUUID, randomBytes } from 'node:crypto';
+import { readFile, stat } from 'node:fs/promises';
+import { resolve, extname, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { db, publicUser } from './db.mjs';
+import { hashPassword, checkPassword, digest, passwordValid } from './security.mjs';
+const now=()=>new Date().toISOString();
+const dist=fileURLToPath(new URL('../dist/',import.meta.url));
+const secure=process.env.COOKIE_SECURE==='true';
+const allowedOrigins=new Set((process.env.APP_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3001,http://127.0.0.1:3001').split(',').map(s=>s.trim()));
+if(process.env.NODE_ENV==='production' && (!secure || !process.env.APP_ORIGIN?.startsWith('https://'))) throw new Error('Production requires COOKIE_SECURE=true and an HTTPS APP_ORIGIN.');
+const fail=(status,message)=>{throw Object.assign(new Error(message),{status})};
+function text(value,label,max=2000){if(typeof value!=='string'||!value.trim()||value.trim().length>max)fail(400,`${label} is required (maximum ${max} characters).`);return value.trim()}
+function email(value){const e=text(value,'Email',254).toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))fail(400,'Enter a valid email address.');return e}
+function choice(v,values){if(!values.includes(v))fail(400,'Invalid selection.');return v}
+function appointment(b){const date=text(b.date,'Date',10), time=choice(b.time,['9:00 AM','10:30 AM','2:00 PM','4:30 PM']);const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kuala_Lumpur',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date||date<today)fail(400,'Choose a valid date today or later.');return {date,time}}
+const kinds=['bookings','reports','contacts','services'];
+function payload(kind,b){
+ if(kind==='bookings')return {facility:choice(b.facility,['Gym','Sauna','Court']),...appointment(b)};
+ if(kind==='reports')return {category:choice(b.category,['Maintenance issue','Suspicious activity','Mailbox password attempts','Door or gate tampering','Accessibility barrier','Noise or disturbance']),details:text(b.details,'Details')};
+ if(kind==='contacts'){const phone=text(b.phone,'Phone',30).replace(/[ ()-]/g,'');if(!/^\+?[0-9]{6,15}$/.test(phone))fail(400,'Enter a valid phone number.');return {name:text(b.name,'Name',80),phone}}
+ return {service:choice(b.service,['Air conditioner','Door repair','Locksmith','General repair']),address:text(b.address,'Address',200),...appointment(b)};
+}
+function record(r){return {...JSON.parse(r.payload),id:r.id,created:r.created,status:r.status,userId:r.user_id,...(r.resident_name?{residentName:r.resident_name,residentEmail:r.resident_email}:{})}}
+function audit(u,action,id){db.prepare('INSERT INTO audit_log(actor_id,action,target_id,created) VALUES(?,?,?,?)').run(u.id,action,id,now())}
+const limits=new Map();
+function throttle(key,max){const t=Date.now();if(limits.size>10000)for(const [k,v]of limits)if(v.until<t)limits.delete(k);const v=limits.get(key);if(!v||v.until<t){limits.set(key,{count:1,until:t+15*60*1000});return}if(v.count>=max)fail(429,'Too many attempts. Try again in 15 minutes.');v.count++}
+function cookie(token,age=8*60*60){return `cc_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${age}${secure?'; Secure':''}`}
+function session(req){const token=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('cc_session='))?.slice(11);if(!token)return null;return db.prepare('SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=? AND s.expires>? AND u.active=1').get(digest(token),Date.now())}
+function createSession(res,u){db.prepare('DELETE FROM sessions WHERE expires<?').run(Date.now());const token=randomBytes(32).toString('hex');db.prepare('INSERT INTO sessions VALUES(?,?,?)').run(digest(token),u.id,Date.now()+8*3600000);res.setHeader('Set-Cookie',cookie(token));return publicUser(u)}
+async function body(req){if(!req.headers['content-type']?.startsWith('application/json'))fail(415,'Use application/json.');let data='';for await(const chunk of req){data+=chunk;if(Buffer.byteLength(data)>16384)fail(413,'Request too large.')}try{const b=JSON.parse(data||'{}');if(!b||typeof b!=='object'||Array.isArray(b))fail(400,'Invalid JSON.');return b}catch{fail(400,'Invalid JSON.')}}
+function send(res,status,data){res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))}
+export const server=http.createServer(async(req,res)=>{
+ res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','same-origin');res.setHeader('X-Frame-Options','DENY');
+ try{
+ const url=new URL(req.url,'http://localhost'),path=url.pathname,method=req.method;
+ if(!path.startsWith('/api/')){
+  if(!['GET','HEAD'].includes(method))fail(405,'Method not allowed.');
+  const target=resolve(dist,'.'+decodeURIComponent(path));if(target!==resolve(dist)&&!target.startsWith(resolve(dist)+sep))fail(403,'Forbidden.');
+  let file=target;try{if(!(await stat(file)).isFile())file=resolve(dist,'index.html')}catch{if(extname(path))fail(404,'File not found.');file=resolve(dist,'index.html')}
+  const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.ico':'image/x-icon'};
+  const content=await readFile(file).catch(()=>fail(404,'Build the app first: npm.cmd run build'));
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+  res.writeHead(200,{'Content-Type':mime[extname(file)]||'application/octet-stream','Cache-Control':'no-cache'});return res.end(method==='HEAD'?undefined:content);
+ }
+ if(!['GET','HEAD'].includes(method)){
+  if(req.headers['x-communitycare-request']!=='1')fail(403,'Invalid request header.');
+  if(req.headers.origin && !allowedOrigins.has(req.headers.origin))fail(403,'Origin is not allowed.');
+  if(req.headers['sec-fetch-site']==='cross-site')fail(403,'Cross-site request rejected.');
+ }
+ if(path==='/api/health'&&method==='GET')return send(res,200,{ok:true});
+ if(['/api/auth/register','/api/auth/login'].includes(path)&&method==='POST'){
+  throttle('ip:'+req.socket.remoteAddress,40);const b=await body(req);const e=email(b.email);throttle('email:'+e,12);
+  if(!passwordValid(b.password))fail(400,'Use a password between 12 and 128 characters.');
+  if(path.endsWith('/register')){
+   const name=text(b.name,'Name',80);if(db.prepare('SELECT id FROM users WHERE email=?').get(e))fail(409,'An account with this email already exists.');
+   const hash=await hashPassword(b.password),id=randomUUID();
+   try{db.prepare('INSERT INTO users(id,name,email,password_hash,created) VALUES(?,?,?,?,?)').run(id,name,e,hash,now())}catch(err){if(String(err.message).includes('UNIQUE'))fail(409,'An account with this email already exists.');throw err}
+   return send(res,201,{user:createSession(res,db.prepare('SELECT * FROM users WHERE id=?').get(id))});
+  }
+  const u=db.prepare('SELECT * FROM users WHERE email=?').get(e);
+  // Always perform the expensive hash, including for an unknown account.
+  const valid=await checkPassword(b.password,u?.password_hash||'00000000000000000000000000000000:'+ '00'.repeat(64));
+  if(!valid||!u?.active)fail(401,'Email or password is incorrect, or the account is inactive.');
+  return send(res,200,{user:createSession(res,u)});
+ }
+ if(path==='/api/auth/logout'&&method==='POST'){
+  const token=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('cc_session='))?.slice(11);
+  if(token)db.prepare('DELETE FROM sessions WHERE token_hash=?').run(digest(token));res.setHeader('Set-Cookie',cookie('',0));return send(res,200,{ok:true});
+ }
+ const u=session(req);if(!u)fail(401,'Please sign in.');
+ if(path==='/api/auth/me'&&method==='GET')return send(res,200,{user:publicUser(u)});
+ if(path==='/api/profile'&&method==='PATCH'){
+  const b=await body(req);const name=text(b.name,'Name',80);if(typeof b.largeText!=='boolean'||typeof b.contrast!=='boolean')fail(400,'Invalid settings.');
+  db.prepare('UPDATE users SET name=?,large_text=?,contrast=? WHERE id=?').run(name,+b.largeText,+b.contrast,u.id);return send(res,200,{user:publicUser(db.prepare('SELECT * FROM users WHERE id=?').get(u.id))});
+ }
+ if(path==='/api/auth/password'&&method==='POST'){
+  throttle('password:'+u.id,10);const b=await body(req);if(typeof b.currentPassword!=='string'||b.currentPassword.length>128||!passwordValid(b.password))fail(400,'New password must contain 12–128 characters.');
+  if(!await checkPassword(b.currentPassword,u.password_hash))fail(400,'Current password is incorrect.');
+  const hash=await hashPassword(b.password);db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(hash,u.id);db.prepare('DELETE FROM sessions WHERE user_id=?').run(u.id);createSession(res,u);return send(res,200,{ok:true});
+ }
+ if(path==='/api/data'&&method==='GET'){
+  const rows=db.prepare('SELECT * FROM records WHERE user_id=? ORDER BY created DESC').all(u.id);
+  const data=Object.fromEntries(kinds.map(k=>[k,rows.filter(r=>r.kind===k).map(record)]));
+  return send(res,200,{...data,notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all(),noticesReadAt:u.notices_read_at});
+ }
+ if(path==='/api/notices/read'&&method==='POST'){db.prepare('UPDATE users SET notices_read_at=? WHERE id=?').run(now(),u.id);return send(res,200,{ok:true})}
+ const match=path.match(/^\/api\/records\/(bookings|reports|contacts|services)(?:\/([a-zA-Z0-9-]+))?$/);
+ if(match){const [,kind,id]=match;
+  if(method==='POST'&&!id){const p=payload(kind,await body(req));const id=randomUUID(),created=now();
+   try{db.prepare('INSERT INTO records(id,user_id,kind,payload,status,created,facility,booking_date,booking_time) VALUES(?,?,?,?,?,?,?,?,?)').run(id,u.id,kind,JSON.stringify(p),kind==='contacts'?'active':'pending',created,p.facility||null,kind==='bookings'?p.date:null,kind==='bookings'?p.time:null)}catch(err){if(String(err.message).includes('UNIQUE'))fail(409,'This facility slot is already reserved. Choose another time.');throw err}
+   return send(res,201,{record:record(db.prepare('SELECT * FROM records WHERE id=?').get(id))});
+  }
+  if(method==='DELETE'&&id){const r=db.prepare('SELECT * FROM records WHERE id=? AND user_id=? AND kind=?').get(id,u.id,kind);if(!r)fail(404,'Record not found.');
+   if(kind==='contacts')db.prepare('DELETE FROM records WHERE id=?').run(id);
+   else {if(['completed','resolved','cancelled','rejected'].includes(r.status))fail(409,'This record is already closed.');db.prepare("UPDATE records SET status='cancelled' WHERE id=?").run(id)}
+   return send(res,200,{ok:true});
+  }
+ }
+ if(path.startsWith('/api/admin/')){
+  if(u.role!=='admin')fail(403,'Administrator access required.');
+  if(path==='/api/admin/data'&&method==='GET'){
+   const users=db.prepare('SELECT * FROM users ORDER BY created DESC').all().map(publicUser);
+   const rows=db.prepare("SELECT r.*,u.name resident_name,u.email resident_email FROM records r JOIN users u ON u.id=r.user_id WHERE r.kind!='contacts' ORDER BY r.created DESC").all();
+   return send(res,200,{users,bookings:rows.filter(r=>r.kind==='bookings').map(record),reports:rows.filter(r=>r.kind==='reports').map(record),services:rows.filter(r=>r.kind==='services').map(record),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all()});
+  }
+  const userMatch=path.match(/^\/api\/admin\/users\/([a-zA-Z0-9-]+)$/);
+  if(userMatch&&method==='PATCH'){const b=await body(req);if(typeof b.active!=='boolean')fail(400,'Invalid account status.');const target=db.prepare('SELECT * FROM users WHERE id=?').get(userMatch[1]);if(!target)fail(404,'Resident not found.');if(target.role==='admin')fail(403,'Admin accounts cannot be disabled here.');db.prepare('UPDATE users SET active=? WHERE id=?').run(+b.active,target.id);if(!b.active)db.prepare('DELETE FROM sessions WHERE user_id=?').run(target.id);audit(u,b.active?'activate resident':'disable resident',target.id);return send(res,200,{ok:true})}
+  const recMatch=path.match(/^\/api\/admin\/records\/([a-zA-Z0-9-]+)$/);
+  if(recMatch&&method==='PATCH'){const r=db.prepare("SELECT * FROM records WHERE id=? AND kind!='contacts'").get(recMatch[1]);if(!r)fail(404,'Record not found.');const b=await body(req);const status=choice(b.status,r.kind==='reports'?['pending','in_progress','resolved','rejected']:['pending','approved','completed','rejected','cancelled']);
+   if(['cancelled','completed','resolved','rejected'].includes(r.status))fail(409,'This record is closed.');
+   try{db.prepare('UPDATE records SET status=? WHERE id=?').run(status,r.id)}catch(err){if(String(err.message).includes('UNIQUE'))fail(409,'Facility slot conflict.');throw err}audit(u,'set status '+status,r.id);return send(res,200,{ok:true});
+  }
+  const noticeMatch=path.match(/^\/api\/admin\/notices(?:\/([a-zA-Z0-9-]+))?$/);
+  if(noticeMatch){const id=noticeMatch[1];
+   if(method==='POST'&&!id){const b=await body(req),nid=randomUUID(),t=now();db.prepare('INSERT INTO notices VALUES(?,?,?,?,?,?)').run(nid,text(b.title,'Title',120),text(b.body,'Notice',4000),u.id,t,t);audit(u,'publish notice',nid);return send(res,201,{id:nid})}
+   if(['PATCH','DELETE'].includes(method)&&id){if(!db.prepare('SELECT id FROM notices WHERE id=?').get(id))fail(404,'Notice not found.');if(method==='DELETE')db.prepare('DELETE FROM notices WHERE id=?').run(id);else{const b=await body(req);db.prepare('UPDATE notices SET title=?,body=?,updated=? WHERE id=?').run(text(b.title,'Title',120),text(b.body,'Notice',4000),now(),id)}audit(u,method==='DELETE'?'delete notice':'edit notice',id);return send(res,200,{ok:true})}
+  }
+ }
+ fail(404,'Endpoint not found.');
+ }catch(err){if(!res.headersSent)send(res,err.status||500,{error:err.status?err.message:'Server error. Please try again.'});if(!err.status)console.error(err.message)}
+});
+server.requestTimeout=15000;server.headersTimeout=10000;

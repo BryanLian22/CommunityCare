@@ -1,0 +1,10 @@
+import { DatabaseSync } from 'node:sqlite';
+import { mkdirSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+export const databasePath = process.env.DATABASE_PATH || fileURLToPath(new URL('../data/communitycare.sqlite', import.meta.url));
+if (databasePath !== ':memory:') mkdirSync(dirname(resolve(databasePath)), {recursive:true});
+export const db = new DatabaseSync(databasePath);
+db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
+db.exec(readFileSync(new URL('./schema.sql', import.meta.url),'utf8'));
+export const publicUser = u => ({id:u.id,name:u.name,email:u.email,role:u.role,active:!!u.active,largeText:!!u.large_text,contrast:!!u.contrast,created:u.created});

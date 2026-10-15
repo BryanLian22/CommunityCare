@@ -1,0 +1,13 @@
+export type User = {id:string; name:string; email:string; role:'resident'|'admin'; active:boolean; largeText:boolean; contrast:boolean; created:string};
+export type Entry = {id:string; userId:string; created:string; status:string; facility?:string; date?:string; time?:string; category?:string; details?:string; name?:string; phone?:string; service?:string; address?:string; residentName?:string; residentEmail?:string};
+export type Notice = {id:string; title:string; body:string; created:string; updated:string};
+export type ResidentData = {bookings:Entry[]; reports:Entry[]; contacts:Entry[]; services:Entry[]; notices:Notice[]; noticesReadAt:string};
+export type AdminData = {users:User[]; bookings:Entry[]; reports:Entry[]; services:Entry[]; notices:Notice[]};
+export async function api<T = {ok:boolean}>(path:string, method='GET', body?:unknown):Promise<T> {
+ let response:Response;
+ try { response=await fetch(`/api${path}`, {method,credentials:'same-origin',headers:{'Content-Type':'application/json','X-CommunityCare-Request':'1'},...(body===undefined?{}:{body:JSON.stringify(body)})}); }
+ catch { throw new Error('Cannot reach the server. Check that npm.cmd run dev is running.'); }
+ const data=await response.json().catch(()=>({error:'Server unavailable. Restart the app server.'}));
+ if(!response.ok){if(response.status===401&&!path.startsWith('/auth/'))window.dispatchEvent(new Event('session-expired'));throw new Error(data.error||'Request failed.');}
+ return data as T;
+}

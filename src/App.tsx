@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
+import {api, type ResidentData, type User} from "./api";
+import {useSession} from "./Session";
 
 type IconName =
   | "alert"
@@ -97,21 +99,12 @@ type Sheet = "service" | "offer" | "booking" | "report" | "suspicious" | "sos" |
 const quickActions: { title: string; subtitle: string; icon: IconName; tone: string; sheet?: Sheet }[] = [
   { title: "Contacts", subtitle: "People & management", icon: "contact", tone: "blue", sheet: "contacts" },
   { title: "Book facility", subtitle: "Gym, sauna & courts", icon: "calendar", tone: "mint", sheet: "booking" },
-  { title: "Notices", subtitle: "Sample community updates", icon: "notice", tone: "yellow", sheet: "notice" },
+  { title: "Notices", subtitle: "Community updates", icon: "notice", tone: "yellow", sheet: "notice" },
   { title: "Services", subtitle: "Community support", icon: "services", tone: "lavender" },
   { title: "Report issue", subtitle: "Maintenance & safety", icon: "report", tone: "orange", sheet: "report" },
   { title: "Accessible map", subtitle: "Lifts & facilities", icon: "wheelchair", tone: "green" },
 ];
 
-type Booking = { id: string; facility: string; date: string; time: string };
-type Report = { id: string; category: string; details: string; created: string };
-type Contact = { id: string; name: string; phone: string };
-function useStored<T,>(key: string, initial: T) {
-  const [value, setValue] = useState<T>(() => { try { return JSON.parse(localStorage.getItem(key) || 'null') ?? initial; } catch { return initial; } });
-  const [failed, setFailed] = useState(false);
-  useEffect(() => { try { localStorage.setItem(key, JSON.stringify(value)); setFailed(false); } catch { setFailed(true); } }, [key, value]);
-  return [value, setValue, failed] as const;
-}
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 export default function App() {
   const [tab, setTab] = useState<Tab>("home");
@@ -126,11 +119,23 @@ export default function App() {
   const [from, setFrom] = useState("My location");
   const [to, setTo] = useState("Community health center");
 
-  const [bookings, setBookings, bookingError] = useStored<Booking[]>("cc-bookings", []);
-  const [reports, setReports, reportError] = useStored<Report[]>("cc-reports", []);
-  const [contacts, setContacts, contactError] = useStored<Contact[]>("cc-contacts", []);
-  const [profile, setProfile, profileError] = useStored("cc-profile", { name: "Byran", largeText: false, contrast: false });
-  const [noticesRead, setNoticesRead] = useStored("cc-notices-read", false);
+  const {user,updateUser} = useSession();
+  const [data,setData] = useState<ResidentData>({bookings:[],reports:[],contacts:[],services:[],notices:[],noticesReadAt:""});
+  const {bookings,reports,contacts,services:serviceRequests,notices} = data;
+  const [profile,setProfile] = useState({name:user.name,largeText:user.largeText,contrast:user.contrast});
+  const [loading,setLoading] = useState(true), [busy,setBusy] = useState(false), [dataError,setDataError] = useState("");
+  const [currentPassword,setCurrentPassword] = useState(""),[newPassword,setNewPassword] = useState("");
+  const unreadCount = notices.filter(n => n.updated > data.noticesReadAt).length;
+  const requestLock = useRef(false);
+  async function refresh(){setData(await api<ResidentData>("/data"));setDataError("")}
+  useEffect(()=>{let mounted=true; const read=()=>api<ResidentData>("/data").then(d=>{if(mounted){setData(d);setDataError("")}}).catch(e=>{if(mounted)setDataError(e.message)}).finally(()=>{if(mounted)setLoading(false)});void read();const onFocus=()=>{void read()};window.addEventListener('focus',onFocus);const interval=window.setInterval(()=>{if(!document.hidden)void read()},30000);return()=>{mounted=false;window.clearInterval(interval);window.removeEventListener('focus',onFocus)}},[]);
+  async function perform(path:string,method:string,payload:unknown,message:string,after?:()=>void){
+    if(requestLock.current)return;requestLock.current=true;setBusy(true);setDataError("");
+    try{await api(path,method,payload);after?.();notify(message);try{await refresh()}catch{setDataError("Saved, but the list could not refresh. Please refresh before submitting again.")}}
+    catch(e){setDataError((e as Error).message);notify((e as Error).message)}finally{requestLock.current=false;setBusy(false)}
+  }
+  const removeRecord=(kind:string,id:string)=>void perform(`/records/${kind}/${id}`,"DELETE",{},kind==='contacts'?"Contact removed.":"Request cancelled.");
+  async function saveProfile(){if(busy)return;setBusy(true);try{const result=await api<{user:User}>("/profile","PATCH",profile);updateUser(result.user);notify("Profile saved.")}catch(e){notify((e as Error).message)}finally{setBusy(false)}}
   const [date, setDate] = useState(today());
   const [time, setTime] = useState("10:30 AM");
   const [category, setCategory] = useState("Maintenance issue");
@@ -141,7 +146,7 @@ export default function App() {
   const [mapSearch, setMapSearch] = useState("");
   const [offer, setOffer] = useState("Home cleaning");
   const [serviceAddress, setServiceAddress] = useState("");
-  const [serviceRequests, setServiceRequests, serviceError] = useStored<{id:string; service:string; address:string; date:string; time:string}[]>("cc-service-requests", []);
+
   useEffect(() => setRouteReady(false), [travelMode, wheelchairMode, from, to]);
   const timer = useRef<number | undefined>(undefined);
   const dialog = useRef<HTMLElement>(null);
@@ -163,8 +168,7 @@ export default function App() {
   }, [sheet]);
   const saveReport = (kind: string) => {
     if (!details.trim()) { notify("Please describe what happened."); return; }
-    setReports(prev => [{ id: crypto.randomUUID(), category: kind, details: details.trim(), created: new Date().toLocaleString() }, ...prev]);
-    setDetails(""); setSheet("history"); notify("Saved on this device. Not sent to security.");
+    void perform("/records/reports","POST",{category:kind,details},"Report submitted to management.",()=>{setDetails("");setSheet("history")});
   };
   const shareLocation = () => {
     if (!navigator.geolocation) { notify("Location is unavailable in this browser."); return; }
@@ -200,7 +204,8 @@ export default function App() {
         </div>
 
         <main className="screen">
-          {(bookingError || reportError || contactError || profileError || serviceError) && <div role="alert" className="demo-note">Storage unavailable: changes may be lost when you close this page.</div>}
+          {loading && <div className="data-banner" role="status">Loading your account…</div>}
+          {dataError && <div role="alert" className="demo-note">{dataError} <Button onClick={()=>void refresh().catch(e=>setDataError(e.message))}>Refresh</Button></div>}
           {tab === "home" && (
             <div className="screen-content">
               <section className="greeting">
@@ -211,7 +216,7 @@ export default function App() {
 
               <section className="status-banner">
                 <div className="status-icon"><Icon name="shield" /></div>
-                <div><div className="status-title">CommunityCare demo</div><div className="status-copy">Sample data · No live monitoring</div></div>
+                <div><div className="status-title">Connected to your community</div><div className="status-copy">Bookings, reports & notices · Maps remain demos</div></div>
                 <span className="live-dot" />
               </section>
 
@@ -254,8 +259,8 @@ export default function App() {
               <section className="notice-preview">
                 <div className="section-title-row"><div className="section-title">Latest notice</div><Button onClick={() => setSheet("notice")}>See all</Button></div>
                 <Button className="notice-row" onClick={() => setSheet("notice")}>
-                  <span className="notice-date"><b>22</b><small>MAY</small></span>
-                  <span className="notice-copy"><b>Annual fire safety inspection</b><small>Building access may be limited, 9 AM–1 PM.</small></span>
+                  <span className="notice-date"><b>{notices[0]?new Date(notices[0].updated).getDate():"—"}</b><small>{notices[0]?new Date(notices[0].updated).toLocaleDateString("en",{month:"short"}):""}</small></span>
+                  <span className="notice-copy"><b>{notices[0]?.title||"No notices yet"}</b><small>{notices[0]?.body.slice(0,80)||"Community updates will appear here."}</small></span>
                   <Icon name="arrow" size="sm" />
                 </Button>
               </section>
@@ -271,7 +276,7 @@ export default function App() {
                   <Button className="menu-row" key={item.title} onClick={() => openAction(item.title, item.sheet)}>
                     <span className={`menu-icon ${item.tone}`}><Icon name={item.icon} /></span>
                     <span className="menu-copy"><b>{item.title}</b><small>{item.subtitle}</small></span>
-                    {item.title === "Notices" && <span className="count">{noticesRead ? 0 : 3}</span>}
+                    {item.title === "Notices" && <span className="count">{unreadCount}</span>}
                     <Icon name="arrow" size="sm" />
                   </Button>
                 ))}
@@ -290,7 +295,7 @@ export default function App() {
 
           {tab === "market" && (
             <div className="screen-content market-screen">
-              <section className="page-heading"><div className="overline">COMMUNITY MARKETPLACE</div><div className="screen-title">Market</div><div className="muted">Sample offers and local home-service requests.</div></section>
+              <section className="page-heading"><div className="overline">COMMUNITY MARKETPLACE</div><div className="screen-title">Market</div><div className="muted">Sample offers and home-service requests to management.</div></section>
               <section className="market-ad">
                 <div className="ad-badge">SAMPLE OFFER</div>
                 <div className="ad-content"><div><small>WELCOME OFFER</small><b>20% off home cleaning</b><span>Exclusive for Oak Residence members this week.</span><Button onClick={() => { setOffer("Home cleaning"); setSheet("offer"); }}>View offer <Icon name="arrow" size="sm" /></Button></div><span className="ad-graphic"><Icon name="home" size="xl" /></span></div>
@@ -419,7 +424,7 @@ export default function App() {
                 <div className="route-type-label"><Icon name={wheelchairMode ? "wheelchair" : "user"} size="sm" />{wheelchairMode ? "WHEELCHAIR-FRIENDLY ROUTE" : "STANDARD FASTEST ROUTE"}</div>
                 <div className="route-card-top"><span className="route-duration"><b>{travelMode === "car" ? "6" : travelMode === "bus" ? "11" : wheelchairMode ? "14" : "11"}</b> min</span><span className="route-distance">{travelMode === "walk" ? `0.6 miles · ${wheelchairMode ? "Mostly flat" : "Fastest"}` : travelMode === "car" ? "1.2 miles · Light traffic" : `2 stops · ${wheelchairMode ? "Low-floor bus" : "Fastest bus"}`}</span><span className="route-score"><Icon name="check" size="sm" />{wheelchairMode ? "Accessible" : "Fastest"}</span></div>
                 <div className="route-features"><span><Icon name={travelMode === "bus" ? "bus" : travelMode === "car" ? "shield" : wheelchairMode ? "elevator" : "walk"} size="sm" />{travelMode === "bus" ? wheelchairMode ? "Accessible bus" : "Direct bus" : travelMode === "car" ? "Guarded entry" : wheelchairMode ? "2 lifts" : "Direct path"}</span><span><Icon name={wheelchairMode ? "wheelchair" : "route"} size="sm" />{wheelchairMode ? "Step-free" : "Standard"}</span><span><Icon name="building" size="sm" />3 facilities</span></div>
-                <Button className="primary-action" onClick={() => { setRouteReady(true); notify("Demo route preview only. No real navigation started."); }}><Icon name={wheelchairMode ? "wheelchair" : "route"} />{routeReady ? "Demo route displayed" : wheelchairMode ? "Preview wheelchair route" : "Preview standard route"}</Button>
+                <Button className="primary-action" disabled={busy} onClick={() => { setRouteReady(true); notify("Demo route preview only. No real navigation started."); }}><Icon name={wheelchairMode ? "wheelchair" : "route"} />{routeReady ? "Demo route displayed" : wheelchairMode ? "Preview wheelchair route" : "Preview standard route"}</Button>
               </section>
             </div>
           )}
@@ -444,24 +449,24 @@ export default function App() {
             <Button className="sheet-backdrop" label="Close" onClick={() => setSheet(null)} />
             <section className="bottom-sheet" ref={dialog}>
               <Button className="close-sheet" label="Close panel" onClick={() => setSheet(null)}>Close ×</Button>
-              <div className="sheet-handle" />
+              <div className="sheet-handle" />{dataError && <div className="account-alert" role="alert">{dataError}</div>}{busy && <p role="status">Saving…</p>}
               {sheet === "booking" && (
                 <>
                   <div className="sheet-title">Book a facility</div><div className="sheet-subtitle">Choose a space and reserve your time.</div>
                   <div className="facility-tabs">{["Gym", "Sauna", "Court"].map((item) => <Button className={facility === item ? "selected" : ""} key={item} onClick={() => setFacility(item)}>{item}</Button>)}</div>
                   <label className="form-field">Booking date<input type="date" min={today()} value={date} onChange={e => setDate(e.target.value)} /></label>
-                  <div className="time-label">AVAILABLE DEMO TIMES</div><div className="time-grid">{["9:00 AM", "10:30 AM", "2:00 PM", "4:30 PM"].map(slot => <Button className={time === slot ? "selected" : ""} key={slot} onClick={() => setTime(slot)}>{slot}</Button>)}</div>
-                  <p className="demo-note">Saved on this device only. Facility availability is not connected.</p>
-                  <Button className="primary-action" onClick={() => {
+                  <div className="time-label">APPOINTMENT TIMES</div><div className="time-grid">{["9:00 AM", "10:30 AM", "2:00 PM", "4:30 PM"].map(slot => <Button className={time === slot ? "selected" : ""} key={slot} onClick={() => setTime(slot)}>{slot}</Button>)}</div>
+                  <p className="demo-note">Requests are saved to your account for management approval. Reserved slots cannot be booked twice.</p>
+                  <Button className="primary-action" disabled={busy} onClick={() => {
                     if (!date || date < today()) { notify("Choose today or a future date."); return; }
-                    if (bookings.some(b => b.facility === facility && b.date === date && b.time === time)) { notify("You already booked that slot."); return; }
-                    setBookings(prev => [...prev, {id: crypto.randomUUID(), facility, date, time}]); setSheet("history"); notify("Demo booking saved on this device.");
-                  }}>Save demo booking</Button>
+                    if (bookings.some(b => b.facility === facility && b.date === date && b.time === time && ["pending","approved"].includes(b.status))) { notify("You already booked that slot."); return; }
+                    void perform("/records/bookings","POST",{facility,date,time},"Booking submitted for approval.",()=>setSheet("history"));
+                  }}>Request booking</Button>
                 </>
               )}
               {sheet === "service" && (
                 <>
-                  <div className="sheet-title">Book a home service</div><div className="sheet-subtitle">Save a request locally. No provider is contacted.</div>
+                  <div className="sheet-title">Book a home service</div><div className="sheet-subtitle">Submit a request to management. Provider dispatch is not automatic.</div>
                   <div className="service-choice">
                     {[
                       ["Air conditioner", "snowflake"],
@@ -474,11 +479,11 @@ export default function App() {
                   <label className="form-field">Appointment date<input type="date" min={today()} value={date} onChange={e => setDate(e.target.value)} /></label>
                   <label className="form-field">Appointment time<select value={time} onChange={e => setTime(e.target.value)}>{["9:00 AM", "10:30 AM", "2:00 PM", "4:30 PM"].map(slot => <option key={slot}>{slot}</option>)}</select></label>
                   <div className="booking-summary"><span>Sample call-out fee</span><b>{service === "Air conditioner" ? "$45" : service === "Door repair" ? "$35" : service === "Locksmith" ? "$30" : "$25"}</b></div>
-                  <Button className="primary-action" onClick={() => {
+                  <Button className="primary-action" disabled={busy} onClick={() => {
                     if (!serviceAddress.trim() || !date || date < today()) { notify("Enter an address and choose today or a future date."); return; }
-                    if (serviceRequests.some(r => r.service === service && r.date === date && r.time === time)) { notify("You already saved this service appointment."); return; }
-                    setServiceRequests(prev => [...prev, {id:crypto.randomUUID(), service, address:serviceAddress.trim(), date, time}]); setSheet("history"); notify("Service request saved locally. No provider contacted.");
-                  }}>Save service request</Button>
+                    if (serviceRequests.some(r => r.service === service && r.date === date && r.time === time && ["pending","approved"].includes(r.status))) { notify("You already saved this service appointment."); return; }
+                    void perform("/records/services","POST",{service,address:serviceAddress.trim(),date,time},"Service request submitted to management.",()=>setSheet("history"));
+                  }}>Submit service request</Button>
                 </>
               )}
               {sheet === "offer" && <><div className="sheet-title">{offer}</div><p className="sheet-subtitle">Sample marketplace offers. These cannot be redeemed or purchased.</p><div className="record-list"><div><b>Home cleaning · 20% off</b><p>Example welcome offer for Oak Residence residents. Provider and terms are not connected.</p></div><div><b>FreshFold Laundry · $8 off</b><p>Example pickup and delivery offer. Availability and ratings are sample data.</p></div></div><Button className="primary-action" onClick={() => setSheet(null)}>Back to Market</Button></>}
@@ -487,37 +492,38 @@ export default function App() {
               )}
               {(sheet === "report" || sheet === "suspicious") && <>
                 <div className="sheet-title">{sheet === "suspicious" ? "Report suspicious activity" : "Report a problem"}</div>
-                <p className="sheet-subtitle">Save a report on this device. It will not be sent to security.</p>
+                <p className="sheet-subtitle">Submit a report for management review. This does not dispatch emergency responders.</p>
                 <label className="form-field">Category<select value={category} onChange={e => setCategory(e.target.value)}>{["Maintenance issue", "Suspicious activity", "Mailbox password attempts", "Door or gate tampering", "Accessibility barrier", "Noise or disturbance"].map(item => <option key={item}>{item}</option>)}</select></label>
                 <label className="form-field">Details<textarea value={details} maxLength={2000} onChange={e => setDetails(e.target.value)} placeholder="What happened and where?" rows={4} /></label>
-                <Button className="primary-action" disabled={!details.trim()} onClick={() => saveReport(category)}>Save report locally</Button>
+                <Button className="primary-action" disabled={busy||!details.trim()} onClick={() => saveReport(category)}>Submit report</Button>
               </>}
               {sheet === "contacts" && <>
                 <div className="sheet-title">Important contacts</div><p className="sheet-subtitle">Add verified phone numbers for security, family, or management.</p>
-                <div className="record-list">{contacts.length === 0 && <p>No contacts added yet.</p>}{contacts.map(c => <div key={c.id}><b>{c.name}</b><a href={`tel:${c.phone}`}>{c.phone} · Call</a><Button onClick={() => setContacts(prev => prev.filter(x => x.id !== c.id))}>Remove</Button></div>)}</div>
+                <div className="record-list">{contacts.length === 0 && <p>No contacts added yet.</p>}{contacts.map(c => <div key={c.id}><b>{c.name}</b><a href={`tel:${c.phone}`}>{c.phone} · Call</a><Button onClick={() => removeRecord("contacts",c.id)}>Remove</Button></div>)}</div>
                 <label className="form-field">Name<input value={contactName} onChange={e => setContactName(e.target.value)} maxLength={80} /></label>
                 <label className="form-field">Phone number<input type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} placeholder="+60…" /></label>
-                <Button className="primary-action" onClick={() => { const phone = contactPhone.replace(/[ ()-]/g, ""); if (!contactName.trim() || !/^\+?[0-9]{6,15}$/.test(phone)) { notify("Enter a name and valid phone number."); return; } setContacts(prev => [...prev, {id:crypto.randomUUID(), name:contactName.trim(), phone}]); setContactName(""); setContactPhone(""); notify("Contact saved."); }}>Add contact</Button>
+                <Button className="primary-action" disabled={busy} onClick={() => { const phone = contactPhone.replace(/[ ()-]/g, ""); if (!contactName.trim() || !/^\+?[0-9]{6,15}$/.test(phone)) { notify("Enter a name and valid phone number."); return; } void perform("/records/contacts","POST",{name:contactName.trim(),phone},"Contact saved.",()=>{setContactName("");setContactPhone("")}); }}>Add contact</Button>
               </>}
               {sheet === "profile" && <>
                 <div className="sheet-title">Profile & accessibility</div>
                 <label className="form-field">Your name<input value={profile.name} maxLength={40} onChange={e => setProfile({...profile, name:e.target.value})} /></label>
                 <label className="setting-row"><input type="checkbox" checked={profile.largeText} onChange={e => setProfile({...profile, largeText:e.target.checked})} />Larger text</label>
                 <label className="setting-row"><input type="checkbox" checked={profile.contrast} onChange={e => setProfile({...profile, contrast:e.target.checked})} />Higher contrast</label>
-                <p className="demo-note">Settings save on this browser. This is a local profile, not an online account.</p>
-                <Button className="primary-action" onClick={() => setSheet("history")}>My bookings & reports</Button>
+                <p className="demo-note">Save your name and accessibility settings to your account.</p>
+                <Button className="primary-action" disabled={busy||!profile.name.trim()} onClick={()=>void saveProfile()}>Save profile</Button>
+                <Button className="outline-action" onClick={() => setSheet("history")}>My bookings & reports</Button>
+                <div className="password-section"><b>Change password</b><label className="form-field">Current password<input type="password" autoComplete="current-password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)}/></label><label className="form-field">New password (12–128 characters)<input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={newPassword} onChange={e=>setNewPassword(e.target.value)}/></label><Button className="outline-action" disabled={busy||newPassword.length<12||!currentPassword} onClick={()=>void perform("/auth/password","POST",{currentPassword,password:newPassword},"Password updated. Other sessions signed out.",()=>{setCurrentPassword("");setNewPassword("")})}>Update password</Button></div>
               </>}
               {sheet === "history" && <>
-                <div className="sheet-title">My bookings & reports</div><p className="sheet-subtitle">Local demo records. Not submitted to management.</p>
-                <div className="record-list"><h3>Bookings</h3>{!bookings.length && <p>No bookings yet.</p>}{bookings.map(b => <div key={b.id}><b>{b.facility}</b><span>{b.date} · {b.time}</span><Button onClick={() => setBookings(prev => prev.filter(x => x.id !== b.id))}>Cancel booking</Button></div>)}
-                <h3>Home-service requests</h3>{!serviceRequests.length && <p>No service requests yet.</p>}{serviceRequests.map(r => <div key={r.id}><b>{r.service}</b><span>{r.address}</span><span>{r.date} · {r.time} · Local request</span><Button onClick={() => setServiceRequests(prev => prev.filter(x => x.id !== r.id))}>Cancel service request</Button></div>)}
-                <h3>Reports</h3>{!reports.length && <p>No reports yet.</p>}{reports.map(r => <div key={r.id}><b>{r.category}</b><span>{r.created} · Local draft</span><p>{r.details}</p><Button onClick={() => setReports(prev => prev.filter(x => x.id !== r.id))}>Delete draft</Button></div>)}</div>
+                <div className="sheet-title">My bookings & reports</div><p className="sheet-subtitle">Your submitted requests and management updates.</p>
+                <div className="record-list"><h3>Bookings</h3>{!bookings.length && <p>No bookings yet.</p>}{bookings.map(b => <div key={b.id}><b>{b.facility}</b><span>{b.date} · {b.time} · {b.status}</span><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(b.status)} onClick={() => removeRecord("bookings",b.id)}>Cancel booking</Button></div>)}
+                <h3>Home-service requests</h3>{!serviceRequests.length && <p>No service requests yet.</p>}{serviceRequests.map(r => <div key={r.id}><b>{r.service}</b><span>{r.address}</span><span>{r.date} · {r.time} · {r.status.replaceAll("_"," ")}</span><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(r.status)} onClick={() => removeRecord("services",r.id)}>Cancel service request</Button></div>)}
+                <h3>Reports</h3>{!reports.length && <p>No reports yet.</p>}{reports.map(r => <div key={r.id}><b>{r.category}</b><span>{new Date(r.created).toLocaleString()} · {r.status.replaceAll("_"," ")}</span><p>{r.details}</p><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(r.status)} onClick={() => removeRecord("reports",r.id)}>Cancel report</Button></div>)}</div>
               </>}
               {sheet === "services" && <><div className="sheet-title">Community support</div><p className="sheet-subtitle">Contact your community team to arrange help.</p><div className="report-options">{["Shopping assistance", "Transport assistance", "Home maintenance", "Accessibility support"].map(name => <Button key={name} onClick={() => { setCategory("Accessibility barrier"); setDetails(`Request: ${name}. `); setSheet("report"); }}>{name}<Icon name="arrow" size="sm" /></Button>)}</div></>}
               {sheet === "forecast" && <><div className="sheet-title">Sample forecast</div><p className="sheet-subtitle">All weather figures on this screen are illustrative. No weather or disaster service is connected.</p><p>For current conditions, check your local official weather service. Do not use this demo to make safety decisions.</p><Button className="primary-action" onClick={() => setSheet(null)}>Understood</Button></>}
-              {sheet === "notice" && (
-                <><div className="sheet-title">Management notices</div><div className="sheet-subtitle">Updates from your community management team.</div><div className="notice-list"><div><span className={noticesRead ? "" : "unread"} /><span><b>Annual fire safety inspection</b><small>May 22 · Building access may be limited.</small></span></div><div><span className={noticesRead ? "" : "unread"} /><span><b>Pool maintenance complete</b><small>May 19 · The pool has reopened.</small></span></div><div><span /><span><b>Community meeting minutes</b><small>May 16 · Read the monthly summary.</small></span></div></div><Button className="primary-action" onClick={() => { setNoticesRead(true); setSheet(null); notify("All notices marked as read"); }}>Mark all as read</Button></>
-              )}
+              {sheet === "notice" && <><div className="sheet-title">Management notices</div><div className="sheet-subtitle">Published by your community administrators.</div><div className="notice-list">{notices.length===0&&<p>No notices published yet.</p>}{notices.map(n=><div key={n.id}><span className={n.updated>data.noticesReadAt?"unread":""}/><span><b>{n.title}</b><small>{new Date(n.updated).toLocaleString()}</small><p className="resident-notice-body">{n.body}</p></span></div>)}</div><Button className="primary-action" disabled={busy} onClick={()=>void perform("/notices/read","POST",{},"Notices marked as read.")}>Mark all as read</Button></>}
+
             </section>
           </div>
         )}

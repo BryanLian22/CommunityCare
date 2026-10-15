@@ -1,14 +1,13 @@
-# Changes from the supplied Figma export
+# Version 2.0 — Accounts, database and administration
 
-- Kept the existing React/TypeScript stack and design.
-- Renamed visible branding to CommunityCare and made the greeting use the saved name and current date.
-- Replaced message-only booking/report/contact/service/profile actions with local workflows.
-- Added persisted records, booking cancellation, report deletion and validation.
-- Added search, notice read state, larger text, higher contrast, keyboard panel handling and location sharing.
-- Removed misleading claims that emergency alerts, calls, weather or navigation were live.
-- Simplified vite.config.ts and corrected index.html placeholders for local use.
-- Added typecheck to the build, npm lockfile, documentation and production build.
+Added resident registration, shared resident/admin login, session restoration, sign-out and password changes. Admins are created through a server-side CLI, not public registration.
 
-Validation: TypeScript checking and production build passed. See README for service limitations.
+Replaced anonymous browser-only records with an SQLite API for bookings, reports, contacts, home services, profile preferences and notices. Kept the existing design, map demos and five-tab resident navigation.
 
-Browser interaction/visual checks could not run because the browser binary download failed in the build environment.
+Added a management dashboard with overview statistics, resident activation, request filtering and status updates, and notice publishing/editing/deletion. Authorization and ownership are enforced by the server.
+
+Added database schema, salted scrypt password hashes, expiring HttpOnly cookie sessions, same-origin write protections, request validation, throttled authentication, booking-slot constraints and administrative audit entries.
+
+Added one-command development startup, admin/password management commands, setup documentation and backend integration tests. Anonymous demo data is not automatically imported. No external services or emergency dispatch integrations were added.
+
+Validation: production build and TypeScript check passed; all 8 backend integration tests passed. Simulated-browser checks against the real API passed for registration, login, profile saving, admin dashboard, notice publishing, resident notice visibility and view switching. Development startup verified. Pixel-level browser rendering was not verified.

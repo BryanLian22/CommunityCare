@@ -19,3 +19,8 @@ logs/
 # beside it.
 /.plugins/
 /.opencode-skills/
+
+# Local database and private settings
+data/
+.env
+*.sqlite*

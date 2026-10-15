@@ -1,69 +1,117 @@
-# CommunityCare
+# CommunityCare — login, database and admin dashboard
 
-Runnable React + TypeScript project adapted from your Smart Community App Figma Make export. The green mobile layout, four tabs, cards, icons and bottom sheets are retained.
+React + TypeScript frontend with a Node.js API and SQLite database. The existing five-tab resident interface is retained. Sign-up creates a resident; administrator accounts are created using a local management command.
 
-## Run on Windows
+## First-time setup (Windows / PowerShell)
 
-1. Install Node.js 22.12 or newer (https://nodejs.org/).
-2. Extract this ZIP completely.
-3. Open the CommunityCare folder in Visual Studio Code (File > Open Folder). If using full Visual Studio, use File > Open > Folder and its terminal.
-4. Open Terminal > New Terminal in the folder containing package.json.
-5. Run:
+Use Node.js 24 or newer. Your previously installed Node 24.21.0 is suitable.
 
-```sh
-npm ci
-npm run dev
+1. Extract the ZIP to a NEW folder. Keep the old project as a backup.
+2. Open the inner `CommunityCare` folder in VS Code. It must contain `package.json`.
+3. Open Terminal > New Terminal and run:
+
+```powershell
+npm.cmd ci
+npm.cmd run admin:create
 ```
 
-6. Open the localhost address printed in the terminal, usually http://localhost:5173.
-7. Press Ctrl+C in the terminal to stop.
+Enter your admin name, email and a NEW password of at least 12 characters. Confirm it. Password input is hidden in an interactive terminal; type normally and press Enter. There is no default administrator password. Use a separate email from any existing resident account.
 
-To preview on a phone on the same Wi-Fi, run `npm run dev -- --host 0.0.0.0` and use the computer's LAN address with the printed port. Your firewall must permit that connection. Location/sharing features require HTTPS or localhost; a plain HTTP LAN preview may not support them.
+4. Start BOTH frontend and backend with one command:
 
-## Check and build
-
-```sh
-npm run typecheck
-npm run build
-npm run preview
+```powershell
+npm.cmd run dev
 ```
 
-The production build is written to `dist/`. Use a web server to serve it; do not double-click dist/index.html. A build is included for convenience.
+5. Open http://localhost:5173. Sign in with the admin account to see the dashboard. Use **Resident view** to open the mobile app, and **Admin dashboard** to return.
+6. To test a resident account, open a private/incognito browser window, choose **Create a resident account**, and register with another email. This keeps your administrator session separate.
 
-## What works
+Use `npm` in place of `npm.cmd` on macOS/Linux. Stop servers with Ctrl+C. Keep the terminal open while using the app. The message `.env not found. Continuing without it.` is normal; default settings work without that optional file. The API uses port 3001 and Vite uses port 5173. If a port is occupied, stop the older CommunityCare server before starting this version.
 
-- Navigation between Home, Community, Safety and Routes.
-- Facility/date/time selection, duplicate-slot prevention, local booking history and cancellation.
-- Report categories, required descriptions, local report history and draft deletion.
-- Contact creation, phone validation, removal and telephone links.
-- Service search and support requests.
-- Profile name, larger text and higher contrast settings.
-- Notices marked as read.
-- One-time location sharing through the device share menu, or a copied location link; permission and failure handling included.
-- Keyboard focus containment and Escape/Close controls for panels.
+## What to test
 
-Data is stored in this browser's localStorage. It persists after reload, but does not sync between devices. Clearing site data removes it. Avoid entering sensitive information into a shared browser. If browser storage is unavailable, the app displays a warning.
+1. Register a resident and submit a facility booking, a report, and a home-service request.
+2. In the administrator window, press Refresh. Review the requests and change their statuses.
+3. Return to the resident window. Records refresh when the window regains focus, or every 30 seconds while visible. A browser reload also refreshes them.
+4. Publish a notice in the admin dashboard. It appears in the resident Home and Notices panels.
+5. Sign out and back in: records remain in the database.
+6. Try a second resident account: it cannot see another resident's contacts or requests.
 
-## Demonstrations, not connected services
+## Admin dashboard
 
-- SOS is explicitly a test and never sends an alert or dispatches help.
-- Weather, air quality, hazard predictions, management notices, facility availability and map details are sample data.
-- The route illustration does not compute directions from the entered start/end locations. Lift status and accessibility are not verified.
-- Reports and bookings are local records, not submissions to management. No security review or 500-metre resident notification is implemented.
-- Contacts must be supplied by you; no security phone numbers are invented.
-- No authentication, database server, push notification service or admin portal is included.
+- Overview: resident count, pending requests, open reports and published notices.
+- Residents: search, disable and reactivate resident accounts. Disabling an account revokes its sessions. Admin accounts cannot be disabled through this screen.
+- Facility bookings: search/filter and approve, complete, reject or cancel.
+- Reports: pending, in progress, resolved or rejected.
+- Home services: approve, complete, reject or cancel requests. Approval does not contact an external service provider.
+- Notices: create, edit and delete announcements visible to signed-in residents.
+- Closed requests remain in history and cannot be reopened. Residents can cancel open requests; contacts can be removed.
 
-## Android and iOS
+## Database
 
-This deliverable is a mobile-responsive web application, not a native APK or iOS app. It runs in a phone browser. Store distribution would require a separate native or hybrid app packaging step, platform permissions and real backend integration.
+The server automatically creates `data/communitycare.sqlite` and all tables on first run. You do not need MySQL, SQL Server or a separate database installation.
 
-## Files
+Tables:
 
-- src/App.tsx: screens, interactive flows, local persistence and accessibility controls.
-- src/index.css: original Figma styling plus local forms and responsive/accessibility adjustments.
-- src/main.tsx: React entry point.
-- vite.config.ts: portable Vite configuration with Figma-specific runtime plugins removed.
-- index.html: page title, language and viewport.
-- package.json / package-lock.json: reproducible npm setup.
+| Table | Purpose |
+|---|---|
+| users | Account name, email, password hash, role, active flag and preferences |
+| sessions | Hashed session tokens and expiration times |
+| records | Resident-owned bookings, reports, private contacts and service requests |
+| notices | Administrator announcements |
+| audit_log | Administrative status, account and notice changes |
 
-Google Fonts are optional network-loaded fonts; system sans-serif is used when unavailable. No API keys are needed.
+Record details are JSON in `records.payload`, with validated types and dedicated booking-slot columns. Foreign keys link records to users. A unique index prevents two pending/approved bookings for the same facility/date/time. Each listed time is treated as one fixed facility slot; capacity/overlapping-duration scheduling is outside this version.
+
+Back up the database: stop the app with Ctrl+C, then copy the whole `data` folder to a safe location. Never replace an existing `data` folder when updating the code. An optional `.env` file can set an absolute `DATABASE_PATH` outside the project folder. `.env.example` documents configuration.
+
+This ZIP deliberately contains no accounts, credentials or runtime database. Starting creates an empty database. Old anonymous localStorage demo records are not automatically assigned to a new account; they remain in the old browser storage and are not imported.
+
+## Accounts and passwords
+
+- Passwords are salted and hashed with scrypt; plain passwords are not stored.
+- Sessions last eight hours and use HttpOnly, SameSite=Strict cookies. Signing out deletes the server session.
+- Profile settings and contacts are private to the signed-in account.
+- Residents cannot assign themselves an admin role or call admin endpoints.
+- Profile > Change password changes your password and signs out other sessions.
+- If a password is forgotten, the system owner can run:
+
+```powershell
+npm.cmd run password:reset
+```
+
+This requires access to the server files. Email verification and email-based password reset are not connected. Admin login uses the same login form as residents.
+
+## Build, test and run the built app
+
+```powershell
+npm.cmd test
+npm.cmd run build
+npm.cmd start
+```
+
+Then visit http://localhost:3001. `npm.cmd start` serves BOTH the compiled frontend and the API. Do not use Vite's standalone preview for database testing; it does not run the backend. A production build is included, and `npm.cmd run build` regenerates it.
+
+Backend tests use an isolated temporary database and cover registration, password hashing, role restrictions, record isolation, facility conflicts, admin moderation, notices, persistence, session revocation, password changes, account activation and rate limiting.
+
+## Deployment scope
+
+This is a local full-stack application, not a hosted service or native Android/iOS build. For remote users you need to host the server with a persistent disk and HTTPS. Set `NODE_ENV=production`, `COOKIE_SECURE=true`, and `APP_ORIGIN` to your exact HTTPS origin. The production server refuses startup without these settings. Terminate HTTPS at a reverse proxy; the Node server itself uses HTTP.
+
+Single-server SQLite and in-memory rate limits suit this local prototype. Multi-server deployment, email verification, password-reset emails, automated backups and monitoring require additional deployment work. Do not expose the Vite development server as a production service.
+
+Weather, disaster predictions, marketplace offers/prices and illustrated routes are still sample data. SOS does not send emergency alerts. Management submissions are real database records, but no external responders or providers are dispatched.
+
+## Main files
+
+- `src/Session.tsx`: registration, login, session and sign-out UI.
+- `src/Admin.tsx`: admin dashboard and moderation tools.
+- `src/api.ts`: frontend API client and shared types.
+- `src/App.tsx`: resident screens wired to database endpoints.
+- `src/account.css`: login and dashboard styling.
+- `server/app.mjs`: API, authentication checks, validation and static server.
+- `server/schema.sql`, `server/db.mjs`: SQLite schema and initialization.
+- `server/security.mjs`: password hashing and verification.
+- `server/create-admin.mjs`, `server/reset-password.mjs`: local account management.
+- `scripts/dev.mjs`: starts frontend and backend together.
+- `tests/backend.test.mjs`: isolated integration tests.
