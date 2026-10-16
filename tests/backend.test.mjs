@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync} from 'node:fs';
+import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomUUID} from 'node:crypto';
@@ -74,6 +74,25 @@ await test('profile persistence, password change revokes old sessions, and disab
  await admin.request(`/admin/users/${bid}`,'PATCH',{active:true});assert.equal((await b.request('/auth/login','POST',{email:'bob@example.test',password})).status,200);
  const previous=a.cookie;await a.request('/auth/logout','POST',{});assert.equal((await a.request('/data','GET',undefined,{Cookie:previous})).status,401);
  assert(db.prepare('SELECT COUNT(*) n FROM audit_log').get().n>=5);
+});
+await test('shared directory is admin-editable, persists, and does not overwrite existing data on restart',async()=>{
+ const initial=(await b.request('/data')).data.communityContacts;assert.equal(initial.length,2);assert(initial.every(c=>c.phone===''));
+ const details={name:'Management Office',phone:'+60 3 1234 5678',hours:'Mon–Fri, 9 AM–5 PM',description:'Resident enquiries'};
+ assert.equal((await b.request('/admin/community-contacts/management','PATCH',details)).status,403);
+ assert.equal((await admin.request('/admin/community-contacts/management','PATCH',{...details,phone:'invalid'})).status,400);
+ assert.equal((await admin.request('/admin/community-contacts/management','PATCH',details)).status,200);
+ assert.equal((await admin.request('/admin/community-contacts/guard','PATCH',{name:'Guard House',phone:'+60387654321',hours:'24 hours',description:'Security assistance'})).status,200);
+ const rows=(await b.request('/data')).data.communityContacts;assert.equal(rows.find(c=>c.id==='management').phone,'+60312345678');assert.equal(rows.find(c=>c.id==='guard').phone,'+60387654321');
+ db.exec(readFileSync(new URL('../server/schema.sql',import.meta.url),'utf8'));
+ const reader=new DatabaseSync(process.env.DATABASE_PATH);assert.equal(reader.prepare("SELECT phone FROM community_contacts WHERE id='management'").get().phone,'+60312345678');reader.close();
+ assert.equal((await admin.request('/admin/community-contacts/guard','PATCH',{name:'Guard House',phone:'',hours:'',description:''})).status,200);
+ assert.equal((await b.request('/data')).data.communityContacts.find(c=>c.id==='guard').phone,'');
+});
+await test('personal contact edits are owner-only and persist',async()=>{
+ const r=await b.request('/records/contacts','POST',{name:'Original',phone:'0123456789'});const id=r.data.record.id;
+ assert.equal((await admin.request(`/records/contacts/${id}`,'PATCH',{name:'Wrong owner',phone:'0123456789'})).status,404);
+ assert.equal((await b.request(`/records/contacts/${id}`,'PATCH',{name:'Caregiver',phone:'+60123456789'})).status,200);
+ assert.equal((await b.request('/data')).data.contacts.find(c=>c.id===id).name,'Caregiver');
 });
 await test('login throttling',async()=>{const c=client();for(let i=0;i<12;i++)await c.request('/auth/login','POST',{email:'limited@example.test',password});assert.equal((await c.request('/auth/login','POST',{email:'limited@example.test',password})).status,429)});
 }finally{await new Promise(resolve=>server.close(resolve));db.close();rmSync(folder,{recursive:true,force:true})}

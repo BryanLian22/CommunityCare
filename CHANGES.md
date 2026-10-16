@@ -1,3 +1,11 @@
+# Version 2.1 — Professional contact directory
+
+Added separate Management Office and Guard House cards with call buttons, descriptions and operating hours. Unconfigured numbers are clearly marked and cannot be called. Personal contacts now support editing as well as adding and removal.
+
+Added admin Community contacts settings and a persistent community_contacts table. Only administrators can change shared details; personal contacts remain owner-only. Existing databases migrate automatically without overwriting configured contact details.
+
+Validation: TypeScript and production build passed; all 10 backend tests passed, including authorization, contact updates, persistence and migration. Simulated-browser interaction checks cover personal contact editing and shared directory editing/display. Pixel-level rendering was not verified.
+
 # Version 2.0 — Accounts, database and administration
 
 Added resident registration, shared resident/admin login, session restoration, sign-out and password changes. Admins are created through a server-side CLI, not public registration.

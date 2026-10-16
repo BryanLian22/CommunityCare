@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import {api, type ResidentData, type User} from "./api";
+import ContactDirectory from "./ContactDirectory";
 import {useSession} from "./Session";
 
 type IconName =
@@ -120,7 +121,7 @@ export default function App() {
   const [to, setTo] = useState("Community health center");
 
   const {user,updateUser} = useSession();
-  const [data,setData] = useState<ResidentData>({bookings:[],reports:[],contacts:[],services:[],notices:[],noticesReadAt:""});
+  const [data,setData] = useState<ResidentData>({bookings:[],reports:[],contacts:[],services:[],notices:[],communityContacts:[],noticesReadAt:""});
   const {bookings,reports,contacts,services:serviceRequests,notices} = data;
   const [profile,setProfile] = useState({name:user.name,largeText:user.largeText,contrast:user.contrast});
   const [loading,setLoading] = useState(true), [busy,setBusy] = useState(false), [dataError,setDataError] = useState("");
@@ -140,8 +141,6 @@ export default function App() {
   const [time, setTime] = useState("10:30 AM");
   const [category, setCategory] = useState("Maintenance issue");
   const [details, setDetails] = useState("");
-  const [contactName, setContactName] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
   const [search, setSearch] = useState("");
   const [mapSearch, setMapSearch] = useState("");
   const [offer, setOffer] = useState("Home cleaning");
@@ -447,7 +446,7 @@ export default function App() {
         {sheet && (
           <div className="sheet-layer" role="dialog" aria-modal="true" aria-label={`${sheet} panel`}>
             <Button className="sheet-backdrop" label="Close" onClick={() => setSheet(null)} />
-            <section className="bottom-sheet" ref={dialog}>
+            <section className={`bottom-sheet ${sheet === "contacts" ? "contacts-sheet" : ""}`} ref={dialog}>
               <Button className="close-sheet" label="Close panel" onClick={() => setSheet(null)}>Close ×</Button>
               <div className="sheet-handle" />{dataError && <div className="account-alert" role="alert">{dataError}</div>}{busy && <p role="status">Saving…</p>}
               {sheet === "booking" && (
@@ -497,13 +496,7 @@ export default function App() {
                 <label className="form-field">Details<textarea value={details} maxLength={2000} onChange={e => setDetails(e.target.value)} placeholder="What happened and where?" rows={4} /></label>
                 <Button className="primary-action" disabled={busy||!details.trim()} onClick={() => saveReport(category)}>Submit report</Button>
               </>}
-              {sheet === "contacts" && <>
-                <div className="sheet-title">Important contacts</div><p className="sheet-subtitle">Add verified phone numbers for security, family, or management.</p>
-                <div className="record-list">{contacts.length === 0 && <p>No contacts added yet.</p>}{contacts.map(c => <div key={c.id}><b>{c.name}</b><a href={`tel:${c.phone}`}>{c.phone} · Call</a><Button onClick={() => removeRecord("contacts",c.id)}>Remove</Button></div>)}</div>
-                <label className="form-field">Name<input value={contactName} onChange={e => setContactName(e.target.value)} maxLength={80} /></label>
-                <label className="form-field">Phone number<input type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} placeholder="+60…" /></label>
-                <Button className="primary-action" disabled={busy} onClick={() => { const phone = contactPhone.replace(/[ ()-]/g, ""); if (!contactName.trim() || !/^\+?[0-9]{6,15}$/.test(phone)) { notify("Enter a name and valid phone number."); return; } void perform("/records/contacts","POST",{name:contactName.trim(),phone},"Contact saved.",()=>{setContactName("");setContactPhone("")}); }}>Add contact</Button>
-              </>}
+              {sheet === "contacts" && <ContactDirectory contacts={contacts} directory={data.communityContacts} onRefresh={refresh} loading={loading}/>}
               {sheet === "profile" && <>
                 <div className="sheet-title">Profile & accessibility</div>
                 <label className="form-field">Your name<input value={profile.name} maxLength={40} onChange={e => setProfile({...profile, name:e.target.value})} /></label>

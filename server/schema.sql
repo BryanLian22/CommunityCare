@@ -25,4 +25,13 @@ CREATE TABLE IF NOT EXISTS audit_log (
  id INTEGER PRIMARY KEY AUTOINCREMENT, actor_id TEXT NOT NULL REFERENCES users(id),
  action TEXT NOT NULL, target_id TEXT NOT NULL, created TEXT NOT NULL
 );
-PRAGMA user_version = 1;
+CREATE TABLE IF NOT EXISTS community_contacts (
+ id TEXT PRIMARY KEY CHECK(id IN ('management','guard')),
+ name TEXT NOT NULL, phone TEXT NOT NULL DEFAULT '', hours TEXT NOT NULL DEFAULT '',
+ description TEXT NOT NULL DEFAULT '', updated TEXT NOT NULL DEFAULT '',
+ updated_by TEXT REFERENCES users(id)
+);
+INSERT OR IGNORE INTO community_contacts(id,name,description) VALUES
+ ('management','Management Office','Bookings, maintenance and resident enquiries.'),
+ ('guard','Guard House','Security assistance and visitor access.');
+PRAGMA user_version = 2;

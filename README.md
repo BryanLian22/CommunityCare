@@ -2,6 +2,16 @@
 
 React + TypeScript frontend with a Node.js API and SQLite database. The existing five-tab resident interface is retained. Sign-up creates a resident; administrator accounts are created using a local management command.
 
+## Updating an existing installation
+
+Stop the app first and back up the whole old project. Extract this ZIP into a new folder, then copy your old `data` folder and optional `.env` into the new `CommunityCare` folder. If `.env` uses a custom DATABASE_PATH, preserve that database location. Run `npm.cmd ci` and `npm.cmd run dev`. Existing accounts and records remain; the contacts table is added automatically. You do not need to create another admin.
+
+## Contact directory
+
+Open **Admin dashboard > Community contacts** to enter and edit the Management Office and Guard House phone numbers, names, operating hours and descriptions. Click **Save contact details** for each card. These details are saved in SQLite and shown to all signed-in residents. Phone numbers start blank because actual numbers were not provided. Call buttons appear after numbers are saved.
+
+Residents open **Contacts** to see the shared directory and add, edit, call or remove their own private contacts. Only administrators can edit the shared directory.
+
 ## First-time setup (Windows / PowerShell)
 
 Use Node.js 24 or newer. Your previously installed Node 24.21.0 is suitable.
@@ -58,6 +68,7 @@ Tables:
 | users | Account name, email, password hash, role, active flag and preferences |
 | sessions | Hashed session tokens and expiration times |
 | records | Resident-owned bookings, reports, private contacts and service requests |
+| community_contacts | Editable management and guard contact details, update time and administrator |
 | notices | Administrator announcements |
 | audit_log | Administrative status, account and notice changes |
 

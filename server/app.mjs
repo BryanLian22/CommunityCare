@@ -83,7 +83,7 @@ export const server=http.createServer(async(req,res)=>{
  if(path==='/api/data'&&method==='GET'){
   const rows=db.prepare('SELECT * FROM records WHERE user_id=? ORDER BY created DESC').all(u.id);
   const data=Object.fromEntries(kinds.map(k=>[k,rows.filter(r=>r.kind===k).map(record)]));
-  return send(res,200,{...data,notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all(),noticesReadAt:u.notices_read_at});
+  return send(res,200,{...data,notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all(),communityContacts:db.prepare("SELECT id,name,phone,hours,description,updated FROM community_contacts ORDER BY CASE id WHEN 'management' THEN 0 ELSE 1 END").all(),noticesReadAt:u.notices_read_at});
  }
  if(path==='/api/notices/read'&&method==='POST'){db.prepare('UPDATE users SET notices_read_at=? WHERE id=?').run(now(),u.id);return send(res,200,{ok:true})}
  const match=path.match(/^\/api\/records\/(bookings|reports|contacts|services)(?:\/([a-zA-Z0-9-]+))?$/);
@@ -91,6 +91,12 @@ export const server=http.createServer(async(req,res)=>{
   if(method==='POST'&&!id){const p=payload(kind,await body(req));const id=randomUUID(),created=now();
    try{db.prepare('INSERT INTO records(id,user_id,kind,payload,status,created,facility,booking_date,booking_time) VALUES(?,?,?,?,?,?,?,?,?)').run(id,u.id,kind,JSON.stringify(p),kind==='contacts'?'active':'pending',created,p.facility||null,kind==='bookings'?p.date:null,kind==='bookings'?p.time:null)}catch(err){if(String(err.message).includes('UNIQUE'))fail(409,'This facility slot is already reserved. Choose another time.');throw err}
    return send(res,201,{record:record(db.prepare('SELECT * FROM records WHERE id=?').get(id))});
+  }
+  if(method==='PATCH'&&kind==='contacts'&&id){
+   const existing=db.prepare("SELECT id FROM records WHERE id=? AND user_id=? AND kind='contacts'").get(id,u.id);
+   if(!existing)fail(404,'Contact not found.');
+   const p=payload('contacts',await body(req));db.prepare('UPDATE records SET payload=? WHERE id=?').run(JSON.stringify(p),id);
+   return send(res,200,{ok:true});
   }
   if(method==='DELETE'&&id){const r=db.prepare('SELECT * FROM records WHERE id=? AND user_id=? AND kind=?').get(id,u.id,kind);if(!r)fail(404,'Record not found.');
    if(kind==='contacts')db.prepare('DELETE FROM records WHERE id=?').run(id);
@@ -103,7 +109,15 @@ export const server=http.createServer(async(req,res)=>{
   if(path==='/api/admin/data'&&method==='GET'){
    const users=db.prepare('SELECT * FROM users ORDER BY created DESC').all().map(publicUser);
    const rows=db.prepare("SELECT r.*,u.name resident_name,u.email resident_email FROM records r JOIN users u ON u.id=r.user_id WHERE r.kind!='contacts' ORDER BY r.created DESC").all();
-   return send(res,200,{users,bookings:rows.filter(r=>r.kind==='bookings').map(record),reports:rows.filter(r=>r.kind==='reports').map(record),services:rows.filter(r=>r.kind==='services').map(record),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all()});
+   return send(res,200,{communityContacts:db.prepare('SELECT id,name,phone,hours,description,updated FROM community_contacts ORDER BY id DESC').all(),users,bookings:rows.filter(r=>r.kind==='bookings').map(record),reports:rows.filter(r=>r.kind==='reports').map(record),services:rows.filter(r=>r.kind==='services').map(record),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all()});
+  }
+  const directoryMatch=path.match(/^\/api\/admin\/community-contacts\/(management|guard)$/);
+  if(directoryMatch&&method==='PATCH'){
+   const b=await body(req),name=text(b.name,'Contact name',80);
+   if(typeof b.phone!=='string'||b.phone.length>30||typeof b.hours!=='string'||b.hours.length>120||typeof b.description!=='string'||b.description.length>240)fail(400,'Invalid contact details.');
+   const phone=b.phone.trim().replace(/[ ()-]/g,'');if(phone&&!/^\+?[0-9]{6,15}$/.test(phone))fail(400,'Enter a valid phone number, or leave it blank.');
+   db.prepare('UPDATE community_contacts SET name=?,phone=?,hours=?,description=?,updated=?,updated_by=? WHERE id=?').run(name,phone,b.hours.trim(),b.description.trim(),now(),u.id,directoryMatch[1]);
+   audit(u,'update community contact',directoryMatch[1]);return send(res,200,{ok:true});
   }
   const userMatch=path.match(/^\/api\/admin\/users\/([a-zA-Z0-9-]+)$/);
   if(userMatch&&method==='PATCH'){const b=await body(req);if(typeof b.active!=='boolean')fail(400,'Invalid account status.');const target=db.prepare('SELECT * FROM users WHERE id=?').get(userMatch[1]);if(!target)fail(404,'Resident not found.');if(target.role==='admin')fail(403,'Admin accounts cannot be disabled here.');db.prepare('UPDATE users SET active=? WHERE id=?').run(+b.active,target.id);if(!b.active)db.prepare('DELETE FROM sessions WHERE user_id=?').run(target.id);audit(u,b.active?'activate resident':'disable resident',target.id);return send(res,200,{ok:true})}
