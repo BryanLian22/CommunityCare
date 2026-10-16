@@ -49,8 +49,8 @@ await test('admin account, moderation, notice publication, and private contacts'
  const id=randomUUID();db.prepare("INSERT INTO users(id,name,email,password_hash,role,created) VALUES(?,?,?,?,'admin',?)").run(id,'Manager','manager@example.test',await hashPassword(password),new Date().toISOString());
  assert.equal((await admin.request('/auth/login','POST',{email:'manager@example.test',password})).data.user.role,'admin');
  const d=(await admin.request('/admin/data')).data;assert.equal(d.bookings.length,1);assert.equal(d.reports.length,1);assert.equal(d.services.length,1);assert.equal(d.contacts,undefined);
- assert.equal((await a.request(`/admin/records/${booking}`,'PATCH',{status:'approved'})).status,403);
- assert.equal((await admin.request(`/admin/records/${booking}`,'PATCH',{status:'approved'})).status,200);
+ assert.equal((await a.request(`/admin/records/${booking}`,'PATCH',{status:'approved',expectedStatus:'pending'})).status,403);
+ assert.equal((await admin.request(`/admin/records/${booking}`,'PATCH',{status:'approved',expectedStatus:'pending'})).status,200);
  assert.equal((await a.request('/data')).data.bookings[0].status,'approved');
  await admin.request(`/admin/records/${report}`,'PATCH',{status:'in_progress'});assert.equal((await a.request('/data')).data.reports[0].status,'in_progress');
  await admin.request(`/admin/records/${service}`,'PATCH',{status:'completed'});assert.equal((await a.request(`/records/services/${service}`,'DELETE',{})).status,409);
@@ -102,7 +102,25 @@ await test('cancelled booking frees its slot and records persist on disk',async(
  assert.equal((await a.request(`/records/bookings/${booking}`,'DELETE',{})).status,200);
  assert.equal((await b.request('/records/bookings','POST',{facility:'Gym',date:'2099-12-01',time:'9:00 AM'})).status,201);
  const reader=new DatabaseSync(process.env.DATABASE_PATH);assert.equal(reader.prepare('SELECT status FROM records WHERE id=?').get(booking).status,'cancelled');reader.close();
- assert.equal((await admin.request(`/admin/records/${booking}`,'PATCH',{status:'approved'})).status,409);
+ assert.equal((await admin.request(`/admin/records/${booking}`,'PATCH',{status:'approved',expectedStatus:'pending'})).status,409);
+});
+await test('live booking availability, decisions, stale edits and past slots',async()=>{
+ const endpoint='/bookings/availability?facility=Gym&date=2099-12-01';
+ let slots=(await a.request(endpoint)).data.slots;assert.equal(slots.find(s=>s.time==='9:00 AM').available,false);
+ const past=(await a.request('/bookings/availability?facility=Gym&date=2000-01-01')).data.slots;assert(past.every(s=>!s.available&&s.reason==='Past time'));
+ assert.equal((await a.request('/bookings/availability?facility=Gym&date=2099-02-30')).status,400);
+ const id=(await a.request('/records/bookings','POST',{facility:'Court',date:'2099-12-01',time:'2:00 PM'})).data.record.id;
+ assert.equal((await admin.request(`/admin/records/${id}`,'PATCH',{status:'completed',expectedStatus:'pending'})).status,400);
+ assert.equal((await admin.request(`/admin/records/${id}`,'PATCH',{status:'rejected',expectedStatus:'pending'})).status,400);
+ assert.equal((await admin.request(`/admin/records/${id}`,'PATCH',{status:'approved',expectedStatus:'pending',note:'Confirmed by management.'})).status,200);
+ assert.equal((await admin.request(`/admin/records/${id}`,'PATCH',{status:'cancelled',expectedStatus:'pending',note:'Stale update'})).status,409);
+ assert.equal((await admin.request(`/admin/records/${id}`,'PATCH',{status:'completed',expectedStatus:'approved'})).status,409);
+ assert.equal((await admin.request(`/admin/records/${id}`,'PATCH',{status:'cancelled',expectedStatus:'approved',note:'Court maintenance.'})).status,200);
+ assert.equal((await a.request('/bookings/availability?facility=Court&date=2099-12-01')).data.slots.find(s=>s.time==='2:00 PM').available,true);
+ const record=(await a.request('/data')).data.bookings.find(r=>r.id===id);assert.equal(record.note,'Court maintenance.');assert.equal(record.history.length,3);
+ const pastId=randomUUID();db.prepare("INSERT INTO records(id,user_id,kind,payload,status,created,facility,booking_date,booking_time) VALUES(?,?,'bookings',?,'approved',?,'Sauna','2000-01-01','9:00 AM')").run(pastId,aid,JSON.stringify({facility:'Sauna',date:'2000-01-01',time:'9:00 AM'}),new Date().toISOString());
+ assert.equal((await a.request(`/records/bookings/${pastId}`,'DELETE',{})).status,409);
+ assert.equal((await admin.request(`/admin/records/${pastId}`,'PATCH',{status:'completed',expectedStatus:'approved'})).status,200);
 });
 await test('profile persistence, password change revokes old sessions, and disabled accounts lose access',async()=>{
  await a.request('/profile','PATCH',{name:'Alice Updated',largeText:true,contrast:true});assert.equal((await a.request('/auth/me')).data.user.name,'Alice Updated');

@@ -1,3 +1,4 @@
+import BookFacility,{BookingHistory,bookingStarted} from './Bookings';
 import Notifications from './Notifications';
 import {ResidentAssistance} from './Assistance';
 import { useState, useEffect, useRef, type ReactNode } from "react";
@@ -285,11 +286,11 @@ export default function App() {
               </section>
               <Button className="outline-action" onClick={() => setSheet("history")}>My bookings & reports ({bookings.length + reports.length + serviceRequests.length})</Button>
               <section className="facility-preview">
-                <div className="section-title-row"><div><div className="section-title">Popular facilities</div><div className="section-note">Available today</div></div><Button onClick={() => setSheet("booking")}>Book now</Button></div>
+                <div className="section-title-row"><div><div className="section-title">Popular facilities</div><div className="section-note">Check live availability</div></div><Button onClick={() => setSheet("booking")}>Book now</Button></div>
                 <div className="facility-list">
-                  <Button onClick={() => setSheet("booking")}><span className="facility-pic gym"><Icon name="dumbbell" /></span><b>Gym</b><small>Open · 6 AM–10 PM</small></Button>
-                  <Button onClick={() => setSheet("booking")}><span className="facility-pic sauna">°C</span><b>Sauna</b><small>4 slots available</small></Button>
-                  <Button onClick={() => setSheet("booking")}><span className="facility-pic court">01</span><b>Court</b><small>Next slot · 2:30 PM</small></Button>
+                  <Button onClick={() => {setFacility("Gym");setSheet("booking")}}><span className="facility-pic gym"><Icon name="dumbbell" /></span><b>Gym</b><small>Check available slots</small></Button>
+                  <Button onClick={() => {setFacility("Sauna");setSheet("booking")}}><span className="facility-pic sauna">°C</span><b>Sauna</b><small>Check available slots</small></Button>
+                  <Button onClick={() => {setFacility("Court");setSheet("booking")}}><span className="facility-pic court">01</span><b>Court</b><small>Check available slots</small></Button>
                 </div>
               </section>
             </div>
@@ -452,20 +453,7 @@ export default function App() {
             <section className={`bottom-sheet ${sheet === "contacts" ? "contacts-sheet" : ""}`} ref={dialog}>
               <Button className="close-sheet" label="Close panel" onClick={() => setSheet(null)}>Close ×</Button>
               <div className="sheet-handle" />{dataError && <div className="account-alert" role="alert">{dataError}</div>}{busy && <p role="status">Saving…</p>}
-              {sheet === "booking" && (
-                <>
-                  <div className="sheet-title">Book a facility</div><div className="sheet-subtitle">Choose a space and reserve your time.</div>
-                  <div className="facility-tabs">{["Gym", "Sauna", "Court"].map((item) => <Button className={facility === item ? "selected" : ""} key={item} onClick={() => setFacility(item)}>{item}</Button>)}</div>
-                  <label className="form-field">Booking date<input type="date" min={today()} value={date} onChange={e => setDate(e.target.value)} /></label>
-                  <div className="time-label">APPOINTMENT TIMES</div><div className="time-grid">{["9:00 AM", "10:30 AM", "2:00 PM", "4:30 PM"].map(slot => <Button className={time === slot ? "selected" : ""} key={slot} onClick={() => setTime(slot)}>{slot}</Button>)}</div>
-                  <p className="demo-note">Requests are saved to your account for management approval. Reserved slots cannot be booked twice.</p>
-                  <Button className="primary-action" disabled={busy} onClick={() => {
-                    if (!date || date < today()) { notify("Choose today or a future date."); return; }
-                    if (bookings.some(b => b.facility === facility && b.date === date && b.time === time && ["pending","approved"].includes(b.status))) { notify("You already booked that slot."); return; }
-                    void perform("/records/bookings","POST",{facility,date,time},"Booking submitted for approval.",()=>setSheet("history"));
-                  }}>Request booking</Button>
-                </>
-              )}
+              {sheet === "booking" && <BookFacility initialFacility={facility} onRefresh={refresh} onDone={()=>setSheet("history")}/>}
               {sheet === "service" && (
                 <>
                   <div className="sheet-title">Book a home service</div><div className="sheet-subtitle">Submit a request to management. Provider dispatch is not automatic.</div>
@@ -513,7 +501,7 @@ export default function App() {
               </>}
               {sheet === "history" && <>
                 <div className="sheet-title">My bookings & reports</div><p className="sheet-subtitle">Your submitted requests and management updates.</p>
-                <div className="record-list"><h3>Bookings</h3>{!bookings.length && <p>No bookings yet.</p>}{bookings.map(b => <div key={b.id}><b>{b.facility}</b><span>{b.date} · {b.time} · {b.status}</span><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(b.status)} onClick={() => removeRecord("bookings",b.id)}>Cancel booking</Button></div>)}
+                <div className="record-list"><h3>Bookings</h3>{!bookings.length && <p>No bookings yet.</p>}{bookings.map(b => <div key={b.id}><b>{b.facility}</b><span>{b.date} · {b.time} · Malaysia time</span><span className={`status-pill ${b.status}`}>{b.status}</span><BookingHistory record={b}/>{bookingStarted(b)&&["pending","approved"].includes(b.status)&&<small>This slot has started. Contact management for changes.</small>}<Button disabled={busy || bookingStarted(b) || ["cancelled","completed","resolved","rejected"].includes(b.status)} onClick={() => {if(window.confirm("Cancel this booking and release the slot?"))removeRecord("bookings",b.id)}}>Cancel booking</Button></div>)}
                 <h3>Home-service requests</h3>{!serviceRequests.length && <p>No service requests yet.</p>}{serviceRequests.map(r => <div key={r.id}><b>{r.service}</b><span>{r.address}</span><span>{r.date} · {r.time} · {r.status.replaceAll("_"," ")}</span><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(r.status)} onClick={() => removeRecord("services",r.id)}>Cancel service request</Button></div>)}
                 <h3>Reports</h3>{!reports.length && <p>No reports yet.</p>}{reports.map(r => <div key={r.id}><b>{r.category}</b><span>{new Date(r.created).toLocaleString()} · {r.status.replaceAll("_"," ")}</span><p>{r.details}</p><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(r.status)} onClick={() => removeRecord("reports",r.id)}>Cancel report</Button></div>)}</div>
               </>}

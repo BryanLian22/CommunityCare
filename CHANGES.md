@@ -1,3 +1,17 @@
+# Version 2.5 — Facility booking redesign
+
+Replaced facility tabs with searchable cards, category chips, a bounded scrolling list and a reservation summary. Added a rounded date/time popup inspired by the supplied reference, with date/time scroll wheels, month navigation, keyboard controls, Cancel and Confirm. The time wheel shows only available configured slots.
+
+Added shared/facilities.json, used by the resident selector, admin facility filter and server validation. Booking availability, approval and database records remain connected. Build, API checks and simulated-browser date-picker booking submission passed. Pixel-level browser rendering was not verified.
+
+# Version 2.4 — Live facility booking
+
+Added database-backed slot availability, automatic refresh, past/reserved slot states, Malaysia-time scheduling and booking summaries. Removed placeholder availability claims on facility cards.
+
+Added dedicated admin booking filters and decision forms, rejection/cancellation reasons, status history, strict status transitions, past-time validation and protection against outdated admin edits. Residents can cancel future bookings with confirmation; cancelling releases the slot. Existing records are preserved.
+
+Production build, API checks and simulated-browser booking submission passed. Full user testing remains for the final phase. Four fixed slots and one booking per facility/slot remain the scheduling model.
+
 # Version 2.3 — In-app assistance notifications
 
 Added persistent, account-owned notifications with unread badges, All/Unread filters, individual/bulk read actions and links to requests. Active admins receive new-request and resident-cancellation alerts. Request owners receive assignment/status/note updates. Request changes and notification creation share a database transaction. Notification polling in the admin dashboard does not overwrite unsaved request forms.

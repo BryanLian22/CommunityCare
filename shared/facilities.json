@@ -1,0 +1,5 @@
+[
+ {"name":"Gym","category":"Fitness","description":"Space for your fitness routine","icon":"fitness"},
+ {"name":"Sauna","category":"Wellness","description":"Take time to relax and recharge","icon":"wellness"},
+ {"name":"Court","category":"Sports","description":"Book a space for your next game","icon":"sports"}
+]

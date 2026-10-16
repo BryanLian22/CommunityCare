@@ -6,6 +6,24 @@ React + TypeScript frontend with a Node.js API and SQLite database. The existing
 
 Stop the app first and back up the whole old project. Extract this ZIP into a new folder, then copy your old `data` folder and optional `.env` into the new `CommunityCare` folder. If `.env` uses a custom DATABASE_PATH, preserve that database location. Run `npm.cmd ci` and `npm.cmd run dev`. Existing accounts and records remain; the contacts table is added automatically. You do not need to create another admin.
 
+## Redesigned facility selector and date/time picker
+
+The booking screen now uses searchable facility cards and category filters, with a scrollable list for larger catalogues. The reservation summary keeps the selected facility visible even when filters change.
+
+Select the date/time card to open the wheel picker. Scroll or tap the date and available time; use month arrows or the month field for other months. Keyboard users can focus either wheel and use Up/Down, Home or End. Cancel leaves the existing selection unchanged. Confirm applies the selected date and time; availability is rechecked before submission. Only available configured slots appear in the time wheel.
+
+To add a future facility, add an entry to `shared/facilities.json` with `name`, `category`, `description` and `icon` (fitness, wellness or sports). The selector, admin facility filter and server validation share this catalogue. Rebuild and restart after editing it. Keep existing facility names unchanged to preserve their relationship with booking history. This is a source configuration, not an admin facility editor. New facilities use the same four fixed daily slots.
+
+## Facility booking
+
+Open **Book facility** on Home or Community, select Gym/Sauna/Court and a date, then choose an available time. Availability comes from the database and refreshes every 15 seconds while visible. Reserved or past slots are disabled. Times are in **Asia/Kuala_Lumpur (UTC+8)**. One reservation is allowed per facility/date/slot; simultaneous submissions are protected by the database.
+
+Pending bookings hold their slot. Admins open **Facility bookings**, filter by facility/date/status/resident, and approve or reject requests. Approval is allowed only before the slot starts. Approved bookings can be completed after their start time or cancelled by management. A rejection/cancellation requires a note visible to the resident. Outdated admin edits are rejected; refresh to reload.
+
+Residents see decisions, notes and dated history under **My bookings & reports** and may cancel before the booking starts. Admin cancellation or rejection releases the slot. Past booking changes require management. Existing records remain; older bookings start recording history with their next update.
+
+This version uses four fixed slots: 9:00 AM, 10:30 AM, 2:00 PM and 4:30 PM. Facility capacity, booking durations, maintenance closures and editable schedules are not configured here. Booking updates appear in booking history; the notification centre currently covers assistance activity.
+
 ## In-app notifications
 
 Residents use the bell on Home to see assistance assignment and progress updates. Administrators use **Notifications** in the sidebar for new requests, cancellations and updates to any requests they submitted themselves. Badges count unread alerts. Filter All/Unread, mark one or all as read, or choose **View request** to open the linked request. Read state is stored separately for each account in SQLite.

@@ -1,3 +1,4 @@
+import facilityCatalog from '../shared/facilities.json' with {type:'json'};
 import http from 'node:http';
 import { randomUUID, randomBytes } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
@@ -16,8 +17,14 @@ function email(value){const e=text(value,'Email',254).toLowerCase();if(!/^[^\s@]
 function choice(v,values){if(!values.includes(v))fail(400,'Invalid selection.');return v}
 function appointment(b){const date=text(b.date,'Date',10), time=choice(b.time,['9:00 AM','10:30 AM','2:00 PM','4:30 PM']);const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kuala_Lumpur',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date||date<today)fail(400,'Choose a valid date today or later.');return {date,time}}
 const kinds=['bookings','reports','contacts','services'];
+const facilities=facilityCatalog.map(f=>f.name);
+const bookingTimes=['9:00 AM','10:30 AM','2:00 PM','4:30 PM'];
+const bookingClock={'9:00 AM':'09:00','10:30 AM':'10:30','2:00 PM':'14:00','4:30 PM':'16:30'};
+function bookingStart(date,time){return Date.parse(`${date}T${bookingClock[time]}:00+08:00`)}
+function validateBookingDate(value){const date=text(value,'Date',10);if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date)fail(400,'Choose a valid date.');return date}
+function bookingAvailability(facility,date){const booked=db.prepare("SELECT booking_time FROM records WHERE kind='bookings' AND facility=? AND booking_date=? AND status IN ('pending','approved')").all(facility,date);return bookingTimes.map(time=>({time,available:bookingStart(date,time)>Date.now()&&!booked.some(r=>r.booking_time===time),reason:bookingStart(date,time)<=Date.now()?'Past time':booked.some(r=>r.booking_time===time)?'Reserved':''}))}
 function payload(kind,b){
- if(kind==='bookings')return {facility:choice(b.facility,['Gym','Sauna','Court']),...appointment(b)};
+ if(kind==='bookings'){const p={facility:choice(b.facility,facilities),...appointment(b)};if(bookingStart(p.date,p.time)<=Date.now())fail(400,'This booking time has already started. Choose a future slot.');return {...p,history:[{status:'pending',at:now(),note:'Booking submitted for approval.'}]}}
  if(kind==='reports')return {category:choice(b.category,['Maintenance issue','Suspicious activity','Mailbox password attempts','Door or gate tampering','Accessibility barrier','Noise or disturbance']),details:text(b.details,'Details')};
  if(kind==='contacts'){const phone=text(b.phone,'Phone',30).replace(/[ ()-]/g,'');if(!/^\+?[0-9]{6,15}$/.test(phone))fail(400,'Enter a valid phone number.');return {name:text(b.name,'Name',80),phone}}
  return {service:choice(b.service,['Air conditioner','Door repair','Locksmith','General repair']),address:text(b.address,'Address',200),...appointment(b)};
@@ -88,6 +95,10 @@ export const server=http.createServer(async(req,res)=>{
   if(!await checkPassword(b.currentPassword,u.password_hash))fail(400,'Current password is incorrect.');
   const hash=await hashPassword(b.password);db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(hash,u.id);db.prepare('DELETE FROM sessions WHERE user_id=?').run(u.id);createSession(res,u);return send(res,200,{ok:true});
  }
+ if(path==='/api/bookings/availability'&&method==='GET'){
+  const facility=choice(url.searchParams.get('facility'),facilities),date=validateBookingDate(url.searchParams.get('date'));
+  return send(res,200,{facility,date,timeZone:'Asia/Kuala_Lumpur',slots:bookingAvailability(facility,date)});
+ }
  if(path==='/api/data'&&method==='GET'){
   const rows=db.prepare('SELECT * FROM records WHERE user_id=? ORDER BY created DESC').all(u.id);
   const data=Object.fromEntries(kinds.map(k=>[k,rows.filter(r=>r.kind===k).map(record)]));
@@ -150,7 +161,9 @@ export const server=http.createServer(async(req,res)=>{
   }
   if(method==='DELETE'&&id){const r=db.prepare('SELECT * FROM records WHERE id=? AND user_id=? AND kind=?').get(id,u.id,kind);if(!r)fail(404,'Record not found.');
    if(kind==='contacts')db.prepare('DELETE FROM records WHERE id=?').run(id);
-   else {if(['completed','resolved','cancelled','rejected'].includes(r.status))fail(409,'This record is already closed.');db.prepare("UPDATE records SET status='cancelled' WHERE id=?").run(id)}
+   else {if(['completed','resolved','cancelled','rejected'].includes(r.status))fail(409,'This record is already closed.');
+    if(kind==='bookings'){const p=JSON.parse(r.payload);if(bookingStart(p.date,p.time)<=Date.now())fail(409,'This booking has started. Contact management to arrange cancellation.');p.history=[...(p.history||[]),{status:'cancelled',at:now(),note:'Cancelled by resident.'}];db.prepare("UPDATE records SET status='cancelled',payload=? WHERE id=?").run(JSON.stringify(p),id);audit(u,'cancel booking',id)}
+    else db.prepare("UPDATE records SET status='cancelled' WHERE id=?").run(id)}
    return send(res,200,{ok:true});
   }
  }
@@ -172,9 +185,23 @@ export const server=http.createServer(async(req,res)=>{
   const userMatch=path.match(/^\/api\/admin\/users\/([a-zA-Z0-9-]+)$/);
   if(userMatch&&method==='PATCH'){const b=await body(req);if(typeof b.active!=='boolean')fail(400,'Invalid account status.');const target=db.prepare('SELECT * FROM users WHERE id=?').get(userMatch[1]);if(!target)fail(404,'Resident not found.');if(target.role==='admin')fail(403,'Admin accounts cannot be disabled here.');db.prepare('UPDATE users SET active=? WHERE id=?').run(+b.active,target.id);if(!b.active)db.prepare('DELETE FROM sessions WHERE user_id=?').run(target.id);audit(u,b.active?'activate resident':'disable resident',target.id);return send(res,200,{ok:true})}
   const recMatch=path.match(/^\/api\/admin\/records\/([a-zA-Z0-9-]+)$/);
-  if(recMatch&&method==='PATCH'){const r=db.prepare("SELECT * FROM records WHERE id=? AND kind!='contacts'").get(recMatch[1]);if(!r)fail(404,'Record not found.');const b=await body(req);const status=choice(b.status,r.kind==='reports'?['pending','in_progress','resolved','rejected']:['pending','approved','completed','rejected','cancelled']);
+  if(recMatch&&method==='PATCH'){
+   const b=await body(req);const r=db.prepare("SELECT * FROM records WHERE id=? AND kind!='contacts'").get(recMatch[1]);if(!r)fail(404,'Record not found.');
    if(['cancelled','completed','resolved','rejected'].includes(r.status))fail(409,'This record is closed.');
-   try{db.prepare('UPDATE records SET status=? WHERE id=?').run(status,r.id)}catch(err){if(String(err.message).includes('UNIQUE'))fail(409,'Facility slot conflict.');throw err}audit(u,'set status '+status,r.id);return send(res,200,{ok:true});
+   const status=choice(b.status,r.kind==='reports'?['pending','in_progress','resolved','rejected']:['pending','approved','completed','rejected','cancelled']);
+   if(r.kind==='bookings'){
+    if(b.expectedStatus!==r.status)fail(409,'Booking changed. Refresh before updating.');
+    const transitions={pending:['approved','rejected','cancelled'],approved:['completed','cancelled']};
+    if(!transitions[r.status]?.includes(status))fail(400,'Invalid booking status transition.');
+    const p=JSON.parse(r.payload),start=bookingStart(p.date,p.time);
+    if(status==='approved'&&start<=Date.now())fail(409,'This slot has passed and cannot be approved. Reject or cancel it.');
+    if(status==='completed'&&start>Date.now())fail(409,'A future booking cannot be marked completed.');
+    const note=b.note===undefined?'':typeof b.note==='string'&&b.note.trim().length<=1000?b.note.trim():fail(400,'Update note must be at most 1000 characters.');
+    if(['rejected','cancelled'].includes(status)&&!note)fail(400,'Enter a reason for the resident.');
+    p.note=note;p.history=[...(p.history||[]),{status,at:now(),note}];
+    try{db.prepare('UPDATE records SET status=?,payload=? WHERE id=?').run(status,JSON.stringify(p),r.id)}catch(err){if(String(err.message).includes('UNIQUE'))fail(409,'Facility slot conflict.');throw err}
+   }else{try{db.prepare('UPDATE records SET status=? WHERE id=?').run(status,r.id)}catch(err){if(String(err.message).includes('UNIQUE'))fail(409,'Facility slot conflict.');throw err}}
+   audit(u,'set status '+status,r.id);return send(res,200,{ok:true});
   }
   const noticeMatch=path.match(/^\/api\/admin\/notices(?:\/([a-zA-Z0-9-]+))?$/);
   if(noticeMatch){const id=noticeMatch[1];
