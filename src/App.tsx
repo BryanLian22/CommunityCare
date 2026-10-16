@@ -1,3 +1,4 @@
+import ResidentEmergency from './Emergency';
 import RequestUpdate from './RequestUpdate';
 import BookFacility,{BookingHistory,bookingStarted} from './Bookings';
 import Notifications from './Notifications';
@@ -238,8 +239,8 @@ export default function App() {
               </section>
 
               <section className="mini-emergency">
-                <div className="mini-copy"><div className="mini-label">EMERGENCY CENTER</div><div className="mini-title">Help is one tap away</div><div className="mini-subtitle">Send an SOS or share your location.</div></div>
-                <Button className="sos-small" onClick={() => setSheet("sos")}>SOS</Button>
+                <div className="mini-copy"><div className="mini-label">EMERGENCY CENTER</div><div className="mini-title">Contact your community team</div><div className="mini-subtitle">Send an SOS or share your location.</div></div>
+                <Button className="sos-small" onClick={() => {setRequestTarget(undefined);setSheet("sos")}}>SOS</Button>
               </section>
 
               <section className="home-residential">
@@ -327,7 +328,7 @@ export default function App() {
 
           {tab === "safety" && (
             <div className="screen-content safety-screen">
-              <section className="page-heading"><div className="overline safety-overline">SAFETY DEMONSTRATION</div><div className="screen-title">Emergency help</div><div className="muted">Demo only. No responders are connected.</div></section>
+              <section className="page-heading"><div className="overline safety-overline">COMMUNITY SAFETY</div><div className="screen-title">Emergency help</div><div className="muted">Send an alert, track updates, or call your community team.</div></section>
               <section className="environment-card">
                 <div className="environment-top">
                   <div className="weather-now"><span className="weather-icon"><Icon name="cloud" size="lg" /></span><div><b>24°</b><small>Light rain · Feels like 23°</small></div></div>
@@ -353,15 +354,15 @@ export default function App() {
               </section>
 
               <section className="sos-panel">
-                <div className="pulse-ring"><Button className="sos-main" onClick={() => setSheet("sos")}><span>SOS</span><small>PRESS FOR HELP</small></Button></div>
-                <div className="sos-instruction">SOS is a demonstration. It does not contact security or emergency services.</div>
+                <div className="pulse-ring"><Button className="sos-main" onClick={() => {setRequestTarget(undefined);setSheet("sos")}}><span>SOS</span><small>PRESS FOR HELP</small></Button></div>
+                <div className="sos-instruction">Send an in-app alert to management, or call your guard directly. Emergency services are not dispatched by this app.</div>
               </section>
               <section className="safety-actions">
                 <Button onClick={() => { setCategory("Suspicious activity"); setSheet("suspicious"); }}><span className="safety-action-icon"><Icon name="eye" /></span><span><b>Alert residents about suspicious activity</b><small>Report gate, mailbox, or access attempts</small></span><Icon name="arrow" size="sm" /></Button>
                 <Button onClick={() => shareLocation()}><span className="safety-action-icon location-tone"><Icon name="location" /></span><span><b>Share emergency location</b><small>Share a one-time location link with a contact</small></span><Icon name="arrow" size="sm" /></Button>
-                <Button onClick={() => setSheet("contacts")}><span className="safety-action-icon contact-tone"><Icon name="phone" /></span><span><b>Emergency contacts</b><small>Manage who gets notified</small></span><Icon name="arrow" size="sm" /></Button>
+                <Button onClick={() => setSheet("contacts")}><span className="safety-action-icon contact-tone"><Icon name="phone" /></span><span><b>Emergency contacts</b><small>Call guard, management or personal contacts</small></span><Icon name="arrow" size="sm" /></Button>
               </section>
-              <div className="security-card"><span><Icon name="shield" /></span><div><b>Community security</b><small>Add your verified security contact</small></div><Button onClick={() => setSheet("contacts")}>Call</Button></div>
+              <div className="security-card"><span><Icon name="shield" /></span><div><b>Community security</b><small>View your saved guard number</small></div><Button onClick={() => setSheet("contacts")}>Call</Button></div>
             </div>
           )}
 
@@ -478,9 +479,7 @@ export default function App() {
                 </>
               )}
               {sheet === "offer" && <><div className="sheet-title">{offer}</div><p className="sheet-subtitle">Sample marketplace offers. These cannot be redeemed or purchased.</p><div className="record-list"><div><b>Home cleaning · 20% off</b><p>Example welcome offer for Oak Residence residents. Provider and terms are not connected.</p></div><div><b>FreshFold Laundry · $8 off</b><p>Example pickup and delivery offer. Availability and ratings are sample data.</p></div></div><Button className="primary-action" onClick={() => setSheet(null)}>Back to Market</Button></>}
-              {sheet === "sos" && (
-                <><div className="sheet-alert-icon"><Icon name="alert" size="lg" /></div><div className="sheet-title centered">Send emergency SOS?</div><div className="sheet-subtitle centered">Demo only: no location or alert will be sent. Use your phone to call for real assistance.</div><Button className="danger-action" onClick={() => { setSheet(null); notify("SOS demo complete. No alert was sent."); }}>Test SOS demo</Button><Button className="cancel-action" onClick={() => setSheet(null)}>Cancel</Button></>
-              )}
+              {sheet === "sos" && <ResidentEmergency contacts={data.communityContacts} targetId={requestTarget}/> }
               {(sheet === "report" || sheet === "suspicious") && <>
                 <div className="sheet-title">{sheet === "suspicious" ? "Report suspicious activity" : "Report a problem"}</div>
                 <p className="sheet-subtitle">Submit a report for management review. This does not dispatch emergency responders.</p>
@@ -489,7 +488,7 @@ export default function App() {
                 <Button className="primary-action" disabled={busy||!details.trim()} onClick={() => saveReport(category)}>Submit report</Button>
               </>}
               {sheet === "request-update" && <RequestUpdate record={[...data.bookings,...data.reports,...data.services].find(r=>r.id===requestTarget)}/>}
-              {sheet === "notifications" && <Notifications items={data.notifications} onRefresh={refresh} onOpen={n=>{setRequestTarget(n.requestId);setSheet(n.kind==='assistance'?"services":"request-update")}}/>}
+              {sheet === "notifications" && <Notifications items={data.notifications} onRefresh={refresh} onOpen={n=>{setRequestTarget(n.requestId);setSheet(n.kind==='emergency'?"sos":n.kind==='assistance'?"services":"request-update")}}/>}
               {sheet === "contacts" && <ContactDirectory contacts={contacts} directory={data.communityContacts} onRefresh={refresh} loading={loading}/>}
               {sheet === "profile" && <>
                 <div className="sheet-title">Profile & accessibility</div>

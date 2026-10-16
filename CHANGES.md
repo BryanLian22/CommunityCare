@@ -1,3 +1,11 @@
+# Version 2.8 — Emergency assistance and SOS handling
+
+Added resident SOS submission with manual location, optional one-time GPS attachment/callback details, direct guard/management calling and persistent history. Added an admin emergency desk with acknowledgement, responder tracking, resolution/false-alarm notes, active-alert banner and in-app notifications. Both alert views poll every five seconds while visible.
+
+Added owner isolation, one-active-alert enforcement, retry deduplication, cancellation only before acknowledgement, stale-edit guards and atomic notification creation. Clear UI wording distinguishes server receipt from human acknowledgement. Existing data is preserved through additive emergency tables.
+
+Production build and API lifecycle/privacy/duplicate checks passed. Simulated-browser submission, admin acknowledgement and resident status display passed. Real-device GPS/calling and full user testing remain for the final phase. No external emergency dispatch or push/SMS/email service is connected.
+
 # Version 2.7 — Notifications for every request decision
 
 Connected facility booking, report and home-service status decisions to persistent notifications for the owning resident. Approval/rejection messages include request details and management notes. Rejection/cancellation reasons are required. Assistance alerts continue working. Notifications link to the appropriate record, preserve read state and do not repeat for unchanged statuses.

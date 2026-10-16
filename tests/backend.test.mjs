@@ -162,6 +162,38 @@ await test('all request decisions notify the owner with working record reference
  await a.request('/notifications/all/read','POST',{ids:unread.map(n=>n.id)});
  assert((await a.request('/notifications')).data.notifications.every(n=>n.readAt));
 });
+await test('SOS lifecycle, privacy, duplicate protection and persistent notifications',async()=>{
+ const payload={clientToken:randomUUID(),category:'Other urgent help',location:'Block A lift lobby',phone:'+60123456789',details:'Need guard assistance.',coordinates:null};
+ assert.equal((await a.request('/emergencies','POST',{...payload,location:''})).status,400);
+ assert.equal((await a.request('/emergencies','POST',{...payload,coordinates:{latitude:999,longitude:0,accuracy:10,capturedAt:new Date().toISOString()}})).status,400);
+ const created=await a.request('/emergencies','POST',payload);assert.equal(created.status,201);const id=created.data.id;
+ assert.equal((await a.request('/emergencies','POST',payload)).data.id,id);
+ assert.equal((await a.request('/emergencies','POST',{...payload,clientToken:randomUUID()})).data.id,id);
+ assert.equal((await b.request('/emergencies')).data.emergencies.length,0);
+ assert.equal((await b.request(`/emergencies/${id}`,'PATCH',{status:'cancelled',revision:1})).status,404);
+ assert.equal((await a.request('/admin/emergencies')).status,403);
+ assert.equal((await a.request(`/admin/emergencies/${id}`,'PATCH',{})).status,403);
+ const adminItems=(await admin.request('/notifications')).data.notifications.filter(n=>n.kind==='emergency'&&n.requestId===id);assert.equal(adminItems.length,1);
+ assert.equal((await a.request(`/notifications/${adminItems[0].id}/read`,'POST',{})).status,404);
+ assert.equal((await admin.request(`/notifications/${adminItems[0].id}/read`,'POST',{})).status,200);
+ const update=(status,revision,assignee='Guard A')=>admin.request(`/admin/emergencies/${id}`,'PATCH',{status,revision,assignee,note:'Management update.'});
+ assert.equal((await update('responding',1)).status,400);
+ assert.equal((await update('acknowledged',1)).status,200);
+ assert.equal((await a.request(`/emergencies/${id}`,'PATCH',{status:'cancelled',revision:2})).status,409);
+ assert.equal((await update('responding',1)).status,409);
+ assert.equal((await update('responding',2,'')).status,400);
+ assert.equal((await update('responding',2)).status,200);
+ assert.equal((await update('resolved',3)).status,200);
+ const record=(await a.request('/emergencies')).data.emergencies.find(r=>r.id===id);assert.equal(record.history.length,4);assert.equal(record.status,'resolved');
+ assert.equal((await update('acknowledged',4)).status,409);
+ assert.equal((await a.request('/emergencies','POST',payload)).data.id,id);
+ const residentItems=(await a.request('/notifications')).data.notifications.filter(n=>n.kind==='emergency');assert.equal(residentItems.length,3);
+ assert.equal((await a.request('/notifications/all/read','POST',{ids:residentItems.map(n=>n.id)})).status,200);
+ assert((await a.request('/notifications')).data.notifications.filter(n=>n.kind==='emergency').every(n=>n.readAt));
+ const second=(await a.request('/emergencies','POST',{...payload,clientToken:randomUUID(),coordinates:{latitude:3.1,longitude:101.6,accuracy:25,capturedAt:new Date().toISOString()}})).data.id;
+ assert.equal((await a.request(`/emergencies/${second}`,'PATCH',{status:'cancelled',revision:1})).status,200);
+ const disk=new DatabaseSync(process.env.DATABASE_PATH);assert.equal(disk.prepare('SELECT status FROM emergency_alerts WHERE id=?').get(id).status,'resolved');assert.equal(disk.prepare('SELECT latitude FROM emergency_alerts WHERE id=?').get(second).latitude,3.1);disk.close();
+});
 await test('profile persistence, password change revokes old sessions, and disabled accounts lose access',async()=>{
  await a.request('/profile','PATCH',{name:'Alice Updated',largeText:true,contrast:true});assert.equal((await a.request('/auth/me')).data.user.name,'Alice Updated');
  const second=client();await second.request('/auth/login','POST',{email:'alice@example.test',password});

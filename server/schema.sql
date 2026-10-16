@@ -62,4 +62,21 @@ CREATE TABLE IF NOT EXISTS record_notifications (
  created TEXT NOT NULL, read_at TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS record_notification_owner ON record_notifications(user_id,created);
-PRAGMA user_version = 6;
+CREATE TABLE IF NOT EXISTS emergency_alerts (
+ id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ client_token TEXT NOT NULL, category TEXT NOT NULL, location TEXT NOT NULL,
+ phone TEXT NOT NULL DEFAULT '', details TEXT NOT NULL DEFAULT '',
+ latitude REAL, longitude REAL, accuracy REAL, captured_at TEXT,
+ status TEXT NOT NULL DEFAULT 'submitted' CHECK(status IN ('submitted','acknowledged','responding','resolved','false_alarm','cancelled')),
+ assignee TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '', history TEXT NOT NULL,
+ revision INTEGER NOT NULL DEFAULT 1, created TEXT NOT NULL, updated TEXT NOT NULL,
+ UNIQUE(user_id,client_token)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS one_active_emergency ON emergency_alerts(user_id) WHERE status IN ('submitted','acknowledged','responding');
+CREATE TABLE IF NOT EXISTS emergency_notifications (
+ id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ title TEXT NOT NULL, body TEXT NOT NULL, request_id TEXT NOT NULL REFERENCES emergency_alerts(id) ON DELETE CASCADE,
+ audience TEXT NOT NULL CHECK(audience IN ('resident','admin')),created TEXT NOT NULL, read_at TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS emergency_notification_owner ON emergency_notifications(user_id,created);
+PRAGMA user_version = 7;

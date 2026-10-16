@@ -6,6 +6,18 @@ React + TypeScript frontend with a Node.js API and SQLite database. The existing
 
 Stop the app first and back up the whole old project. Extract this ZIP into a new folder, then copy your old `data` folder and optional `.env` into the new `CommunityCare` folder. If `.env` uses a custom DATABASE_PATH, preserve that database location. Run `npm.cmd ci` and `npm.cmd run dev`. Existing accounts and records remain; the contacts table is added automatically. You do not need to create another admin.
 
+## Emergency assistance and SOS
+
+Residents: open **SOS** on Home or Safety. Call the saved Guard House or Management number directly, or select the incident type and enter your block/unit/landmark. Optionally attach a one-time GPS location and callback number. **Send SOS to management** saves the alert and creates in-app notifications for active administrators. Location is requested only when you press Attach; it is sent only with the alert. There is no background location tracking.
+
+A saved alert starts as **Awaiting acknowledgement**. Only an administrator can acknowledge it. Residents can track management updates and history, and cancel an accidental alert before acknowledgement. Once acknowledged, contact management about a false alarm. Only one active SOS per resident is permitted; repeated submissions/retries return the existing alert. GPS denial/failure can be handled by entering a location manually. If submission cannot be confirmed, refresh alerts or call directly.
+
+Admins: use **Emergency alerts** to review active alerts, the resident/location/callback details and any attached coordinates. Acknowledge after review, enter the contacted responder's name to mark **Responding**, and finish with **Resolved** or **False alarm** and a note. Every update notifies the resident. Updates are revision-checked to protect against conflicting edits. Acknowledgement records a person reviewing the alert; it does not automatically dispatch anyone.
+
+The emergency desk and resident SOS panel refresh every 5 seconds while visible. Admin notification/active-alert counts refresh every 15 seconds elsewhere in the dashboard. Both show the last successful check and report refresh errors. This is polling, not guaranteed immediate delivery. Admins must have the app open to see alerts. No phone push, SMS, email, alarm sound or emergency-service dispatch is connected. Direct-call links open the device's phone handler and require a configured number. Use emergency services directly for immediate danger.
+
+New tables `emergency_alerts` and `emergency_notifications` are added automatically. Alert status, notes, location snapshot and history persist in the database and are visible only to the submitting resident and administrators. Existing data is preserved.
+
 ## Redesigned facility selector and date/time picker
 
 The booking screen now uses searchable facility cards and category filters, with a scrollable list for larger catalogues. The reservation summary keeps the selected facility visible even when filters change.
@@ -153,7 +165,7 @@ This is a local full-stack application, not a hosted service or native Android/i
 
 Single-server SQLite and in-memory rate limits suit this local prototype. Multi-server deployment, email verification, password-reset emails, automated backups and monitoring require additional deployment work. Do not expose the Vite development server as a production service.
 
-Weather, disaster predictions, marketplace offers/prices and illustrated routes are still sample data. SOS does not send emergency alerts. Management submissions are real database records, but no external responders or providers are dispatched.
+Weather, disaster predictions, marketplace offers/prices and illustrated routes are still sample data. SOS sends in-app alerts to community administrators; it does not contact emergency services. Management submissions are real database records, but no external responders or providers are dispatched.
 
 ## Main files
 

@@ -34,7 +34,7 @@ function record(r){return {...JSON.parse(r.payload),id:r.id,created:r.created,st
 function audit(u,action,id){db.prepare('INSERT INTO audit_log(actor_id,action,target_id,created) VALUES(?,?,?,?)').run(u.id,action,id,now())}
 function assistance(r){return {...r,history:JSON.parse(r.history)}}
 function assistanceList(userId){return db.prepare('SELECT a.*,u.name residentName,u.email residentEmail FROM assistance_requests a JOIN users u ON u.id=a.user_id '+(userId?'WHERE a.user_id=? ':'')+'ORDER BY a.created DESC').all(...(userId?[userId]:[])).map(assistance)}
-function notifications(userId){return db.prepare("SELECT id,title,body,request_id requestId,audience,created,read_at readAt,'assistance' kind FROM notifications WHERE user_id=? UNION ALL SELECT id,title,body,request_id requestId,'resident' audience,created,read_at readAt,kind FROM record_notifications WHERE user_id=? ORDER BY created DESC,id DESC").all(userId,userId)}
+function notifications(userId){return db.prepare("SELECT id,title,body,request_id requestId,audience,created,read_at readAt,'assistance' kind FROM notifications WHERE user_id=? UNION ALL SELECT id,title,body,request_id requestId,'resident' audience,created,read_at readAt,kind FROM record_notifications WHERE user_id=? UNION ALL SELECT id,title,body,request_id requestId,audience,created,read_at readAt,'emergency' kind FROM emergency_notifications WHERE user_id=? ORDER BY created DESC,id DESC").all(userId,userId,userId)}
 function notifyRecord(r,p,status,note){const type={bookings:'Facility booking',reports:'Report',services:'Home-service request'}[r.kind];const subject=p.facility||p.category||p.service;db.prepare('INSERT INTO record_notifications(id,user_id,title,body,request_id,kind,created) VALUES(?,?,?,?,?,?,?)').run(randomUUID(),r.user_id,`${type} ${status.replaceAll('_',' ')}`,`${subject}: ${status.replaceAll('_',' ')}.${p.date?' '+p.date+' · '+p.time+'.':''}${note?' '+note:''}`,r.id,r.kind,now())}
 
 function notifyUser(userId,title,body,requestId,audience){db.prepare('INSERT INTO notifications(id,user_id,title,body,request_id,audience,created) VALUES(?,?,?,?,?,?,?)').run(randomUUID(),userId,title,body,requestId,audience,now())}
@@ -42,6 +42,11 @@ function notifyAdmins(title,body,requestId){for(const admin of db.prepare("SELEC
 function transaction(fn){db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result}catch(e){db.exec('ROLLBACK');throw e}}
 const assistanceTypes=['Wheelchair / mobility support','Shopping / carrying groceries','Transport assistance','Home maintenance','Other assistance'];
 const assistanceNext={pending:['accepted','rejected','cancelled'],accepted:['in_progress','cancelled'],in_progress:['completed','cancelled'],completed:[],rejected:[],cancelled:[]};
+const emergencyNext={submitted:['acknowledged','false_alarm'],acknowledged:['responding','resolved','false_alarm'],responding:['resolved','false_alarm'],resolved:[],false_alarm:[],cancelled:[]};
+function emergencyList(userId){return db.prepare('SELECT e.*,u.name residentName,u.email residentEmail FROM emergency_alerts e JOIN users u ON u.id=e.user_id '+(userId?'WHERE e.user_id=? ':'')+'ORDER BY e.created DESC').all(...(userId?[userId]:[])).map(r=>({...r,history:JSON.parse(r.history)}))}
+function emergencyNotify(userId,title,body,id,audience){db.prepare('INSERT INTO emergency_notifications(id,user_id,title,body,request_id,audience,created) VALUES(?,?,?,?,?,?,?)').run(randomUUID(),userId,title,body,id,audience,now())}
+function emergencyAdmins(title,body,id){for(const admin of db.prepare("SELECT id FROM users WHERE role='admin' AND active=1").all())emergencyNotify(admin.id,title,body,id,'admin')}
+function optionalText(value,label,max){if(value===undefined)return '';if(typeof value!=='string'||value.trim().length>max)fail(400,`${label} must be at most ${max} characters.`);return value.trim()}
 const limits=new Map();
 function throttle(key,max){const t=Date.now();if(limits.size>10000)for(const [k,v]of limits)if(v.until<t)limits.delete(k);const v=limits.get(key);if(!v||v.until<t){limits.set(key,{count:1,until:t+15*60*1000});return}if(v.count>=max)fail(429,'Too many attempts. Try again in 15 minutes.');v.count++}
 function cookie(token,age=8*60*60){return `cc_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${age}${secure?'; Secure':''}`}
@@ -98,6 +103,40 @@ export const server=http.createServer(async(req,res)=>{
   if(!await checkPassword(b.currentPassword,u.password_hash))fail(400,'Current password is incorrect.');
   const hash=await hashPassword(b.password);db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(hash,u.id);db.prepare('DELETE FROM sessions WHERE user_id=?').run(u.id);createSession(res,u);return send(res,200,{ok:true});
  }
+ if((path==='/api/emergencies'||path==='/api/admin/emergencies')&&method==='GET'){
+  const admin=path.startsWith('/api/admin/');if(admin&&u.role!=='admin')fail(403,'Administrator access required.');
+  return send(res,200,{emergencies:emergencyList(admin?undefined:u.id),checkedAt:now()});
+ }
+ if(path==='/api/emergencies'&&method==='POST'){
+  const b=await body(req),token=text(b.clientToken,'Request token',80);if(!/^[a-zA-Z0-9-]{16,80}$/.test(token))fail(400,'Invalid request token.');
+  const previous=db.prepare('SELECT id FROM emergency_alerts WHERE user_id=? AND client_token=?').get(u.id,token);if(previous)return send(res,200,{id:previous.id,existing:true});
+  const active=db.prepare("SELECT id FROM emergency_alerts WHERE user_id=? AND status IN ('submitted','acknowledged','responding')").get(u.id);if(active)return send(res,200,{id:active.id,existing:true});
+  const category=choice(b.category,['Medical help','Security concern','Fire / smoke','Other urgent help']);
+  const location=optionalText(b.location,'Location',200),details=optionalText(b.details,'Details',1000),phone=optionalText(b.phone,'Phone number',30).replace(/[ ()-]/g,'');
+  if(phone&&!/^\+?[0-9]{6,15}$/.test(phone))fail(400,'Enter a valid callback number or leave it blank.');
+  let latitude=null,longitude=null,accuracy=null,capturedAt=null;
+  if(b.coordinates!==null&&b.coordinates!==undefined){const c=b.coordinates;if(typeof c!=='object'||!Number.isFinite(c.latitude)||c.latitude<-90||c.latitude>90||!Number.isFinite(c.longitude)||c.longitude<-180||c.longitude>180||!Number.isFinite(c.accuracy)||c.accuracy<0)fail(400,'Invalid location coordinates.');
+   const captured=Date.parse(c.capturedAt);if(!Number.isFinite(captured)||Date.now()-captured>600000||captured>Date.now()+60000)fail(400,'Location is out of date. Refresh it or enter your location manually.');
+   latitude=c.latitude;longitude=c.longitude;accuracy=c.accuracy;capturedAt=new Date(captured).toISOString();
+  }
+  if(!location&&latitude===null)fail(400,'Enter your block/unit or attach your location.');
+  const id=randomUUID(),t=now(),history=JSON.stringify([{status:'submitted',at:t,note:'Saved to the management dashboard. Awaiting acknowledgement.',assignee:'',actor:u.name}]);
+  transaction(()=>{db.prepare('INSERT INTO emergency_alerts(id,user_id,client_token,category,location,phone,details,latitude,longitude,accuracy,captured_at,history,created,updated) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(id,u.id,token,category,location,phone,details,latitude,longitude,accuracy,capturedAt,history,t,t);emergencyAdmins('SOS · New urgent alert',`${u.name}: ${category}. ${location||'Location attached'}`,id);audit(u,'submit SOS',id)});
+  return send(res,201,{id,existing:false});
+ }
+ const emergencyMatch=path.match(/^\/api\/(admin\/)?emergencies\/([a-zA-Z0-9-]+)$/);
+ if(emergencyMatch&&method==='PATCH'){
+  const admin=!!emergencyMatch[1];if(admin&&u.role!=='admin')fail(403,'Administrator access required.');const b=await body(req);
+  const r=db.prepare('SELECT * FROM emergency_alerts WHERE id=?').get(emergencyMatch[2]);if(!r||(!admin&&r.user_id!==u.id))fail(404,'Alert not found.');
+  if(b.revision!==r.revision)fail(409,'Alert changed. Refresh before updating.');if(!emergencyNext[r.status].length)fail(409,'This alert is closed.');
+  const status=admin?choice(b.status,emergencyNext[r.status]):choice(b.status,['cancelled']);
+  if(!admin&&r.status!=='submitted')fail(409,'Management has acknowledged this alert. Call them to report a false alarm.');
+  const note=admin?text(b.note,'Update for the resident',1000):'Cancelled by resident before acknowledgement.';
+  const assignee=admin?optionalText(b.assignee,'Responder name',100):r.assignee;if(status==='responding'&&!assignee)fail(400,'Enter the responder name before marking responding.');
+  const t=now(),history=JSON.parse(r.history);history.push({status,at:t,note,assignee,actor:u.name});
+  transaction(()=>{db.prepare('UPDATE emergency_alerts SET status=?,assignee=?,note=?,history=?,revision=revision+1,updated=? WHERE id=?').run(status,assignee,note,JSON.stringify(history),t,r.id);audit(u,'SOS '+status,r.id);if(admin)emergencyNotify(r.user_id,'SOS · '+status.replaceAll('_',' '),note,r.id,'resident');else emergencyAdmins('SOS · Resident cancelled alert',`${u.name} cancelled their alert.`,r.id)});
+  return send(res,200,{ok:true});
+ }
  if(path==='/api/facilities'&&method==='GET')return send(res,200,{facilities:facilityList()});
  if(path==='/api/bookings/availability'&&method==='GET'){
   const f=facilityByName(text(url.searchParams.get('facility'),'Facility',80)),facility=f.name,date=validateBookingDate(url.searchParams.get('date'));
@@ -113,9 +152,9 @@ export const server=http.createServer(async(req,res)=>{
  if(notificationMatch&&method==='POST'){
   if(notificationMatch[1]==='all'){
    const b=await body(req);if(!Array.isArray(b.ids)||b.ids.length>500||b.ids.some(id=>typeof id!=='string'||id.length>100))fail(400,'Invalid notification selection.');
-   transaction(()=>{for(const id of b.ids)for(const table of ['notifications','record_notifications'])db.prepare(`UPDATE ${table} SET read_at=? WHERE id=? AND user_id=? AND read_at=''`).run(now(),id,u.id)});
+   transaction(()=>{for(const id of b.ids)for(const table of ['notifications','record_notifications','emergency_notifications'])db.prepare(`UPDATE ${table} SET read_at=? WHERE id=? AND user_id=? AND read_at=''`).run(now(),id,u.id)});
   }else{
-   const changes=transaction(()=>['notifications','record_notifications'].reduce((n,table)=>n+Number(db.prepare(`UPDATE ${table} SET read_at=CASE WHEN read_at='' THEN ? ELSE read_at END WHERE id=? AND user_id=?`).run(now(),notificationMatch[1],u.id).changes),0));
+   const changes=transaction(()=>['notifications','record_notifications','emergency_notifications'].reduce((n,table)=>n+Number(db.prepare(`UPDATE ${table} SET read_at=CASE WHEN read_at='' THEN ? ELSE read_at END WHERE id=? AND user_id=?`).run(now(),notificationMatch[1],u.id).changes),0));
    if(!changes)fail(404,'Notification not found.');
   }
   return send(res,200,{ok:true});
