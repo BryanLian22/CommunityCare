@@ -1,3 +1,4 @@
+import { searchPlaces, routeBetween } from './navigation.mjs';
 import { getWeather, searchWeatherCities } from './weather.mjs';
 import http from 'node:http';
 import { randomUUID, randomBytes } from 'node:crypto';
@@ -217,7 +218,7 @@ function send(res, status, data) {
 }
 export const server = http.createServer(async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Referrer-Policy', 'same-origin');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('X-Frame-Options', 'DENY');
   try {
     const url = new URL(req.url, 'http://localhost'), path = url.pathname, method = req.method;
@@ -241,7 +242,7 @@ export const server = http.createServer(async (req, res) => {
         '.ico': 'image/x-icon'
       };
       const content = await readFile(file).catch(() => fail(404, 'Build the app first: npm.cmd run build'));
-      res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+      res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://tile.openstreetmap.org; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
       res.writeHead(200, { 'Content-Type': mime[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
       return res.end(method === 'HEAD' ? undefined : content);
     }
@@ -283,6 +284,27 @@ export const server = http.createServer(async (req, res) => {
     }
     const u = session(req);
     if (!u) fail(401, 'Please sign in.');
+    if (path === '/api/navigation/search' && method === 'GET') {
+      throttle('nav-search:' + u.id, 60);
+      const q = text(url.searchParams.get('q'), 'Place name', 160);
+      if (q.length < 3) fail(400, 'Enter at least three characters.');
+      try {
+        return send(res, 200, { places: await searchPlaces(q) });
+      } catch (e) {
+        if (e.status) throw e;
+        fail(502, 'Place search is unavailable. Please try again.');
+      }
+    }
+    if (path === '/api/navigation/route' && method === 'POST') {
+      throttle('nav-route:' + u.id, 90);
+      const b = await body(req);
+      try {
+        return send(res, 200, await routeBetween(b.start, b.end, b.mode));
+      } catch (e) {
+        if (e.status) throw e;
+        fail(502, 'Directions are unavailable. Please try again or open Google Maps.');
+      }
+    }
     if (path === '/api/auth/me' && method === 'GET') return send(res, 200, { user: publicUser(u) });
     if (path === '/api/profile' && method === 'PATCH') {
       const b = await body(req);

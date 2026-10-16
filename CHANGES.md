@@ -73,3 +73,9 @@ Added database schema, salted scrypt password hashes, expiring HttpOnly cookie s
 Added one-command development startup, admin/password management commands, setup documentation and backend integration tests. Anonymous demo data is not automatically imported. No external services or emergency dispatch integrations were added.
 
 Validation: production build and TypeScript check passed; all 8 backend integration tests passed. Simulated-browser checks against the real API passed for registration, login, profile saving, admin dashboard, notice publishing, resident notice visibility and view switching. Development startup verified. Pixel-level browser rendering was not verified.
+
+## Live routes
+- Replaced sample Routes screen with a professional route planner, real map, searchable places, OSRM walking/driving geometry and maneuver directions.
+- Added opt-in foreground GPS following, accuracy/time status, recenter, stop and explicit recalculation from GPS.
+- Added Google Maps handoff for native navigation and honest accessibility/traffic limitations.
+- Added authenticated, rate-limited provider endpoints, timeout/error handling and bounded caching; enabled only the OSM tile host in production CSP and a provider-compatible referrer policy.

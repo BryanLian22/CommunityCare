@@ -1,3 +1,4 @@
+import Routes from './Routes';
 import Weather from './Weather';
 import ResidentEmergency from './Emergency';
 import RequestUpdate from './RequestUpdate';
@@ -185,13 +186,7 @@ export default function App() {
   const [sheet, setSheet] = useState<Sheet>(null);
   const [toast, setToast] = useState("");
   const [facility, setFacility] = useState("Gym");
-  const [routeReady, setRouteReady] = useState(false);
-  const [travelMode, setTravelMode] = useState<"car" | "walk" | "bus">("walk");
-  const [mapFilter, setMapFilter] = useState<"bridge" | "bus" | "wheelchair">("wheelchair");
-  const [wheelchairMode, setWheelchairMode] = useState(true);
   const [service, setService] = useState("Air conditioner");
-  const [from, setFrom] = useState("My location");
-  const [to, setTo] = useState("Community health center");
 
   const { user, updateUser } = useSession();
   const [data, setData] = useState<ResidentData>({
@@ -284,11 +279,9 @@ export default function App() {
   const [category, setCategory] = useState("Maintenance issue");
   const [details, setDetails] = useState("");
   const [search, setSearch] = useState("");
-  const [mapSearch, setMapSearch] = useState("");
   const [offer, setOffer] = useState("Home cleaning");
   const [serviceAddress, setServiceAddress] = useState("");
 
-  useEffect(() => setRouteReady(false), [travelMode, wheelchairMode, from, to]);
   const timer = useRef<number | undefined>(undefined);
   const dialog = useRef<HTMLElement>(null);
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -739,191 +732,7 @@ export default function App() {
             </div>
           )}
 
-          {tab === "routes" && (
-            <div className={`route-screen ${wheelchairMode ? "wheelchair-route" : "standard-route"}`}>
-              <div className="demo-note">Illustrative map · Times and routes are sample data, not live navigation.</div>
-              <div className="route-header">
-                <div>
-                  <div className="overline">ACCESSIBLE NAVIGATION</div>
-                  <div className="screen-title">Find your route</div>
-                </div>
-                <Button className={`round-button ${wheelchairMode ? "wheelchair-active" : ""}`} label="Accessible facilities" onClick={() => setWheelchairMode(!wheelchairMode)}>
-                  <Icon name="wheelchair" size="sm" />
-                </Button>
-              </div>
-              <div className="route-persona" aria-label="Route accessibility mode">
-                <Button className={!wheelchairMode ? "selected" : ""} onClick={() => setWheelchairMode(false)}>
-                  <span><Icon name="user" /></span>
-                  <div><b>Standard route</b><small>Fastest available path</small></div>
-                  {!wheelchairMode && <i><Icon name="check" size="sm" /></i>}
-                </Button>
-                <Button className={wheelchairMode ? "selected" : ""} onClick={() => setWheelchairMode(true)}>
-                  <span><Icon name="wheelchair" /></span>
-                  <div><b>Wheelchair route</b><small>Step-free & accessible</small></div>
-                  {wheelchairMode && <i><Icon name="check" size="sm" /></i>}
-                </Button>
-              </div>
-              <div className={`route-mode-note ${wheelchairMode ? "accessible" : "standard"}`}>
-                <Icon name={wheelchairMode ? "wheelchair" : "route"} size="sm" />
-                <span>
-                  <b>{wheelchairMode ? "Accessibility mode is on" : "Standard navigation mode"}</b>
-                  {wheelchairMode ? " Routes avoid stairs and prioritize working lifts, ramps, and smooth paths." : " Routes prioritize travel time, distance, and current traffic."}
-                </span>
-              </div>
-              <div className="travel-modes" aria-label="Travel mode">
-                <Button className={travelMode === "car" ? "selected" : ""} onClick={() => setTravelMode("car")}>
-                  <Icon name="car" />
-                  <span><b>Drive</b><small>6 min</small></span>
-                </Button>
-                <Button className={travelMode === "walk" ? "selected" : ""} onClick={() => setTravelMode("walk")}>
-                  <Icon name="walk" />
-                  <span><b>Walk</b><small>14 min</small></span>
-                </Button>
-                <Button className={travelMode === "bus" ? "selected" : ""} onClick={() => setTravelMode("bus")}>
-                  <Icon name="bus" />
-                  <span><b>Transit</b><small>11 min</small></span>
-                </Button>
-              </div>
-              <div className="route-fields">
-                <div className="route-markers">
-                  <i />
-                  <span />
-                  <i />
-                </div>
-                <div>
-                  <label>START</label>
-                  <input aria-label="Starting point" value={from} onChange={(e) => setFrom(e.target.value)} />
-                  <label>DESTINATION</label>
-                  <input aria-label="Destination" value={to} onChange={(e) => setTo(e.target.value)} />
-                </div>
-                <Button label="Swap locations" onClick={() => {
-
-                  setFrom(to);
-                  setTo(from);
-                }}><Icon name="swap" size="sm" /></Button>
-              </div>
-              <div className="preference-scroll">
-                {wheelchairMode ? (
-                  <>
-                    <Button className="selected" onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="wheelchair" size="sm" />Step-free</Button>
-                    <Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="elevator" size="sm" />Working lifts</Button>
-                    <Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="route" size="sm" />Gentle slope</Button>
-                  </>
-                ) : (
-                  <>
-                    <Button className="selected" onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="route" size="sm" />Fastest</Button>
-                    <Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="shield" size="sm" />Well-lit</Button>
-                    <Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="map" size="sm" />Shortest</Button>
-                  </>
-                )}
-              </div>
-              <div className="map-search">
-                <div>
-                  <Icon name="search" size="sm" />
-                  <input value={mapSearch} onChange={e => setMapSearch(e.target.value)} aria-label="Search map facilities" placeholder="Search places and facilities" />
-                </div>
-                <Button label="Map options" onClick={() => notify("Choose a travel mode and facility filter above the map.")}>
-                  <Icon name="plus" size="sm" />
-                </Button>
-              </div>
-              {mapSearch.trim() && <div className="map-results" role="status">
-                {["Guard house", "Management office", "Working lift", "Accessible WC", "Ramp bridge", "Low-floor bus", "Accessible stop", "Visitor parking"].filter(x => x.toLowerCase().includes(mapSearch.toLowerCase())).map(place => <Button key={place} onClick={() => {
-
-                  setTo(place);
-                  setMapSearch("");
-                }}>{place} · Sample place</Button>)}
-                {!["Guard house", "Management office", "Working lift", "Accessible WC", "Ramp bridge", "Low-floor bus", "Accessible stop", "Visitor parking"].some(x => x.toLowerCase().includes(mapSearch.toLowerCase())) && <p>No sample places found.</p>}
-              </div>}
-              <div className="facility-filters">
-                {wheelchairMode ? (
-                  <>
-                    <Button className={mapFilter === "bridge" ? "selected" : ""} onClick={() => setMapFilter("bridge")}><Icon name="bridge" size="sm" />Accessible bridges</Button>
-                    <Button className={mapFilter === "bus" ? "selected" : ""} onClick={() => setMapFilter("bus")}><Icon name="bus" size="sm" />Low-floor bus</Button>
-                    <Button className={mapFilter === "wheelchair" ? "selected" : ""} onClick={() => setMapFilter("wheelchair")}><Icon name="wheelchair" size="sm" />Accessible facilities</Button>
-                  </>
-                ) : (
-                  <>
-                    <Button className="selected" onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="car" size="sm" />Parking</Button>
-                    <Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="bus" size="sm" />Bus stops</Button>
-                    <Button onClick={() => notify("This preference is illustrative; route calculation is not connected.")}><Icon name="market" size="sm" />Nearby places</Button>
-                  </>
-                )}
-              </div>
-              <div className="mobile-map">
-                <span className="map-green green-one" />
-                <span className="map-green green-two" />
-                <span className="road road-one" />
-                <span className="road road-two" />
-                <span className="road road-three" />
-                <svg viewBox="0 0 400 420" preserveAspectRatio="none">
-                  <path className="route-halo" d={wheelchairMode ? "M70 350C92 300 55 250 130 220s110 30 145-35 45-55 80-115" : "M70 350C115 285 150 275 190 205s80-55 165-135"} />
-                  <path className="route-line-path" d={wheelchairMode ? "M70 350C92 300 55 250 130 220s110 30 145-35 45-55 80-115" : "M70 350C115 285 150 275 190 205s80-55 165-135"} />
-                </svg>
-                <span className="start-dot" />
-                <span className="destination-pin"><Icon name="location" size="sm" /></span>
-                {wheelchairMode ? <>
-                  <span className="map-place place-one"><Icon name="elevator" size="sm" />Working lift</span>
-                  <span className="map-place place-two"><Icon name="wheelchair" size="sm" />Accessible WC</span>
-                  {mapFilter === "bridge" && <span className="map-place bridge-place"><Icon name="bridge" size="sm" />Ramp bridge</span>}
-                  {mapFilter === "bus" && <>
-                    <span className="map-place bus-place-one"><Icon name="bus" size="sm" />Low-floor bus</span>
-                    <span className="map-place bus-place-two"><Icon name="bus" size="sm" />Accessible stop</span>
-                  </>}
-                </> : <>
-                  <span className="map-place parking-place"><Icon name="car" size="sm" />Visitor parking</span>
-                  <span className="map-place shortcut-place"><Icon name="route" size="sm" />Faster route</span>
-                </>}
-                <Button className="residential-poi guard-poi" onClick={() => notify("Sample: Guard house · Open 24 hours. Status is not verified.")}>
-                  <span><Icon name="shield" size="sm" /></span>
-                  <small>Guard house</small>
-                </Button>
-                <Button className="residential-poi office-poi" onClick={() => notify("Sample: Management office · Open until 6 PM. Status is not verified.")}>
-                  <span><Icon name="building" size="sm" /></span>
-                  <small>Management</small>
-                </Button>
-                <span className="map-label park-label">RIVERSIDE PARK</span>
-                <span className="map-label residence-label">OAK RESIDENCES</span>
-                <Button className="locate-button" label="Center my location" onClick={() => notify("This illustrative map cannot show your real location.")}>
-                  <Icon name="location" />
-                </Button>
-              </div>
-              <section className={`route-card ${routeReady ? "ready" : ""}`}>
-                <div className="route-type-label">
-                  <Icon name={wheelchairMode ? "wheelchair" : "user"} size="sm" />
-                  {wheelchairMode ? "WHEELCHAIR-FRIENDLY ROUTE" : "STANDARD FASTEST ROUTE"}
-                </div>
-                <div className="route-card-top">
-                  <span className="route-duration"><b>{travelMode === "car" ? "6" : travelMode === "bus" ? "11" : wheelchairMode ? "14" : "11"}</b> min</span>
-                  <span className="route-distance">
-                    {travelMode === "walk" ? `0.6 miles · ${wheelchairMode ? "Mostly flat" : "Fastest"}` : travelMode === "car" ? "1.2 miles · Light traffic" : `2 stops · ${wheelchairMode ? "Low-floor bus" : "Fastest bus"}`}
-                  </span>
-                  <span className="route-score">
-                    <Icon name="check" size="sm" />
-                    {wheelchairMode ? "Accessible" : "Fastest"}
-                  </span>
-                </div>
-                <div className="route-features">
-                  <span>
-                    <Icon name={travelMode === "bus" ? "bus" : travelMode === "car" ? "shield" : wheelchairMode ? "elevator" : "walk"} size="sm" />
-                    {travelMode === "bus" ? wheelchairMode ? "Accessible bus" : "Direct bus" : travelMode === "car" ? "Guarded entry" : wheelchairMode ? "2 lifts" : "Direct path"}
-                  </span>
-                  <span>
-                    <Icon name={wheelchairMode ? "wheelchair" : "route"} size="sm" />
-                    {wheelchairMode ? "Step-free" : "Standard"}
-                  </span>
-                  <span><Icon name="building" size="sm" />3 facilities</span>
-                </div>
-                <Button className="primary-action" disabled={busy} onClick={() => {
-
-                  setRouteReady(true);
-                  notify("Demo route preview only. No real navigation started.");
-                }}>
-                  <Icon name={wheelchairMode ? "wheelchair" : "route"} />
-                  {routeReady ? "Demo route displayed" : wheelchairMode ? "Preview wheelchair route" : "Preview standard route"}
-                </Button>
-              </section>
-            </div>
-          )}
+          {tab === "routes" && <Routes />}
         </main>
 
         <nav className="bottom-nav" aria-label="App navigation">

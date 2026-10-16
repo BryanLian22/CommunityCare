@@ -192,3 +192,23 @@ Marketplace offers/prices and illustrated routes are still sample data. Weather 
 - `server/create-admin.mjs`, `server/reset-password.mjs`: local account management.
 - `scripts/dev.mjs`: starts frontend and backend together.
 - `tests/backend.test.mjs`: isolated integration tests.
+
+## Live routes and GPS
+
+Routes now uses Leaflet with OpenStreetMap tiles, Photon place search and FOSSGIS OSRM walking/driving directions. No API key is needed for this small-scale version. Search both locations and select results (include your city); or choose **Use my location**. Select a mode, then **Find directions**. The route summary shows estimated distance/time and selectable maneuver steps. **Start live GPS** follows your device while Routes is open; dragging the map pauses following and **Recenter** resumes it. **Re-route from GPS** explicitly recalculates from the latest position. Stop tracking or leave Routes to release the location watcher.
+
+GPS requires permission and HTTPS on a deployed site (localhost also works). A desktop's reported location may be inaccurate. The accuracy circle and timestamp indicate the fix quality; stale fixes cannot be used for re-routing. The initial Kuala Lumpur map viewport is not the user's detected location. GPS movement, voice and background operation must be checked on a physical phone during the final testing phase.
+
+**Open Google Maps** transfers the selected destination/mode to Google Maps for its navigation experience, including voice navigation where supported. In-app GPS is a foreground location follower with a route/instruction list: it does not announce turns, automatically advance steps, reroute automatically, operate offline or run in the background. Route times exclude current traffic. No wheelchair accessibility, working-lift or step-free assurance is inferred from walking routes.
+
+Place queries go to Photon and route coordinates to FOSSGIS through authenticated server endpoints; tile requests go directly to OpenStreetMap. The app does not persist journey history or GPS coordinates to the account/database. Provider responses have a bounded, five-minute in-memory cache; providers may keep their own request logs. The backend limits upstream requests to one per second per running process and limits requests per account. Errors are displayed without substituting sample routes. Run one server process when using the public routing service; use a shared limiter and contracted/self-hosted services for production scale. Public mapping endpoints offer no service guarantee. Attribution remains visible on the map and in Routes.
+
+Provider documentation and terms:
+- https://routing.openstreetmap.de/about.html
+- https://github.com/komoot/photon
+- https://operations.osmfoundation.org/policies/tiles/
+- https://project-osrm.org/docs/v5.24.0/api/
+
+Updated files: `src/App.tsx`, `server/app.mjs`, `package.json`, `package-lock.json`, `README.md`, `CHANGES.md`, generated `dist/`.
+Added files: `src/Routes.tsx`, `src/Routes.css`, `server/navigation.mjs`, `tests/navigation.test.mjs`.
+When updating an existing installation, preserve your `.env` and `data/` directory. Run `npm install`, `npm run build`, then `npm start` (Windows PowerShell can use `npm.cmd`). No database migration is needed for Routes.

@@ -1,0 +1,365 @@
+.live-routes {
+  padding:24px 20px 32px;
+  color:#173a31;
+  background:#f4f7f4
+}
+.nav-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:22px;
+  gap:12px
+}
+.nav-eyebrow {
+  font-size:10px;
+  font-weight:750;
+  letter-spacing:1.7px;
+  color:#60766e
+}
+.nav-heading h1 {
+  font-size:27px;
+  line-height:1.2;
+  letter-spacing:-1px;
+  margin:8px 0
+}
+.nav-heading p,.nav-empty p {
+  font-size:13px;
+  color:#697d74;
+  margin:6px 0
+}
+.nav-compass {
+  display:grid;
+  place-items:center;
+  background:#dfece3;
+  color:#16664e;
+  border-radius:50%;
+  width:52px;
+  height:52px;
+  font-size:30px;
+  flex-shrink:0
+}
+.nav-planner,.nav-summary {
+  background:#fff;
+  border:1px solid #dce6df;
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 8px 24px #163c2910
+}
+.live-routes button,.nav-google {
+  font:inherit;
+  cursor:pointer;
+  min-height:44px;
+  border-radius:12px;
+  border:1px solid #dbe5df;
+  background:#fff;
+  color:#215143;
+  font-size:13px;
+  font-weight:650;
+  padding:10px 12px
+}
+.live-routes button:disabled {
+  opacity:.45;
+  cursor:not-allowed
+}
+.live-routes button:focus-visible,.live-routes input:focus-visible,.nav-google:focus-visible {
+  outline:3px solid #d89732;
+  outline-offset:2px
+}
+.nav-modes {
+  display:flex;
+  background:#eef3ef;
+  border-radius:13px;
+  padding:4px;
+  margin-bottom:18px;
+  gap:4px
+}
+.nav-modes button {
+  flex:1;
+  border:0;
+  background:transparent
+}
+.nav-modes button[aria-pressed=true] {
+  background:#196b52;
+  color:#fff;
+  box-shadow:0 3px 7px #1d5c4920
+}
+.nav-field label {
+  display:block;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-weight:700;
+  color:#688075
+}
+.nav-search-row {
+  display:flex;
+  gap:6px;
+  margin-top:8px
+}
+.nav-search-row input {
+  width:0;
+  flex:1;
+  border:1px solid #dbe5df;
+  border-radius:10px;
+  padding:12px;
+  font:inherit;
+  letter-spacing:0;
+  text-transform:none;
+  font-size:13px;
+  color:#173a31;
+  background:#fbfcfb
+}
+.nav-search-row button {
+  font-size:11px;
+  padding:8px
+}
+.nav-selected {
+  font-size:11px;
+  color:#387b60;
+  display:block;
+  margin-top:6px
+}
+.nav-small-actions {
+  display:flex;
+  justify-content:space-between;
+  margin:7px 0 12px
+}
+.nav-small-actions button {
+  border:0;
+  background:none;
+  padding:6px;
+  font-size:12px
+}
+.live-routes .nav-primary {
+  background:#196b52;
+  border-color:#196b52;
+  color:#fff
+}
+.nav-planner>.nav-primary {
+  width:100%;
+  margin-top:18px
+}
+.nav-results {
+  list-style:none;
+  padding:0;
+  margin:8px 0;
+  background:#f2f7f3;
+  border-radius:12px;
+  max-height:230px;
+  overflow:auto
+}
+.nav-results button {
+  width:100%;
+  text-align:left;
+  border:0;
+  border-bottom:1px solid #e0e7e0;
+  border-radius:0;
+  line-height:1.5
+}
+.nav-message {
+  font-size:12px;
+  line-height:1.6;
+  background:#fff4dd;
+  color:#79591f;
+  padding:12px;
+  border-radius:10px;
+  margin:12px 0
+}
+.nav-map-wrap {
+  border-radius:20px;
+  overflow:hidden;
+  border:1px solid #dce6df;
+  margin-top:18px;
+  background:#e5eee5
+}
+.nav-live-map {
+  height:330px;
+  width:100%;
+  z-index:0
+}
+.nav-map-controls {
+  display:flex;
+  justify-content:space-between;
+  background:white;
+  padding:8px;
+  gap:8px
+}
+.nav-map-controls button {
+  border:0;
+  font-size:12px
+}
+.nav-gps {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:10px;
+  color:#60796c;
+  margin:12px 0
+}
+.nav-gps i {
+  height:7px;
+  width:7px;
+  background:#a08036;
+  border-radius:50%
+}
+.nav-gps i.active {
+  background:#20815d
+}
+.nav-summary {
+  margin-top:16px
+}
+.nav-metrics {
+  display:flex;
+  align-items:center;
+  gap:26px;
+  margin:12px 0
+}
+.nav-metrics strong {
+  font-size:37px;
+  letter-spacing:-1px
+}
+.nav-metrics strong small {
+  font-size:16px;
+  font-weight:500;
+  letter-spacing:0
+}
+.nav-metrics>span {
+  font-size:19px;
+  border-left:1px solid #dce5dd;
+  padding-left:24px
+}
+.nav-metrics>span small {
+  display:block;
+  font-size:10px;
+  color:#738579;
+  margin-top:5px
+}
+.nav-summary>p {
+  font-size:12px;
+  line-height:1.6;
+  color:#647c6d
+}
+.nav-action-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:16px 0
+}
+.nav-action-grid button {
+  font-size:12px
+}
+.nav-directions {
+  border-top:1px solid #e3eae4;
+  padding-top:16px
+}
+.nav-directions summary {
+  cursor:pointer;
+  font-size:13px;
+  font-weight:650;
+  line-height:1.8
+}
+.nav-directions summary span {
+  font-size:10px;
+  color:#7b8a80;
+  margin-left:10px
+}
+.nav-directions ol {
+  list-style:none;
+  padding:0;
+  margin:12px 0 0;
+  max-height:320px;
+  overflow:auto
+}
+.nav-directions li button {
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  width:100%;
+  text-align:left;
+  border:0;
+  border-bottom:1px solid #edf0ec;
+  border-radius:0;
+  line-height:1.5;
+  font-weight:500;
+  padding:12px 0
+}
+.nav-step-number {
+  background:#edf3ed;
+  border-radius:8px;
+  width:26px;
+  height:26px;
+  display:grid;
+  place-items:center;
+  flex-shrink:0;
+  font-size:11px
+}
+.nav-directions li small {
+  display:block;
+  color:#788b7d;
+  font-size:11px;
+  margin-top:4px
+}
+.nav-empty {
+  text-align:center;
+  padding:26px 14px
+}
+.nav-empty b {
+  font-size:15px
+}
+.nav-google {
+  display:block;
+  margin-top:16px;
+  text-align:center;
+  text-decoration:none;
+  border-color:#c4d7c8;
+  padding:15px
+}
+.nav-google small {
+  display:block;
+  font-size:11px;
+  color:#708274;
+  margin-top:5px;
+  font-weight:400
+}
+.nav-footnote {
+  font-size:11px;
+  line-height:1.7;
+  color:#718174;
+  padding:20px 2px 0
+}
+.nav-footnote b {
+  color:#4f695b
+}
+.nav-footnote a {
+  color:#24694d;
+  text-decoration:underline
+}
+.nav-live-map .leaflet-control-attribution {
+  font-size:10px
+}
+.nav-live-map .leaflet-control-zoom a {
+  color:#275c46
+}
+.nav-field>p {
+  font-size:12px;
+  color:#8d5628
+}
+.large-text .live-routes {
+  font-size:18px
+}
+@media(max-width:360px) {
+  .live-routes {
+  padding:18px 12px
+}
+.nav-heading h1 {
+  font-size:23px
+}
+.nav-planner,.nav-summary {
+  padding:14px
+}
+.nav-live-map {
+  height:290px
+}
+
+}
+
