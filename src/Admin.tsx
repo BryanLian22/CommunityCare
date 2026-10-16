@@ -1,3 +1,4 @@
+import { AdminBills, AdminVisitors } from './Household';
 import { ResidentialMapAdmin } from './ResidentialMap';
 import { AdminEmergencies } from './Emergency';
 import RequestUpdate from './RequestUpdate';
@@ -8,9 +9,11 @@ import { AdminAssistance } from './Assistance';
 import { useEffect, useState } from 'react';
 import { CommunityContactSettings } from './ContactDirectory';
 import { api, type AdminData, type Entry, type Notice, type AppNotification, type EmergencyAlert } from './api';
-type Section = 'residential-map' | 'overview' | 'residents' | 'bookings' | 'reports' | 'services' | 'notices' | 'contacts' | 'assistance' | 'notifications' | 'facilities' | 'request-update' | 'emergencies';
+type Section = 'bills' | 'visitors' | 'residential-map' | 'overview' | 'residents' | 'bookings' | 'reports' | 'services' | 'notices' | 'contacts' | 'assistance' | 'notifications' | 'facilities' | 'request-update' | 'emergencies';
 const sections: { id: Section; label: string }[] = [
   { id: 'overview', label: 'Overview' },
+  { id: 'bills', label: 'Bills & payments' },
+  { id: 'visitors', label: 'Visitor parking' },
   { id: 'emergencies', label: 'Emergency alerts' },
   { id: 'notifications', label: 'Notifications' },
   { id: 'assistance', label: 'Assistance requests' },
@@ -27,7 +30,7 @@ const closed = ['completed', 'resolved', 'rejected', 'cancelled'];
 export default function Admin() {
   const [urgentCount, setUrgentCount] = useState(0);
   const [requestTarget, setRequestTarget] = useState<string | undefined>();
-  const [data, setData] = useState<AdminData | null>(null), [section, setSection] = useState<Section>('overview'), [query, setQuery] = useState(''), [filter, setFilter] = useState('all'), [busy, setBusy] = useState(false), [error, setError] = useState(''), [success, setSuccess] = useState(''), [editing, setEditing] = useState<Notice | null>(null), [title, setTitle] = useState(''), [body, setBody] = useState('');
+  const [data, setData] = useState<AdminData | null>(null), [section, setSection] = useState<Section>(new URLSearchParams(window.location.search).has('visitor_pass') ? 'visitors' : 'overview'), [query, setQuery] = useState(''), [filter, setFilter] = useState('all'), [busy, setBusy] = useState(false), [error, setError] = useState(''), [success, setSuccess] = useState(''), [editing, setEditing] = useState<Notice | null>(null), [title, setTitle] = useState(''), [body, setBody] = useState('');
   async function load() {
     const d = await api<AdminData>('/admin/data');
     setData(d)
@@ -184,6 +187,8 @@ export default function Admin() {
             </table>
           </div>
         </section>}
+        {section === 'bills' && <AdminBills users={data.users} />}
+        {section === 'visitors' && <AdminVisitors />}
         {section === 'residential-map' && <ResidentialMapAdmin />}
         {section === 'facilities' && <FacilityManagement facilities={data.facilities} bookings={data.bookings} onRefresh={load} />}
         {section === 'bookings' && <AdminBookings records={data.bookings} facilities={data.facilities} onRefresh={load} />}

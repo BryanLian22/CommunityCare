@@ -87,3 +87,12 @@ Validation: production build and TypeScript check passed; all 8 backend integrat
 - Added automatic route recalculation on refreshed status, closures and unavailable lifts; stairs never enter wheelchair routes.
 - Added safe unconfirmed defaults, 24-hour Available expiry, offline route suspension, optimistic concurrency and audit records.
 - Verified five focused checks covering safe defaults, persistence/conflicts, alternate lift routes, unsafe/stale path exclusion and admin-only API changes. Production build passed.
+
+## Home bills and visitor parking
+- Removed Home's residential navigator; the Routes navigator remains intact.
+- Added Home outstanding balance and electricity/water/management totals, bill details, overdue indicators and payment history.
+- Added admin bill issuing, partial/full payment recording and unpaid-bill voiding, with audit history and stale-edit checks.
+- Added resident visitor registration (name, phone, car plate, date), downloadable QR pass, pass history and cancellation.
+- Added admin QR/code verification, check-in/out and cancellation, enforcing Malaysia visit dates and one-entry use.
+- Added private database records, creation retry keys, validation and automatic additive table initialization.
+- Production build and three focused household integration checks passed; full acceptance testing remains deferred.

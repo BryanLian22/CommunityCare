@@ -1,0 +1,71 @@
+.hh-home { color: #214a3c; margin: 12px 0 24px; }
+.hh-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.hh-heading span { font-size: 10px; font-weight: 700; letter-spacing: 1.8px; color: #74867b; }
+.hh-heading h2 { margin: 6px 0 0; font-size: 22px; letter-spacing: -.6px; }
+.hh-home button,.hh-admin button { cursor: pointer; min-height: 44px; border: 1px solid #d8e4db; border-radius: 10px; background: white; color: #285d49; font: inherit; font-size: 13px; padding: 10px 14px; }
+.hh-home button:disabled,.hh-admin button:disabled { opacity: .5; cursor: not-allowed; }
+.hh-home button:focus-visible,.hh-home input:focus-visible,.hh-admin button:focus-visible { outline: 3px solid #d3a342; outline-offset: 2px; }
+.hh-balance { position: relative; background: #195f4b; color: #fff; padding: 24px; border-radius: 22px; overflow: hidden; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; box-shadow: 0 7px 18px #175c4324; }
+.hh-balance small { font-size: 10px; letter-spacing: 1.4px; color: #bfd9c9; }
+.hh-balance strong { display: block; font-size: 34px; font-weight: 650; letter-spacing: -1px; margin: 12px 0; }
+.hh-balance p { font-size: 11px; color: #cce0d4; margin: 0; }
+.hh-balance>span { font-size: 62px; color: #75a98e66; align-self: center; }
+.hh-balance button { width: 100%; text-align: left; margin-top: 10px; padding: 12px 0 0; border: 0; border-top: 1px solid #ffffff30; border-radius: 0; background: transparent; color: #fff; min-height: 36px; }
+.hh-breakdown { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 12px 0 20px; }
+.hh-breakdown button { display: flex; flex-direction: column; align-items: flex-start; padding: 12px 10px; border-radius: 14px; gap: 7px; min-width: 0; }
+.hh-breakdown small { color: #74867a; font-size: 10px; line-height: 1.4; }
+.hh-breakdown b { font-size: 12px; overflow-wrap: anywhere; }
+.hh-category { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 10px; font-size: 22px; background: #e8eee7; color: #4b7457; flex-shrink: 0; }
+.hh-category.electricity { background: #fff0cf; color: #b28732; }
+.hh-category.water { background: #e2eff7; color: #5488aa; }
+.hh-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+.hh-tabs button { flex: 1; }
+.hh-tabs button[aria-pressed=true] { color: #fff; background: #22664f; border-color: #22664f; }
+.hh-bill { border-bottom: 1px solid #dfe7de; padding: 12px 0; }
+.hh-bill summary { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.hh-bill summary b { font-size: 12px; }
+.hh-bill summary small { display: block; font-size: 10px; color: #82917e; margin-top: 5px; line-height: 1.5; }
+.hh-bill-amount { margin-left: auto; text-align: right; flex-shrink: 0; }
+.hh-bill summary .hh-overdue { color: #b9673e; }
+.hh-bill-detail { font-size: 12px; line-height: 1.7; padding: 10px; overflow-wrap: anywhere; }
+.hh-bill-detail>small { font-size: 9px; color: #7b8b76; }
+.hh-bill-detail li small { display: block; color: #84907c; font-size: 10px; }
+.hh-parking-launch { display: flex; width: 100%; align-items: center; gap: 14px; text-align: left; padding: 18px !important; border-radius: 18px !important; }
+.hh-parking-launch>span:last-child { margin-left: auto; font-size: 22px; }
+.hh-parking-launch b { display: block; font-size: 15px; }
+.hh-parking-launch small { display: block; font-size: 11px; color: #7b8e7b; margin-top: 5px; }
+.hh-parking-icon { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: #e4eee6; color: #306b4e; font-size: 25px; font-weight: 700; }
+.hh-parking-content { background: #fff; padding: 18px; border: 1px solid #dce6dc; border-radius: 18px; margin-top: 12px; }
+.hh-parking-content h3,.hh-admin-card h3 { margin: 10px 0; font-size: 17px; }
+.hh-home label,.hh-admin label { display: block; font-size: 12px; color: #617a66; margin: 12px 0; }
+.hh-home input,.hh-admin input,.hh-admin select { width: 100%; box-sizing: border-box; min-width: 0; font: inherit; font-size: 14px; padding: 12px; border: 1px solid #d6e1d4; border-radius: 10px; color: #28573f; background: #fbfcfa; margin-top: 6px; }
+.hh-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hh-home .hh-primary,.hh-admin .hh-primary { background: #1f6950; color: #fff; border-color: #1f6950; margin: 10px 0; width: 100%; }
+.hh-caption,.hh-empty { font-size: 11px; line-height: 1.7; color: #7a8e7c; }
+.hh-error,.hh-confirm { font-size: 12px; line-height: 1.7; background: #fff0dc; color: #896131; padding: 12px; border-radius: 10px; margin: 12px 0; }
+.hh-confirm button { margin-right: 7px; }
+.hh-pass { border: 1px solid #d6e3d4; border-radius: 18px; padding: 16px; margin: 18px 0; background: #f7faf4; }
+.hh-pass header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.hh-pass header small { font-size: 9px; letter-spacing: 1.5px; color: #7a9077; }
+.hh-pass header h3 { font-size: 25px; letter-spacing: 1px; margin: 8px 0; }
+.hh-pass>p { font-size: 12px; line-height: 1.8; }
+.hh-pill { font-size: 10px; border-radius: 15px; padding: 6px 8px; background: #e9eee3; color: #617956; white-space: nowrap; text-transform: capitalize; }
+.hh-pill.active { background: #dceddb; color: #3d7a46; }
+.hh-pill.cancelled,.hh-pill.expired { background: #f6e2d5; color: #aa6542; }
+.hh-qr { background: #fff; border-radius: 14px; overflow: hidden; max-width: 300px; margin: 12px auto; }
+.hh-qr img { width: 100%; display: block; }
+.hh-download { display: block; text-align: center; padding: 12px; background: #e1eddc; color: #33683d; text-decoration: none; border-radius: 10px; font-size: 12px; font-weight: 650; }
+.hh-code { margin: 12px 0; font-size: 11px; color: #698061; }
+.hh-code summary { cursor: pointer; padding: 8px 0; }
+.hh-code code { display: block; overflow-wrap: anywhere; background: #fff; padding: 8px; }
+.hh-pass .hh-cancel { border: 0; background: transparent; color: #a36242; width: 100%; font-size: 11px; }
+.hh-pass-row { display: flex; width: 100%; justify-content: space-between; align-items: center; text-align: left; gap: 10px; margin: 8px 0; }
+.hh-pass-row b { font-size: 12px; }
+.hh-pass-row small { display: block; color: #7b8e76; font-size: 10px; margin-top: 5px; }
+.hh-admin { color: #28543e; }
+.hh-admin>p { color: #73836c; line-height: 1.7; }
+.hh-admin-card { padding: 20px; border: 1px solid #dbe5d6; border-radius: 18px; background: #fff; margin: 16px 0; }
+.hh-admin-card>small { display: block; color: #7c8d76; margin-top: 4px; }
+.hh-admin>form { max-width: 650px; }
+.hh-admin-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(290px,1fr)); gap: 16px; align-items: start; }
+@media(max-width:380px) { .hh-form-row { grid-template-columns: 1fr; gap: 0; }.hh-balance { padding: 20px; }.hh-balance strong { font-size: 30px; }.hh-bill summary { flex-wrap: wrap; }.hh-admin-grid { grid-template-columns: 1fr; } }

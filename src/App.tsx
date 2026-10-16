@@ -1,4 +1,4 @@
-import ResidentialMap from './ResidentialMap';
+import HouseholdHome from './Household';
 import Routes from './Routes';
 import Weather from './Weather';
 import ResidentEmergency from './Emergency';
@@ -408,10 +408,12 @@ export default function App() {
                 <div className="status-icon"><Icon name="shield" /></div>
                 <div>
                   <div className="status-title">Connected to your community</div>
-                  <div className="status-copy">Bookings, reports & notices · Maps remain demos</div>
+                  <div className="status-copy">Bills, visitor passes & community updates</div>
                 </div>
                 <span className="live-dot" />
               </section>
+
+              <HouseholdHome />
 
               <section>
                 <div className="section-title-row">
@@ -441,7 +443,6 @@ export default function App() {
                 }}>SOS</Button>
               </section>
 
-              <ResidentialMap />
 
               <section className="notice-preview">
                 <div className="section-title-row">

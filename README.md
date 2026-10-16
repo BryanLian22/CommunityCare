@@ -234,3 +234,29 @@ Residents can tap a landmark and choose **I'm here**, or choose their position i
 Files added in this update: `src/ResidentialMap.tsx`, `src/ResidentialMap.css`, `server/residential.mjs`, `shared/residential-map.json`, `shared/residential-routing.mjs`, `shared/residential-routing.d.mts`, `tests/residential.test.mjs`.
 Files modified: `src/App.tsx`, `src/Routes.tsx`, `src/Admin.tsx`, `server/app.mjs`, `server/db.mjs`, `README.md`, `CHANGES.md`; rebuilt `dist/`.
 Focused verification: `node --test tests/residential.test.mjs`. The full testing phase remains deferred.
+
+## Household bills and visitor parking
+
+Home now shows an outstanding-balance card and separate electricity, water and management-fee totals near the top. **View bills** expands outstanding or all bills with due dates, overdue status and payment history. The residential navigator remains on Routes and has been removed from Home.
+
+### Bills
+- **Admin → Bills & payments** issues MYR bills to an active resident, with category, billing month, due date, amount and note/unit reference.
+- Admins can record a full or partial payment already received, including a receipt/reference. This is bookkeeping, not a payment gateway. It does not connect to electricity/water providers or charge residents.
+- A bill without payments may be voided with a reason; paid bills cannot be voided through this screen. Correct an unpaid erroneous bill by voiding it and issuing a replacement.
+- All amounts are stored as integer sen. Overpayment and stale revisions are rejected. Residents see only their own bills. Recorded changes are audited. There are no fabricated sample charges.
+- Home refreshes every 15 seconds while visible and on window focus. When a refresh fails, the page warns that displayed records may be stale.
+
+### Visitor parking
+1. On Home, expand **Visitor parking**. Enter visitor name, phone number, car plate and visit date. Choose **Generate visitor QR**.
+2. A persisted pass and QR image appear. Download the QR and share it with the visitor yourself. Reopen it from **My visitor passes** later. Cancel an unused pass if plans change; its saved QR then becomes invalid at verification.
+3. The QR holds a random opaque pass token in an app URL, not the visitor's personal data. Management scans it using a phone's camera, opens the app, signs in using an administrator account and selects **Verify pass**. The admin screen opens on Visitor parking when the URL contains a pass token. Alternatively paste the pass code or scanned URL into **Admin → Visitor parking**.
+4. Confirm visitor identity and car plate, then select **Confirm vehicle & check in**. Use **Record exit** when they leave. The server checks the date/status again for every action. A pass is valid for one entry on its visit date in Asia/Kuala_Lumpur; future, cancelled, expired and already-used passes cannot enter. Checked-in visitors can still check out after midnight.
+5. The QR is a visitor entry registration, not a reserved/assigned parking bay. Bay capacity, automatic barriers, a separate guard role, and an in-app camera scanner are not implemented. Verification is limited to existing administrator accounts. Do not share an administrator account; create individual authorized accounts using the existing admin setup.
+6. For phone scans, run the app at a URL reachable by the phone. A QR generated on `localhost` points to localhost on the scanning device, so use a deployed/site address or the code-paste alternative while developing. Do not post visitor QR codes publicly. No visitor or resident personal details are returned to unauthenticated QR scans.
+
+### Update and storage
+Keep your existing `.env` and `data/` folder. Run `npm install`, `npm run build`, then `npm start` (or `npm.cmd` in PowerShell). Two additive SQLite tables, `household_bills` and `visitor_passes`, are created automatically at server startup. Existing accounts, bookings, maps and other data are preserved. The ZIP intentionally excludes runtime databases, `.env`, `.git` and `node_modules`.
+
+Added: `src/Household.tsx`, `src/Household.css`, `server/household.mjs`, `tests/household.test.mjs`.
+Modified: `src/App.tsx`, `src/Admin.tsx`, `server/app.mjs`, `server/db.mjs`, `package.json`, `package-lock.json`, `README.md`, `CHANGES.md`; rebuilt `dist/`.
+Verification: `npm run build` and `node --test tests/household.test.mjs` passed. These focused checks cover ownership/admin permissions, integer balances and partial payments, stale revision rejection, QR generation, creation retries, cancellation, expiry and single-entry enforcement. Full user/phone testing remains deferred.

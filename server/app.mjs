@@ -1,3 +1,4 @@
+import { householdRoutes } from './household.mjs';
 import { readResidential, updateResidential } from './residential.mjs';
 import { searchPlaces, routeBetween } from './navigation.mjs';
 import { getWeather, searchWeatherCities } from './weather.mjs';
@@ -285,6 +286,7 @@ export const server = http.createServer(async (req, res) => {
     }
     const u = session(req);
     if (!u) fail(401, 'Please sign in.');
+    if (await householdRoutes({ db, u, path, method, readBody: () => body(req), send, res, audit, transaction, throttle })) return;
     if (path === '/api/residential-map' && method === 'GET') return send(res, 200, readResidential(db));
     if (path === '/api/navigation/search' && method === 'GET') {
       throttle('nav-search:' + u.id, 60);
