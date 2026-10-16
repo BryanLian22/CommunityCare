@@ -1,3 +1,9 @@
+# Version 2.9 — Live weather
+
+Replaced sample weather with authenticated server calls to Open-Meteo for weather, forecasts, air quality and city search. Added per-account location preferences, explicit optional GPS, provider attribution, source timestamps, missing-data/error states and ten-minute refresh/cache. Added three-day and hourly outlooks. Removed fabricated thunderstorm/flood-risk figures.
+
+Build, location persistence/isolation and normalization checks passed. Live weather, air-quality and city-search requests succeeded. Simulated-browser location selection and forecast expansion passed using a controlled response. Provider timeouts are surfaced rather than replaced with demo data. Full user and real-device GPS testing remains for the final phase.
+
 # Version 2.8 — Emergency assistance and SOS handling
 
 Added resident SOS submission with manual location, optional one-time GPS attachment/callback details, direct guard/management calling and persistent history. Added an admin emergency desk with acknowledgement, responder tracking, resolution/false-alarm notes, active-alert banner and in-app notifications. Both alert views poll every five seconds while visible.

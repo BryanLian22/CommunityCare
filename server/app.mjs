@@ -1,3 +1,4 @@
+import {getWeather,searchWeatherCities} from './weather.mjs';
 import http from 'node:http';
 import { randomUUID, randomBytes } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
@@ -136,6 +137,22 @@ export const server=http.createServer(async(req,res)=>{
   const t=now(),history=JSON.parse(r.history);history.push({status,at:t,note,assignee,actor:u.name});
   transaction(()=>{db.prepare('UPDATE emergency_alerts SET status=?,assignee=?,note=?,history=?,revision=revision+1,updated=? WHERE id=?').run(status,assignee,note,JSON.stringify(history),t,r.id);audit(u,'SOS '+status,r.id);if(admin)emergencyNotify(r.user_id,'SOS · '+status.replaceAll('_',' '),note,r.id,'resident');else emergencyAdmins('SOS · Resident cancelled alert',`${u.name} cancelled their alert.`,r.id)});
   return send(res,200,{ok:true});
+ }
+ if(path==='/api/weather/location'&&method==='GET')return send(res,200,{location:db.prepare('SELECT name,latitude,longitude FROM weather_locations WHERE user_id=?').get(u.id)||null});
+ if(path==='/api/weather/location'&&method==='PATCH'){
+  const b=await body(req),name=text(b.name,'Location name',180);
+  if(!Number.isFinite(b.latitude)||b.latitude<-90||b.latitude>90||!Number.isFinite(b.longitude)||b.longitude<-180||b.longitude>180)fail(400,'Invalid weather location.');
+  const latitude=Math.round(b.latitude*100)/100,longitude=Math.round(b.longitude*100)/100;
+  db.prepare('INSERT INTO weather_locations(user_id,name,latitude,longitude,updated) VALUES(?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET name=excluded.name,latitude=excluded.latitude,longitude=excluded.longitude,updated=excluded.updated').run(u.id,name,latitude,longitude,now());
+  return send(res,200,{location:{name,latitude,longitude}});
+ }
+ if(path==='/api/weather/search'&&method==='GET'){
+  throttle('weather-search:'+u.id,40);const q=text(url.searchParams.get('q'),'City name',100);if(q.length<2)fail(400,'Enter at least two characters.');
+  try{return send(res,200,{locations:await searchWeatherCities(q)})}catch{fail(502,'City search is unavailable. Try again later.')}
+ }
+ if(path==='/api/weather'&&method==='GET'){
+  throttle('weather:'+u.id,60);const location=db.prepare('SELECT name,latitude,longitude FROM weather_locations WHERE user_id=?').get(u.id);if(!location)fail(400,'Choose a weather location first.');
+  try{return send(res,200,{location,...await getWeather(location.latitude,location.longitude)})}catch{fail(502,'Live weather is unavailable. Check the server internet connection and try again.')}
  }
  if(path==='/api/facilities'&&method==='GET')return send(res,200,{facilities:facilityList()});
  if(path==='/api/bookings/availability'&&method==='GET'){

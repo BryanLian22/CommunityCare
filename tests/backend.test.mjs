@@ -194,6 +194,20 @@ await test('SOS lifecycle, privacy, duplicate protection and persistent notifica
  assert.equal((await a.request(`/emergencies/${second}`,'PATCH',{status:'cancelled',revision:1})).status,200);
  const disk=new DatabaseSync(process.env.DATABASE_PATH);assert.equal(disk.prepare('SELECT status FROM emergency_alerts WHERE id=?').get(id).status,'resolved');assert.equal(disk.prepare('SELECT latitude FROM emergency_alerts WHERE id=?').get(second).latitude,3.1);disk.close();
 });
+await test('weather location preferences validate and stay private',async()=>{
+ assert.equal((await a.request('/weather/location')).data.location,null);
+ assert.equal((await a.request('/weather/location','PATCH',{name:'Invalid',latitude:91,longitude:0})).status,400);
+ assert.equal((await a.request('/weather/location','PATCH',{name:'Kuala Lumpur',latitude:3.139,longitude:101.687})).status,200);
+ assert.equal((await a.request('/weather/location')).data.location.latitude,3.14);
+ assert.equal((await b.request('/weather/location')).data.location,null);
+ const disk=new DatabaseSync(process.env.DATABASE_PATH);assert.equal(disk.prepare('SELECT name FROM weather_locations WHERE user_id=?').get(aid).name,'Kuala Lumpur');disk.close();
+});
+await test('weather normalization preserves missing values and separates forecasts from AQI',async()=>{
+ const {normalizeWeather}=await import('../server/weather.mjs');const t=Math.floor(Date.now()/3600000)*3600;
+ const fixture={timezone:'Asia/Kuala_Lumpur',current:{time:t,temperature_2m:28,apparent_temperature:null,weather_code:80,wind_speed_10m:12},hourly:{time:[t-3600,t,t+3600],precipitation_probability:[10,null,60]},daily:{time:[t],temperature_2m_max:[30],temperature_2m_min:[24],weather_code:[80],precipitation_probability_max:[70]}};
+ const data=normalizeWeather(fixture,null);assert.equal(data.current.feelsLike,null);assert.equal(data.air,null);assert.equal(data.hourly.length,2);assert.equal(data.hourly[0].rain,null);assert.equal(data.daily[0].rain,70);
+ assert.throws(()=>normalizeWeather({},null));assert.equal(normalizeWeather(fixture,{current:{us_aqi:52,time:t}}).air.aqi,52);
+});
 await test('profile persistence, password change revokes old sessions, and disabled accounts lose access',async()=>{
  await a.request('/profile','PATCH',{name:'Alice Updated',largeText:true,contrast:true});assert.equal((await a.request('/auth/me')).data.user.name,'Alice Updated');
  const second=client();await second.request('/auth/login','POST',{email:'alice@example.test',password});

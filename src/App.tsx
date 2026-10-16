@@ -1,3 +1,4 @@
+import Weather from './Weather';
 import ResidentEmergency from './Emergency';
 import RequestUpdate from './RequestUpdate';
 import BookFacility,{BookingHistory,bookingStarted} from './Bookings';
@@ -100,7 +101,7 @@ function Button({ children, className = "", onClick, label, disabled }: {
 }
 
 type Tab = "market" | "home" | "community" | "safety" | "routes";
-type Sheet = "service" | "offer" | "booking" | "report" | "suspicious" | "sos" | "contacts" | "notice" | "profile" | "services" | "forecast" | "history" | "notifications" | "request-update" | null;
+type Sheet = "service" | "offer" | "booking" | "report" | "suspicious" | "sos" | "contacts" | "notice" | "profile" | "services" | "history" | "notifications" | "request-update" | null;
 
 const quickActions: { title: string; subtitle: string; icon: IconName; tone: string; sheet?: Sheet }[] = [
   { title: "Contacts", subtitle: "People & management", icon: "contact", tone: "blue", sheet: "contacts" },
@@ -329,29 +330,7 @@ export default function App() {
           {tab === "safety" && (
             <div className="screen-content safety-screen">
               <section className="page-heading"><div className="overline safety-overline">COMMUNITY SAFETY</div><div className="screen-title">Emergency help</div><div className="muted">Send an alert, track updates, or call your community team.</div></section>
-              <section className="environment-card">
-                <div className="environment-top">
-                  <div className="weather-now"><span className="weather-icon"><Icon name="cloud" size="lg" /></span><div><b>24°</b><small>Light rain · Feels like 23°</small></div></div>
-                  <span className="live-badge"><i /> DEMO</span>
-                </div>
-                <div className="environment-stats">
-                  <div><small>AIR QUALITY</small><b><span className="aqi-dot" />42 <em>Good</em></b></div>
-                  <div><small>RAIN</small><b>78%</b></div>
-                  <div><small>WIND</small><b>18 <em>km/h</em></b></div>
-                </div>
-                <div className="environment-advice"><Icon name="umbrella" size="sm" /><span><b>Bring an umbrella.</b> Rain is likely until 4 PM. Outdoor activity is safe.</span></div>
-              </section>
-
-              <section className="disaster-card">
-                <div className="disaster-heading"><span><Icon name="alert" /></span><div><small>NATURAL HAZARD FORECAST</small><b>Thunderstorm watch</b></div><em>MODERATE</em></div>
-                <div className="prediction-row">
-                  <div><span>5–8 PM</span><small>Expected window</small></div>
-                  <div><span>65%</span><small>Probability</small></div>
-                  <div><span>Low</span><small>Flood risk</small></div>
-                </div>
-                <div className="disaster-advice">Strong winds may develop this evening. Stay indoors if an alert is issued and keep devices charged.</div>
-                <Button onClick={() => setSheet("forecast")}>View forecast & preparedness <Icon name="arrow" size="sm" /></Button>
-              </section>
+              <Weather/>
 
               <section className="sos-panel">
                 <div className="pulse-ring"><Button className="sos-main" onClick={() => {setRequestTarget(undefined);setSheet("sos")}}><span>SOS</span><small>PRESS FOR HELP</small></Button></div>
@@ -507,7 +486,7 @@ export default function App() {
                 <h3>Reports</h3>{!reports.length && <p>No reports yet.</p>}{reports.map(r => <div key={r.id}><b>{r.category}</b><span>{new Date(r.created).toLocaleString()} · {r.status.replaceAll("_"," ")}</span><p>{r.details}</p><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(r.status)} onClick={() => removeRecord("reports",r.id)}>Cancel report</Button></div>)}</div>
               </>}
               {sheet === "services" && <ResidentAssistance key={requestTarget||"all"} requests={data.assistance} onRefresh={refresh} targetId={requestTarget}/> }
-              {sheet === "forecast" && <><div className="sheet-title">Sample forecast</div><p className="sheet-subtitle">All weather figures on this screen are illustrative. No weather or disaster service is connected.</p><p>For current conditions, check your local official weather service. Do not use this demo to make safety decisions.</p><Button className="primary-action" onClick={() => setSheet(null)}>Understood</Button></>}
+
               {sheet === "notice" && <><div className="sheet-title">Management notices</div><div className="sheet-subtitle">Published by your community administrators.</div><div className="notice-list">{notices.length===0&&<p>No notices published yet.</p>}{notices.map(n=><div key={n.id}><span className={n.updated>data.noticesReadAt?"unread":""}/><span><b>{n.title}</b><small>{new Date(n.updated).toLocaleString()}</small><p className="resident-notice-body">{n.body}</p></span></div>)}</div><Button className="primary-action" disabled={busy} onClick={()=>void perform("/notices/read","POST",{},"Notices marked as read.")}>Mark all as read</Button></>}
 
             </section>

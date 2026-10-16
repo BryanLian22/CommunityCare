@@ -79,4 +79,8 @@ CREATE TABLE IF NOT EXISTS emergency_notifications (
  audience TEXT NOT NULL CHECK(audience IN ('resident','admin')),created TEXT NOT NULL, read_at TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS emergency_notification_owner ON emergency_notifications(user_id,created);
-PRAGMA user_version = 7;
+CREATE TABLE IF NOT EXISTS weather_locations (
+ user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+ name TEXT NOT NULL, latitude REAL NOT NULL, longitude REAL NOT NULL, updated TEXT NOT NULL
+);
+PRAGMA user_version = 8;

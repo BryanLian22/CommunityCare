@@ -6,6 +6,18 @@ React + TypeScript frontend with a Node.js API and SQLite database. The existing
 
 Stop the app first and back up the whole old project. Extract this ZIP into a new folder, then copy your old `data` folder and optional `.env` into the new `CommunityCare` folder. If `.env` uses a custom DATABASE_PATH, preserve that database location. Run `npm.cmd ci` and `npm.cmd run dev`. Existing accounts and records remain; the contacts table is added automatically. You do not need to create another admin.
 
+## Live weather and air quality
+
+Open **Safety**, then choose a city under Local weather. Search for your city, press **Use Kuala Lumpur**, or explicitly choose **Use my location**. Your selected area is saved privately to your account. Approximate coordinates (rounded to two decimal places) are sent to Open-Meteo; GPS is not requested automatically. Changing location clears old weather while the new area's data loads.
+
+The card shows current model-estimated temperature, feels-like temperature, wind, humidity, rain probability for the current forecast hour and U.S. AQI. Forecasts show three days plus twelve hourly entries in the selected location's timezone. Values are rounded for display. U.S. AQI is not Malaysia's official API index. Missing air-quality data is shown as unavailable without hiding weather.
+
+The page refreshes every ten minutes while visible and when returning to it. The server caches each area for ten minutes and combines concurrent requests. A manual refresh may return that cached result. Conditions and air quality have their own timestamps. Failed refreshes show an error and label any previously loaded weather as Last result; no sample numbers are substituted.
+
+Open-Meteo's public endpoints are configured for this non-commercial prototype, with no API key needed. The server needs internet access to `api.open-meteo.com`, `air-quality-api.open-meteo.com`, and `geocoding-api.open-meteo.com`. Provider outages/rate limits can temporarily affect availability. Review [Open-Meteo licensing and commercial plans](https://open-meteo.com/en/pricing) before commercial hosting. Forecast documentation: https://open-meteo.com/en/docs; air quality: https://open-meteo.com/en/docs/air-quality-api; city search: https://open-meteo.com/en/docs/geocoding-api.
+
+The old sample thunderstorm-watch probability and flood-risk panel have been removed. Forecast conditions are not official weather warnings; official warning and flood feeds are not connected.
+
 ## Emergency assistance and SOS
 
 Residents: open **SOS** on Home or Safety. Call the saved Guard House or Management number directly, or select the incident type and enter your block/unit/landmark. Optionally attach a one-time GPS location and callback number. **Send SOS to management** saves the alert and creates in-app notifications for active administrators. Location is requested only when you press Attach; it is sent only with the alert. There is no background location tracking.
@@ -165,7 +177,7 @@ This is a local full-stack application, not a hosted service or native Android/i
 
 Single-server SQLite and in-memory rate limits suit this local prototype. Multi-server deployment, email verification, password-reset emails, automated backups and monitoring require additional deployment work. Do not expose the Vite development server as a production service.
 
-Weather, disaster predictions, marketplace offers/prices and illustrated routes are still sample data. SOS sends in-app alerts to community administrators; it does not contact emergency services. Management submissions are real database records, but no external responders or providers are dispatched.
+Marketplace offers/prices and illustrated routes are still sample data. Weather uses Open-Meteo; official disaster warnings are not connected. SOS sends in-app alerts to community administrators; it does not contact emergency services. Management submissions are real database records, but no external responders or providers are dispatched.
 
 ## Main files
 
