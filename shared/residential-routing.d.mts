@@ -1,0 +1,2 @@
+export function effectiveStatus(item: { status: string; updated: string }, now?: number): string;
+export function residentialRoute(nodes: {id: string; status: string; updated: string}[], edges: {id: string; from: string; to: string; status: string; updated: string; accessible: boolean; kind: string}[], start: string, end: string, wheelchair: boolean, now?: number): {nodes: string[]; edges: string[]} | null;

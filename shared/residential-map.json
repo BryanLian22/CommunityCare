@@ -1,0 +1,25 @@
+{
+  "nodes": [
+    {"id":"gate","name":"Guard house","x":48,"y":280,"floor":0,"kind":"guard","gpsEligible":true},
+    {"id":"centre","name":"Central courtyard","x":188,"y":280,"floor":0,"kind":"junction","gpsEligible":true},
+    {"id":"office","name":"Management","x":188,"y":155,"floor":0,"kind":"office","gpsEligible":false},
+    {"id":"lift-a","name":"Lift A","x":65,"y":155,"floor":0,"kind":"lift","gpsEligible":false},
+    {"id":"tower-a","name":"Tower A · Level 1","x":65,"y":55,"floor":1,"kind":"tower","gpsEligible":false},
+    {"id":"lift-b","name":"Lift B","x":315,"y":155,"floor":0,"kind":"lift","gpsEligible":false},
+    {"id":"tower-b","name":"Tower B · Level 1","x":315,"y":55,"floor":1,"kind":"tower","gpsEligible":false},
+    {"id":"wc","name":"Accessible WC","x":315,"y":280,"floor":0,"kind":"wc","gpsEligible":false},
+    {"id":"garden","name":"Garden","x":315,"y":390,"floor":0,"kind":"garden","gpsEligible":true}
+  ],
+  "edges": [
+    {"id":"gate-court","from":"gate","to":"centre","name":"Entrance path","kind":"level"},
+    {"id":"court-office","from":"centre","to":"office","name":"Management path","kind":"level"},
+    {"id":"court-lift-a","from":"centre","to":"lift-a","name":"Tower A approach","kind":"level"},
+    {"id":"lift-a-upper","from":"lift-a","to":"tower-a","name":"Lift A to Level 1","kind":"lift"},
+    {"id":"court-lift-b","from":"centre","to":"lift-b","name":"Tower B approach","kind":"level"},
+    {"id":"lift-b-upper","from":"lift-b","to":"tower-b","name":"Lift B to Level 1","kind":"lift"},
+    {"id":"upper-bridge","from":"tower-a","to":"tower-b","name":"Level 1 connecting bridge","kind":"level"},
+    {"id":"court-wc","from":"centre","to":"wc","name":"WC access ramp","kind":"ramp"},
+    {"id":"wc-garden","from":"wc","to":"garden","name":"Garden path","kind":"level"},
+    {"id":"stairs-a","from":"centre","to":"tower-a","name":"Tower A stairs","kind":"stairs"}
+  ]
+}

@@ -1,3 +1,4 @@
+import ResidentialMap from './ResidentialMap';
 import Routes from './Routes';
 import Weather from './Weather';
 import ResidentEmergency from './Emergency';
@@ -440,48 +441,7 @@ export default function App() {
                 }}>SOS</Button>
               </section>
 
-              <section className="home-residential">
-                <div className="section-title-row">
-                  <div>
-                    <div className="section-title">Residential area map</div>
-                    <div className="section-note">Oak Residence · Sample facility status</div>
-                  </div>
-                  <Button onClick={() => setTab("routes")}>Open map</Button>
-                </div>
-                <div className="home-map">
-                  <span className="home-map-block block-a">TOWER A</span>
-                  <span className="home-map-block block-b">TOWER B</span>
-                  <span className="home-map-block block-c">TOWER C</span>
-                  <span className="home-map-road road-horizontal" />
-                  <span className="home-map-road road-vertical" />
-                  <span className="home-area-label">OAK RESIDENCE</span>
-                  <Button className="home-landmark guard" onClick={() => notify("Sample: Guard house · Open 24 hours. Status is not verified.")}>
-                    <span><Icon name="shield" size="sm" /></span>
-                    <small>Guard house</small>
-                    <em>Open 24h</em>
-                  </Button>
-                  <Button className="home-landmark office" onClick={() => notify("Sample: Management office · Open until 6 PM. Status is not verified.")}>
-                    <span><Icon name="building" size="sm" /></span>
-                    <small>Management</small>
-                    <em>Open</em>
-                  </Button>
-                  <Button className="home-facility restroom" onClick={() => notify("Sample: Accessible restroom · Available. Status is not verified.")}>
-                    <Icon name="wheelchair" size="sm" />
-                    <span>Accessible WC</span>
-                  </Button>
-                  <Button className="home-facility lift" onClick={() => notify("Sample: Lift A · Operating normally. Status is not verified.")}>
-                    <Icon name="elevator" size="sm" />
-                    <span>Lift A</span>
-                    <i />
-                  </Button>
-                  <span className="you-are-here"><i />Demo location</span>
-                </div>
-                <div className="home-map-legend">
-                  <span><i className="open" />Open now</span>
-                  <span><i className="accessible" />Accessible facility</span>
-                  <span><i className="location" />Your location</span>
-                </div>
-              </section>
+              <ResidentialMap />
 
               <section className="notice-preview">
                 <div className="section-title-row">

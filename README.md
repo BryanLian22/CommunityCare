@@ -212,3 +212,25 @@ Provider documentation and terms:
 Updated files: `src/App.tsx`, `server/app.mjs`, `package.json`, `package-lock.json`, `README.md`, `CHANGES.md`, generated `dist/`.
 Added files: `src/Routes.tsx`, `src/Routes.css`, `server/navigation.mjs`, `tests/navigation.test.mjs`.
 When updating an existing installation, preserve your `.env` and `data/` directory. Run `npm install`, `npm run build`, then `npm start` (Windows PowerShell can use `npm.cmd`). No database migration is needed for Routes.
+
+## Live virtual residential map and wheelchair routing
+
+The Residential navigator appears above the real Routes map and replaces the old sample map on Home. It is a schematic, not a geographical map or a surveyed floor plan. The real street map and its Google Maps handoff remain available below it.
+
+### Management setup
+1. Open **Admin → Residential map → Lifts & landmarks**. Rename/reposition the starter landmarks to match the property and verify that its connections match the actual building. Mark each verified landmark Available; enter closure/repair notes when needed.
+2. Open **Paths & accessibility**. Verify each connection physically, mark its status, and tick wheelchair suitability only after checking width, slope, surface, steps and lift access. Stairs cannot be made wheelchair-suitable.
+3. Both endpoints and every connection on a route must be confirmed Available. Lift A and Lift B each connect ground to Level 1; the upper bridge links the Level 1 lobbies. The fixed starter topology must match the property before use. A different building topology needs a tailored graph; moving a visual marker alone does not change its connections.
+4. Optional: add surveyed latitude/longitude to the outdoor guard house, central courtyard and garden landmarks for GPS matching. Never copy approximate coordinates from an unrelated property.
+
+All items initially show **Not confirmed**. Nothing is seeded as a working lift. Status updates persist in SQLite (`residential_map_items`) and are audited. Confirming Available expires after 24 hours; closed/repair states remain until management changes them. The additive table is created on server startup; existing accounts, bookings and other records are preserved. Concurrent edits use revision checks.
+
+Residents receive management updates every 10 seconds while the page is visible and on returning to the page. Routes recalculate from the same graph when a lift/path changes. The wheelchair mode excludes stairs, unsuitable connections, closures, repairs and unconfirmed status. If all safe connections are unavailable, no route is shown. Standard mode can use stairs. These schematic routes minimize the number of connections and intentionally do not claim distances or travel times. Offline/failed status refresh pauses routes rather than relying on cached availability.
+
+Residents can tap a landmark and choose **I'm here**, or choose their position in the dropdown. The blue marker is explicitly labelled as a manual selection. **Locate near a landmark** takes one GPS reading, accepts only accuracy of 35 metres or better and a configured outdoor reference within 60 metres, and labels the result as an approximate landmark match. It never infers floors or tracks indoor movement. GPS requires HTTPS/localhost and permission. Update the selected location as you move. No resident position is stored in the database.
+
+“Live” currently means live management-entered status, not a connection to lift controllers, IoT telemetry or indoor positioning hardware. Hardware integrations can be added later. For final acceptance, test management updates across two devices and validate the layout, accessibility and GPS references onsite.
+
+Files added in this update: `src/ResidentialMap.tsx`, `src/ResidentialMap.css`, `server/residential.mjs`, `shared/residential-map.json`, `shared/residential-routing.mjs`, `shared/residential-routing.d.mts`, `tests/residential.test.mjs`.
+Files modified: `src/App.tsx`, `src/Routes.tsx`, `src/Admin.tsx`, `server/app.mjs`, `server/db.mjs`, `README.md`, `CHANGES.md`; rebuilt `dist/`.
+Focused verification: `node --test tests/residential.test.mjs`. The full testing phase remains deferred.

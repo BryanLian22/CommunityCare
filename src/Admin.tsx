@@ -1,3 +1,4 @@
+import { ResidentialMapAdmin } from './ResidentialMap';
 import { AdminEmergencies } from './Emergency';
 import RequestUpdate from './RequestUpdate';
 import FacilityManagement from './FacilityManagement';
@@ -7,7 +8,7 @@ import { AdminAssistance } from './Assistance';
 import { useEffect, useState } from 'react';
 import { CommunityContactSettings } from './ContactDirectory';
 import { api, type AdminData, type Entry, type Notice, type AppNotification, type EmergencyAlert } from './api';
-type Section = 'overview' | 'residents' | 'bookings' | 'reports' | 'services' | 'notices' | 'contacts' | 'assistance' | 'notifications' | 'facilities' | 'request-update' | 'emergencies';
+type Section = 'residential-map' | 'overview' | 'residents' | 'bookings' | 'reports' | 'services' | 'notices' | 'contacts' | 'assistance' | 'notifications' | 'facilities' | 'request-update' | 'emergencies';
 const sections: { id: Section; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'emergencies', label: 'Emergency alerts' },
@@ -15,6 +16,7 @@ const sections: { id: Section; label: string }[] = [
   { id: 'assistance', label: 'Assistance requests' },
   { id: 'residents', label: 'Residents' },
   { id: 'bookings', label: 'Facility bookings' },
+  { id: 'residential-map', label: 'Residential map' },
   { id: 'facilities', label: 'Manage facilities' },
   { id: 'reports', label: 'Reports' },
   { id: 'services', label: 'Home services' },
@@ -182,6 +184,7 @@ export default function Admin() {
             </table>
           </div>
         </section>}
+        {section === 'residential-map' && <ResidentialMapAdmin />}
         {section === 'facilities' && <FacilityManagement facilities={data.facilities} bookings={data.bookings} onRefresh={load} />}
         {section === 'bookings' && <AdminBookings records={data.bookings} facilities={data.facilities} onRefresh={load} />}
         {(section === 'reports' || section === 'services') && <section className="admin-panel">

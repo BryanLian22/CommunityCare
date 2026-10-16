@@ -1,3 +1,4 @@
+import { readResidential, updateResidential } from './residential.mjs';
 import { searchPlaces, routeBetween } from './navigation.mjs';
 import { getWeather, searchWeatherCities } from './weather.mjs';
 import http from 'node:http';
@@ -284,6 +285,7 @@ export const server = http.createServer(async (req, res) => {
     }
     const u = session(req);
     if (!u) fail(401, 'Please sign in.');
+    if (path === '/api/residential-map' && method === 'GET') return send(res, 200, readResidential(db));
     if (path === '/api/navigation/search' && method === 'GET') {
       throttle('nav-search:' + u.id, 60);
       const q = text(url.searchParams.get('q'), 'Place name', 160);
@@ -541,6 +543,16 @@ export const server = http.createServer(async (req, res) => {
     }
     if (path.startsWith('/api/admin/')) {
       if (u.role !== 'admin') fail(403, 'Administrator access required.');
+      const residentialMatch = path.match(/^\/api\/admin\/residential-map\/([a-z0-9-]+)$/);
+      if (residentialMatch && method === 'PATCH') {
+        const b = await body(req);
+        const item = transaction(() => {
+          const result = updateResidential(db, residentialMatch[1], b);
+          audit(u, 'update residential map: ' + result.status, result.id);
+          return result;
+        });
+        return send(res, 200, { item });
+      }
       if (path === '/api/admin/data' && method === 'GET') {
         const users = db.prepare('SELECT * FROM users ORDER BY created DESC').all().map(publicUser);
         const rows = db.prepare("SELECT r.*,u.name resident_name,u.email resident_email FROM records r JOIN users u ON u.id=r.user_id WHERE r.kind!='contacts' ORDER BY r.created DESC").all();

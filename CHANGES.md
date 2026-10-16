@@ -79,3 +79,11 @@ Validation: production build and TypeScript check passed; all 8 backend integrat
 - Added opt-in foreground GPS following, accuracy/time status, recenter, stop and explicit recalculation from GPS.
 - Added Google Maps handoff for native navigation and honest accessibility/traffic limitations.
 - Added authenticated, rate-limited provider endpoints, timeout/error handling and bounded caching; enabled only the OSM tile host in production CSP and a provider-compatible referrer policy.
+
+## Virtual residential navigator
+- Added a live database-backed schematic above Routes' street map and on Home.
+- Added wheelchair/standard route selection, manual current-position selection, optional GPS-to-outdoor-landmark matching and clear source labels.
+- Added admin editing for landmark names/positions, GPS reference coordinates, lift/path statuses, notes and wheelchair suitability.
+- Added automatic route recalculation on refreshed status, closures and unavailable lifts; stairs never enter wheelchair routes.
+- Added safe unconfirmed defaults, 24-hour Available expiry, offline route suspension, optimistic concurrency and audit records.
+- Verified five focused checks covering safe defaults, persistence/conflicts, alternate lift routes, unsafe/stale path exclusion and admin-only API changes. Production build passed.

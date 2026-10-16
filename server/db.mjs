@@ -1,3 +1,4 @@
+import { initializeResidential } from './residential.mjs';
 import seedFacilities from '../shared/facilities.json' with {type: 'json'};
 import { randomUUID } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
@@ -9,6 +10,7 @@ if (databasePath !== ':memory:') mkdirSync(dirname(resolve(databasePath)), { rec
 export const db = new DatabaseSync(databasePath);
 db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
 db.exec(readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'));
+initializeResidential(db);
 // Seed once per name, preserving administrator changes on every later startup.
 for (const f of seedFacilities) db.prepare('INSERT OR IGNORE INTO facilities(id,name,category,description,icon,created,updated) VALUES(?,?,?,?,?,?,?)').run(randomUUID(), f.name, f.category, f.description, f.icon, new Date().toISOString(), new Date().toISOString());
 // Preserve any facility already referenced by an older database.

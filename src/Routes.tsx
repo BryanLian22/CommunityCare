@@ -1,3 +1,4 @@
+import ResidentialMap from "./ResidentialMap";
 import { useEffect, useRef, useState } from "react"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
@@ -347,6 +348,7 @@ export default function Routes() {
     : ""
   return (
     <section className="live-routes">
+      <ResidentialMap />
       <header className="nav-heading">
         <div>
           <span className="nav-eyebrow">EXPLORE WITH CONFIDENCE</span>
