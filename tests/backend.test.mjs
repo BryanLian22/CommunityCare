@@ -82,6 +82,22 @@ await test('assistance ownership, assignment, ordered progression, conflicts and
  const cancelId=(await a.request('/assistance','POST',payload)).data.id;
  assert.equal((await a.request(`/assistance/${cancelId}`,'PATCH',{status:'cancelled',revision:1})).status,200);
 });
+await test('notifications are persistent, isolated and independently marked read',async()=>{
+ const adminItems=(await admin.request('/notifications')).data.notifications;
+ assert(adminItems.some(n=>n.title==='New assistance request'));assert(adminItems.some(n=>n.title==='Assistance request cancelled'));
+ const residentItems=(await a.request('/notifications')).data.notifications;assert(residentItems.length>=3);assert(residentItems.every(n=>!n.readAt));
+ assert.equal((await b.request('/notifications')).data.notifications.length,0);
+ const id=residentItems[0].id;
+ assert.equal((await b.request(`/notifications/${id}/read`,'POST',{})).status,404);
+ assert.equal((await a.request(`/notifications/${id}/read`,'POST',{})).status,200);
+ assert((await a.request('/notifications')).data.notifications.find(n=>n.id===id).readAt);
+ assert((await admin.request('/notifications')).data.notifications.every(n=>!n.readAt));
+ await b.request('/notifications/all/read','POST',{ids:residentItems.map(n=>n.id)});
+ assert((await a.request('/notifications')).data.notifications.some(n=>!n.readAt));
+ assert.equal((await a.request('/notifications/all/read','POST',{ids:residentItems.map(n=>n.id)})).status,200);
+ assert((await a.request('/notifications')).data.notifications.every(n=>n.readAt));
+ const disk=new DatabaseSync(process.env.DATABASE_PATH);assert(disk.prepare('SELECT read_at FROM notifications WHERE id=?').get(id).read_at);disk.close();
+});
 await test('cancelled booking frees its slot and records persist on disk',async()=>{
  assert.equal((await a.request(`/records/bookings/${booking}`,'DELETE',{})).status,200);
  assert.equal((await b.request('/records/bookings','POST',{facility:'Gym',date:'2099-12-01',time:'9:00 AM'})).status,201);

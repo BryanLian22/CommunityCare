@@ -1,3 +1,9 @@
+# Version 2.3 — In-app assistance notifications
+
+Added persistent, account-owned notifications with unread badges, All/Unread filters, individual/bulk read actions and links to requests. Active admins receive new-request and resident-cancellation alerts. Request owners receive assignment/status/note updates. Request changes and notification creation share a database transaction. Notification polling in the admin dashboard does not overwrite unsaved request forms.
+
+Additive notifications table migration preserves existing records. Alerts start with new activity; no historical backfill. Phone push, email, SMS and staff-account alerts are not connected. Production build and focused API/UI checks passed; full user testing remains for the final phase.
+
 # Version 2.2 — Request Assistance
 
 Added assistance submission, private resident tracking, cancellation before work begins, admin assignment by staff name, search and status filters, sequential progress updates and timestamped history. All request data is stored in SQLite. Existing installations receive an additive schema migration. Revision checks prevent overwriting concurrent updates.

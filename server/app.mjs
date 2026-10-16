@@ -26,6 +26,10 @@ function record(r){return {...JSON.parse(r.payload),id:r.id,created:r.created,st
 function audit(u,action,id){db.prepare('INSERT INTO audit_log(actor_id,action,target_id,created) VALUES(?,?,?,?)').run(u.id,action,id,now())}
 function assistance(r){return {...r,history:JSON.parse(r.history)}}
 function assistanceList(userId){return db.prepare('SELECT a.*,u.name residentName,u.email residentEmail FROM assistance_requests a JOIN users u ON u.id=a.user_id '+(userId?'WHERE a.user_id=? ':'')+'ORDER BY a.created DESC').all(...(userId?[userId]:[])).map(assistance)}
+function notifications(userId){return db.prepare('SELECT id,title,body,request_id requestId,audience,created,read_at readAt FROM notifications WHERE user_id=? ORDER BY created DESC,id DESC').all(userId)}
+function notifyUser(userId,title,body,requestId,audience){db.prepare('INSERT INTO notifications(id,user_id,title,body,request_id,audience,created) VALUES(?,?,?,?,?,?,?)').run(randomUUID(),userId,title,body,requestId,audience,now())}
+function notifyAdmins(title,body,requestId){for(const admin of db.prepare("SELECT id FROM users WHERE role='admin' AND active=1").all())notifyUser(admin.id,title,body,requestId,'admin')}
+function transaction(fn){db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result}catch(e){db.exec('ROLLBACK');throw e}}
 const assistanceTypes=['Wheelchair / mobility support','Shopping / carrying groceries','Transport assistance','Home maintenance','Other assistance'];
 const assistanceNext={pending:['accepted','rejected','cancelled'],accepted:['in_progress','cancelled'],in_progress:['completed','cancelled'],completed:[],rejected:[],cancelled:[]};
 const limits=new Map();
@@ -87,13 +91,25 @@ export const server=http.createServer(async(req,res)=>{
  if(path==='/api/data'&&method==='GET'){
   const rows=db.prepare('SELECT * FROM records WHERE user_id=? ORDER BY created DESC').all(u.id);
   const data=Object.fromEntries(kinds.map(k=>[k,rows.filter(r=>r.kind===k).map(record)]));
-  return send(res,200,{...data,assistance:assistanceList(u.id),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all(),communityContacts:db.prepare("SELECT id,name,phone,hours,description,updated FROM community_contacts ORDER BY CASE id WHEN 'management' THEN 0 ELSE 1 END").all(),noticesReadAt:u.notices_read_at});
+  return send(res,200,{...data,notifications:notifications(u.id).filter(n=>n.audience==='resident'),assistance:assistanceList(u.id),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all(),communityContacts:db.prepare("SELECT id,name,phone,hours,description,updated FROM community_contacts ORDER BY CASE id WHEN 'management' THEN 0 ELSE 1 END").all(),noticesReadAt:u.notices_read_at});
+ }
+ if(path==='/api/notifications'&&method==='GET')return send(res,200,{notifications:notifications(u.id)});
+ const notificationMatch=path.match(/^\/api\/notifications\/(all|[a-zA-Z0-9-]+)\/read$/);
+ if(notificationMatch&&method==='POST'){
+  if(notificationMatch[1]==='all'){
+   const b=await body(req);if(!Array.isArray(b.ids)||b.ids.length>500||b.ids.some(id=>typeof id!=='string'||id.length>100))fail(400,'Invalid notification selection.');
+   transaction(()=>{for(const id of b.ids)db.prepare("UPDATE notifications SET read_at=? WHERE id=? AND user_id=? AND read_at=''").run(now(),id,u.id)});
+  }else{
+   const result=db.prepare("UPDATE notifications SET read_at=CASE WHEN read_at='' THEN ? ELSE read_at END WHERE id=? AND user_id=?").run(now(),notificationMatch[1],u.id);
+   if(!result.changes)fail(404,'Notification not found.');
+  }
+  return send(res,200,{ok:true});
  }
  if(path==='/api/assistance'&&method==='POST'){
   const b=await body(req),id=randomUUID(),t=now();
   const category=choice(b.category,assistanceTypes),location=text(b.location,'Location',200),details=text(b.details,'Details',2000);
   const history=JSON.stringify([{status:'pending',at:t,note:'Request submitted.',assignee:''}]);
-  db.prepare('INSERT INTO assistance_requests(id,user_id,category,location,details,history,created,updated) VALUES(?,?,?,?,?,?,?,?)').run(id,u.id,category,location,details,history,t,t);
+  transaction(()=>{db.prepare('INSERT INTO assistance_requests(id,user_id,category,location,details,history,created,updated) VALUES(?,?,?,?,?,?,?,?)').run(id,u.id,category,location,details,history,t,t);notifyAdmins('New assistance request',`${u.name} requested ${category.toLowerCase()} at ${location}.`,id)});
   return send(res,201,{id});
  }
  const assistanceMatch=path.match(/^\/api\/(admin\/)?assistance\/([a-zA-Z0-9-]+)$/);
@@ -116,8 +132,8 @@ export const server=http.createServer(async(req,res)=>{
    if(status===r.status&&assignee===r.assignee&&note===r.note) return send(res,200,{ok:true});
   }
   const t=now(),history=JSON.parse(r.history);history.push({status,at:t,assignee,note});
-  db.prepare('UPDATE assistance_requests SET status=?,assignee=?,note=?,history=?,revision=revision+1,updated=? WHERE id=?').run(status,assignee,note,JSON.stringify(history),t,r.id);
-  audit(u,admin?'update assistance':'cancel assistance',r.id);return send(res,200,{ok:true});
+  transaction(()=>{db.prepare('UPDATE assistance_requests SET status=?,assignee=?,note=?,history=?,revision=revision+1,updated=? WHERE id=?').run(status,assignee,note,JSON.stringify(history),t,r.id);
+  audit(u,admin?'update assistance':'cancel assistance',r.id);if(admin)notifyUser(r.user_id,'Assistance request updated',`${r.category}: ${status.replaceAll('_',' ')}.${assignee?' Assigned to '+assignee+'.':''}${note?' '+note:''}`,r.id,'resident');else notifyAdmins('Assistance request cancelled',`${u.name} cancelled ${r.category.toLowerCase()}.`,r.id)});return send(res,200,{ok:true});
  }
  if(path==='/api/notices/read'&&method==='POST'){db.prepare('UPDATE users SET notices_read_at=? WHERE id=?').run(now(),u.id);return send(res,200,{ok:true})}
  const match=path.match(/^\/api\/records\/(bookings|reports|contacts|services)(?:\/([a-zA-Z0-9-]+))?$/);
@@ -143,7 +159,7 @@ export const server=http.createServer(async(req,res)=>{
   if(path==='/api/admin/data'&&method==='GET'){
    const users=db.prepare('SELECT * FROM users ORDER BY created DESC').all().map(publicUser);
    const rows=db.prepare("SELECT r.*,u.name resident_name,u.email resident_email FROM records r JOIN users u ON u.id=r.user_id WHERE r.kind!='contacts' ORDER BY r.created DESC").all();
-   return send(res,200,{assistance:assistanceList(),communityContacts:db.prepare('SELECT id,name,phone,hours,description,updated FROM community_contacts ORDER BY id DESC').all(),users,bookings:rows.filter(r=>r.kind==='bookings').map(record),reports:rows.filter(r=>r.kind==='reports').map(record),services:rows.filter(r=>r.kind==='services').map(record),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all()});
+   return send(res,200,{notifications:notifications(u.id),assistance:assistanceList(),communityContacts:db.prepare('SELECT id,name,phone,hours,description,updated FROM community_contacts ORDER BY id DESC').all(),users,bookings:rows.filter(r=>r.kind==='bookings').map(record),reports:rows.filter(r=>r.kind==='reports').map(record),services:rows.filter(r=>r.kind==='services').map(record),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all()});
   }
   const directoryMatch=path.match(/^\/api\/admin\/community-contacts\/(management|guard)$/);
   if(directoryMatch&&method==='PATCH'){

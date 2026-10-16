@@ -43,4 +43,10 @@ CREATE TABLE IF NOT EXISTS assistance_requests (
  created TEXT NOT NULL, updated TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS assistance_owner ON assistance_requests(user_id,created);
-PRAGMA user_version = 3;
+CREATE TABLE IF NOT EXISTS notifications (
+ id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ title TEXT NOT NULL, body TEXT NOT NULL, request_id TEXT NOT NULL REFERENCES assistance_requests(id) ON DELETE CASCADE,
+ audience TEXT NOT NULL CHECK(audience IN ('resident','admin')), created TEXT NOT NULL, read_at TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS notification_owner ON notifications(user_id,created);
+PRAGMA user_version = 4;

@@ -1,3 +1,4 @@
+import Notifications from './Notifications';
 import {ResidentAssistance} from './Assistance';
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import {api, type ResidentData, type User} from "./api";
@@ -96,7 +97,7 @@ function Button({ children, className = "", onClick, label, disabled }: {
 }
 
 type Tab = "market" | "home" | "community" | "safety" | "routes";
-type Sheet = "service" | "offer" | "booking" | "report" | "suspicious" | "sos" | "contacts" | "notice" | "profile" | "services" | "forecast" | "history" | null;
+type Sheet = "service" | "offer" | "booking" | "report" | "suspicious" | "sos" | "contacts" | "notice" | "profile" | "services" | "forecast" | "history" | "notifications" | null;
 
 const quickActions: { title: string; subtitle: string; icon: IconName; tone: string; sheet?: Sheet }[] = [
   { title: "Contacts", subtitle: "People & management", icon: "contact", tone: "blue", sheet: "contacts" },
@@ -110,6 +111,7 @@ const quickActions: { title: string; subtitle: string; icon: IconName; tone: str
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 export default function App() {
   const [tab, setTab] = useState<Tab>("home");
+  const [requestTarget,setRequestTarget]=useState<string|undefined>();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [toast, setToast] = useState("");
   const [facility, setFacility] = useState("Gym");
@@ -122,7 +124,7 @@ export default function App() {
   const [to, setTo] = useState("Community health center");
 
   const {user,updateUser} = useSession();
-  const [data,setData] = useState<ResidentData>({bookings:[],reports:[],contacts:[],services:[],notices:[],communityContacts:[],assistance:[],noticesReadAt:""});
+  const [data,setData] = useState<ResidentData>({bookings:[],reports:[],contacts:[],services:[],notices:[],communityContacts:[],assistance:[],notifications:[],noticesReadAt:""});
   const {bookings,reports,contacts,services:serviceRequests,notices} = data;
   const [profile,setProfile] = useState({name:user.name,largeText:user.largeText,contrast:user.contrast});
   const [loading,setLoading] = useState(true), [busy,setBusy] = useState(false), [dataError,setDataError] = useState("");
@@ -185,7 +187,7 @@ export default function App() {
   };
 
   const openAction = (title: string, target?: Sheet) => {
-    if (target) setSheet(target);
+    if (target) {setRequestTarget(undefined);setSheet(target);}
     else if (title === "Accessible map") setTab("routes");
     else setTab("market");
   };
@@ -198,7 +200,7 @@ export default function App() {
         <div className="app-header">
           <div className="brand-lockup"><div className="brand-icon"><Icon name="community" size="sm" /></div><span>CommunityCare</span></div>
           <div className="header-actions">
-            <Button className="round-button" label="Notifications" onClick={() => setSheet("notice")}><Icon name="bell" size="sm" /><i /></Button>
+            <Button className="round-button" label={`Notifications${data.notifications.some(n=>!n.readAt)?`, ${data.notifications.filter(n=>!n.readAt).length} unread`:""}`} onClick={() => setSheet("notifications")}><Icon name="bell" size="sm" />{data.notifications.some(n=>!n.readAt)&&<span className="notification-badge">{data.notifications.filter(n=>!n.readAt).length}</span>}</Button>
             <Button className="avatar-button" label="Profile" onClick={() => setSheet("profile")}>{profile.name.slice(0,2).toUpperCase()}</Button>
           </div>
         </div>
@@ -497,6 +499,7 @@ export default function App() {
                 <label className="form-field">Details<textarea value={details} maxLength={2000} onChange={e => setDetails(e.target.value)} placeholder="What happened and where?" rows={4} /></label>
                 <Button className="primary-action" disabled={busy||!details.trim()} onClick={() => saveReport(category)}>Submit report</Button>
               </>}
+              {sheet === "notifications" && <Notifications items={data.notifications} onRefresh={refresh} onOpen={n=>{setRequestTarget(n.requestId);setSheet("services")}}/>}
               {sheet === "contacts" && <ContactDirectory contacts={contacts} directory={data.communityContacts} onRefresh={refresh} loading={loading}/>}
               {sheet === "profile" && <>
                 <div className="sheet-title">Profile & accessibility</div>
@@ -514,7 +517,7 @@ export default function App() {
                 <h3>Home-service requests</h3>{!serviceRequests.length && <p>No service requests yet.</p>}{serviceRequests.map(r => <div key={r.id}><b>{r.service}</b><span>{r.address}</span><span>{r.date} · {r.time} · {r.status.replaceAll("_"," ")}</span><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(r.status)} onClick={() => removeRecord("services",r.id)}>Cancel service request</Button></div>)}
                 <h3>Reports</h3>{!reports.length && <p>No reports yet.</p>}{reports.map(r => <div key={r.id}><b>{r.category}</b><span>{new Date(r.created).toLocaleString()} · {r.status.replaceAll("_"," ")}</span><p>{r.details}</p><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(r.status)} onClick={() => removeRecord("reports",r.id)}>Cancel report</Button></div>)}</div>
               </>}
-              {sheet === "services" && <ResidentAssistance requests={data.assistance} onRefresh={refresh}/> }
+              {sheet === "services" && <ResidentAssistance key={requestTarget||"all"} requests={data.assistance} onRefresh={refresh} targetId={requestTarget}/> }
               {sheet === "forecast" && <><div className="sheet-title">Sample forecast</div><p className="sheet-subtitle">All weather figures on this screen are illustrative. No weather or disaster service is connected.</p><p>For current conditions, check your local official weather service. Do not use this demo to make safety decisions.</p><Button className="primary-action" onClick={() => setSheet(null)}>Understood</Button></>}
               {sheet === "notice" && <><div className="sheet-title">Management notices</div><div className="sheet-subtitle">Published by your community administrators.</div><div className="notice-list">{notices.length===0&&<p>No notices published yet.</p>}{notices.map(n=><div key={n.id}><span className={n.updated>data.noticesReadAt?"unread":""}/><span><b>{n.title}</b><small>{new Date(n.updated).toLocaleString()}</small><p className="resident-notice-body">{n.body}</p></span></div>)}</div><Button className="primary-action" disabled={busy} onClick={()=>void perform("/notices/read","POST",{},"Notices marked as read.")}>Mark all as read</Button></>}
 
