@@ -49,4 +49,10 @@ CREATE TABLE IF NOT EXISTS notifications (
  audience TEXT NOT NULL CHECK(audience IN ('resident','admin')), created TEXT NOT NULL, read_at TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS notification_owner ON notifications(user_id,created);
-PRAGMA user_version = 4;
+CREATE TABLE IF NOT EXISTS facilities (
+ id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+ category TEXT NOT NULL, description TEXT NOT NULL, icon TEXT NOT NULL,
+ is_open INTEGER NOT NULL DEFAULT 1, closure_reason TEXT NOT NULL DEFAULT '',
+ revision INTEGER NOT NULL DEFAULT 1, created TEXT NOT NULL, updated TEXT NOT NULL
+);
+PRAGMA user_version = 5;

@@ -12,7 +12,15 @@ The booking screen now uses searchable facility cards and category filters, with
 
 Select the date/time card to open the wheel picker. Scroll or tap the date and available time; use month arrows or the month field for other months. Keyboard users can focus either wheel and use Up/Down, Home or End. Cancel leaves the existing selection unchanged. Confirm applies the selected date and time; availability is rechecked before submission. Only available configured slots appear in the time wheel.
 
-To add a future facility, add an entry to `shared/facilities.json` with `name`, `category`, `description` and `icon` (fitness, wellness or sports). The selector, admin facility filter and server validation share this catalogue. Rebuild and restart after editing it. Keep existing facility names unchanged to preserve their relationship with booking history. This is a source configuration, not an admin facility editor. New facilities use the same four fixed daily slots.
+### Admin facility management
+
+Use **Admin dashboard → Manage facilities → Add facility**. Enter the name, category, description and icon, choose Open/Closed and save. New facilities are stored in SQLite and appear in the resident booking selector without rebuilding the app. New categories become filter chips automatically. The shared JSON now provides initial seed data only; use the admin dashboard for changes.
+
+For repairs, choose **Closed for repairs / maintenance**, enter a closure notice and save. Residents can see the facility and notice but cannot book it. The server also blocks bookings and approvals while closed, including requests from stale browser tabs. Choose **Open for booking** and save when repairs finish. Closure remains in effect until an admin reopens it; there is no automatic reopening date.
+
+Existing reservations are retained. The management form shows the count of future pending/approved reservations; review them under **Facility bookings** and cancel affected reservations with a reason as needed. Residents see the current closure notice alongside their bookings. Closing does not automatically cancel reservations or send notifications.
+
+Admins can edit category, description, icon and open/closed state. Facility names remain fixed after creation to preserve booking links. All facilities currently use the four standard daily slots. Older databases automatically receive the facilities table and their existing facilities; saved closures are preserved on restart.
 
 ## Facility booking
 
@@ -22,7 +30,7 @@ Pending bookings hold their slot. Admins open **Facility bookings**, filter by f
 
 Residents see decisions, notes and dated history under **My bookings & reports** and may cancel before the booking starts. Admin cancellation or rejection releases the slot. Past booking changes require management. Existing records remain; older bookings start recording history with their next update.
 
-This version uses four fixed slots: 9:00 AM, 10:30 AM, 2:00 PM and 4:30 PM. Facility capacity, booking durations, maintenance closures and editable schedules are not configured here. Booking updates appear in booking history; the notification centre currently covers assistance activity.
+This version uses four fixed slots: 9:00 AM, 10:30 AM, 2:00 PM and 4:30 PM. Facility capacity, booking durations and editable schedules are not configured here; maintenance closures are managed through Manage facilities. Booking updates appear in booking history; the notification centre currently covers assistance activity.
 
 ## In-app notifications
 

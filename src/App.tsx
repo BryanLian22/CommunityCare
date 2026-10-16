@@ -125,7 +125,7 @@ export default function App() {
   const [to, setTo] = useState("Community health center");
 
   const {user,updateUser} = useSession();
-  const [data,setData] = useState<ResidentData>({bookings:[],reports:[],contacts:[],services:[],notices:[],communityContacts:[],assistance:[],notifications:[],noticesReadAt:""});
+  const [data,setData] = useState<ResidentData>({bookings:[],reports:[],contacts:[],services:[],notices:[],communityContacts:[],facilities:[],assistance:[],notifications:[],noticesReadAt:""});
   const {bookings,reports,contacts,services:serviceRequests,notices} = data;
   const [profile,setProfile] = useState({name:user.name,largeText:user.largeText,contrast:user.contrast});
   const [loading,setLoading] = useState(true), [busy,setBusy] = useState(false), [dataError,setDataError] = useState("");
@@ -453,7 +453,7 @@ export default function App() {
             <section className={`bottom-sheet ${sheet === "contacts" ? "contacts-sheet" : ""}`} ref={dialog}>
               <Button className="close-sheet" label="Close panel" onClick={() => setSheet(null)}>Close ×</Button>
               <div className="sheet-handle" />{dataError && <div className="account-alert" role="alert">{dataError}</div>}{busy && <p role="status">Saving…</p>}
-              {sheet === "booking" && <BookFacility initialFacility={facility} onRefresh={refresh} onDone={()=>setSheet("history")}/>}
+              {sheet === "booking" && <BookFacility initialFacility={facility} facilities={data.facilities} onRefresh={refresh} onDone={()=>setSheet("history")}/>}
               {sheet === "service" && (
                 <>
                   <div className="sheet-title">Book a home service</div><div className="sheet-subtitle">Submit a request to management. Provider dispatch is not automatic.</div>
@@ -501,7 +501,7 @@ export default function App() {
               </>}
               {sheet === "history" && <>
                 <div className="sheet-title">My bookings & reports</div><p className="sheet-subtitle">Your submitted requests and management updates.</p>
-                <div className="record-list"><h3>Bookings</h3>{!bookings.length && <p>No bookings yet.</p>}{bookings.map(b => <div key={b.id}><b>{b.facility}</b><span>{b.date} · {b.time} · Malaysia time</span><span className={`status-pill ${b.status}`}>{b.status}</span><BookingHistory record={b}/>{bookingStarted(b)&&["pending","approved"].includes(b.status)&&<small>This slot has started. Contact management for changes.</small>}<Button disabled={busy || bookingStarted(b) || ["cancelled","completed","resolved","rejected"].includes(b.status)} onClick={() => {if(window.confirm("Cancel this booking and release the slot?"))removeRecord("bookings",b.id)}}>Cancel booking</Button></div>)}
+                <div className="record-list"><h3>Bookings</h3>{!bookings.length && <p>No bookings yet.</p>}{bookings.map(b => <div key={b.id}><b>{b.facility}</b><span>{b.date} · {b.time} · Malaysia time</span><span className={`status-pill ${b.status}`}>{b.status}</span><BookingHistory record={b}/>{data.facilities.find(f=>f.name===b.facility&&!f.isOpen)&&<p className="contact-error">Facility currently closed: {data.facilities.find(f=>f.name===b.facility)?.closureReason}. Contact management about this booking.</p>}{bookingStarted(b)&&["pending","approved"].includes(b.status)&&<small>This slot has started. Contact management for changes.</small>}<Button disabled={busy || bookingStarted(b) || ["cancelled","completed","resolved","rejected"].includes(b.status)} onClick={() => {if(window.confirm("Cancel this booking and release the slot?"))removeRecord("bookings",b.id)}}>Cancel booking</Button></div>)}
                 <h3>Home-service requests</h3>{!serviceRequests.length && <p>No service requests yet.</p>}{serviceRequests.map(r => <div key={r.id}><b>{r.service}</b><span>{r.address}</span><span>{r.date} · {r.time} · {r.status.replaceAll("_"," ")}</span><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(r.status)} onClick={() => removeRecord("services",r.id)}>Cancel service request</Button></div>)}
                 <h3>Reports</h3>{!reports.length && <p>No reports yet.</p>}{reports.map(r => <div key={r.id}><b>{r.category}</b><span>{new Date(r.created).toLocaleString()} · {r.status.replaceAll("_"," ")}</span><p>{r.details}</p><Button disabled={busy || ["cancelled","completed","resolved","rejected"].includes(r.status)} onClick={() => removeRecord("reports",r.id)}>Cancel report</Button></div>)}</div>
               </>}

@@ -1,3 +1,11 @@
+# Version 2.6 — Admin-managed facilities
+
+Added Manage facilities in the admin dashboard: create facilities, edit category/description/icon, close for repairs with a resident-visible notice, and reopen. The facility catalogue is stored in SQLite. Seed migration preserves existing records and admin settings. Resident search/category filters and admin booking filters use the live catalogue.
+
+Closed facilities remain visible but cannot receive new bookings or approvals. Existing reservations are retained with closure notices and can be cancelled by management. Future active booking counts assist review. Concurrent admin edits are protected by revision checks. Facility names remain stable after creation; daily slots remain fixed.
+
+Build, API lifecycle checks and simulated-browser admin creation passed. Full user testing remains for the final phase.
+
 # Version 2.5 — Facility booking redesign
 
 Replaced facility tabs with searchable cards, category chips, a bounded scrolling list and a reservation summary. Added a rounded date/time popup inspired by the supplied reference, with date/time scroll wheels, month navigation, keyboard controls, Cancel and Confirm. The time wheel shows only available configured slots.

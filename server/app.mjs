@@ -1,4 +1,3 @@
-import facilityCatalog from '../shared/facilities.json' with {type:'json'};
 import http from 'node:http';
 import { randomUUID, randomBytes } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
@@ -17,14 +16,16 @@ function email(value){const e=text(value,'Email',254).toLowerCase();if(!/^[^\s@]
 function choice(v,values){if(!values.includes(v))fail(400,'Invalid selection.');return v}
 function appointment(b){const date=text(b.date,'Date',10), time=choice(b.time,['9:00 AM','10:30 AM','2:00 PM','4:30 PM']);const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kuala_Lumpur',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date||date<today)fail(400,'Choose a valid date today or later.');return {date,time}}
 const kinds=['bookings','reports','contacts','services'];
-const facilities=facilityCatalog.map(f=>f.name);
+function facilityByName(name){const f=db.prepare('SELECT * FROM facilities WHERE name=?').get(name);if(!f)fail(404,'Facility not found.');return f}
+function facilityList(){return db.prepare('SELECT * FROM facilities ORDER BY created,name').all().map(f=>({...f,isOpen:!!f.is_open,closureReason:f.closure_reason}))}
+function facilityDetails(b){return {category:text(b.category,'Category',50),description:text(b.description,'Description',240),icon:choice(b.icon,['fitness','wellness','sports']),isOpen:typeof b.isOpen==='boolean'?b.isOpen:fail(400,'Choose open or closed.'),closureReason:b.isOpen?'':text(b.closureReason,'Closure reason',300)}}
 const bookingTimes=['9:00 AM','10:30 AM','2:00 PM','4:30 PM'];
 const bookingClock={'9:00 AM':'09:00','10:30 AM':'10:30','2:00 PM':'14:00','4:30 PM':'16:30'};
 function bookingStart(date,time){return Date.parse(`${date}T${bookingClock[time]}:00+08:00`)}
 function validateBookingDate(value){const date=text(value,'Date',10);if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date)fail(400,'Choose a valid date.');return date}
-function bookingAvailability(facility,date){const booked=db.prepare("SELECT booking_time FROM records WHERE kind='bookings' AND facility=? AND booking_date=? AND status IN ('pending','approved')").all(facility,date);return bookingTimes.map(time=>({time,available:bookingStart(date,time)>Date.now()&&!booked.some(r=>r.booking_time===time),reason:bookingStart(date,time)<=Date.now()?'Past time':booked.some(r=>r.booking_time===time)?'Reserved':''}))}
+function bookingAvailability(facility,date){const config=facilityByName(facility);const booked=db.prepare("SELECT booking_time FROM records WHERE kind='bookings' AND facility=? AND booking_date=? AND status IN ('pending','approved')").all(facility,date);return bookingTimes.map(time=>({time,available:!!config.is_open&&bookingStart(date,time)>Date.now()&&!booked.some(r=>r.booking_time===time),reason:!config.is_open?'Closed for maintenance':bookingStart(date,time)<=Date.now()?'Past time':booked.some(r=>r.booking_time===time)?'Reserved':''}))}
 function payload(kind,b){
- if(kind==='bookings'){const p={facility:choice(b.facility,facilities),...appointment(b)};if(bookingStart(p.date,p.time)<=Date.now())fail(400,'This booking time has already started. Choose a future slot.');return {...p,history:[{status:'pending',at:now(),note:'Booking submitted for approval.'}]}}
+ if(kind==='bookings'){const f=facilityByName(text(b.facility,'Facility',80));if(!f.is_open)fail(409,'This facility is closed: '+f.closure_reason);const p={facility:f.name,...appointment(b)};if(bookingStart(p.date,p.time)<=Date.now())fail(400,'This booking time has already started. Choose a future slot.');return {...p,history:[{status:'pending',at:now(),note:'Booking submitted for approval.'}]}}
  if(kind==='reports')return {category:choice(b.category,['Maintenance issue','Suspicious activity','Mailbox password attempts','Door or gate tampering','Accessibility barrier','Noise or disturbance']),details:text(b.details,'Details')};
  if(kind==='contacts'){const phone=text(b.phone,'Phone',30).replace(/[ ()-]/g,'');if(!/^\+?[0-9]{6,15}$/.test(phone))fail(400,'Enter a valid phone number.');return {name:text(b.name,'Name',80),phone}}
  return {service:choice(b.service,['Air conditioner','Door repair','Locksmith','General repair']),address:text(b.address,'Address',200),...appointment(b)};
@@ -95,14 +96,15 @@ export const server=http.createServer(async(req,res)=>{
   if(!await checkPassword(b.currentPassword,u.password_hash))fail(400,'Current password is incorrect.');
   const hash=await hashPassword(b.password);db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(hash,u.id);db.prepare('DELETE FROM sessions WHERE user_id=?').run(u.id);createSession(res,u);return send(res,200,{ok:true});
  }
+ if(path==='/api/facilities'&&method==='GET')return send(res,200,{facilities:facilityList()});
  if(path==='/api/bookings/availability'&&method==='GET'){
-  const facility=choice(url.searchParams.get('facility'),facilities),date=validateBookingDate(url.searchParams.get('date'));
-  return send(res,200,{facility,date,timeZone:'Asia/Kuala_Lumpur',slots:bookingAvailability(facility,date)});
+  const f=facilityByName(text(url.searchParams.get('facility'),'Facility',80)),facility=f.name,date=validateBookingDate(url.searchParams.get('date'));
+  return send(res,200,{facility,date,isOpen:!!f.is_open,closureReason:f.closure_reason,timeZone:'Asia/Kuala_Lumpur',slots:bookingAvailability(facility,date)});
  }
  if(path==='/api/data'&&method==='GET'){
   const rows=db.prepare('SELECT * FROM records WHERE user_id=? ORDER BY created DESC').all(u.id);
   const data=Object.fromEntries(kinds.map(k=>[k,rows.filter(r=>r.kind===k).map(record)]));
-  return send(res,200,{...data,notifications:notifications(u.id).filter(n=>n.audience==='resident'),assistance:assistanceList(u.id),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all(),communityContacts:db.prepare("SELECT id,name,phone,hours,description,updated FROM community_contacts ORDER BY CASE id WHEN 'management' THEN 0 ELSE 1 END").all(),noticesReadAt:u.notices_read_at});
+  return send(res,200,{...data,facilities:facilityList(),notifications:notifications(u.id).filter(n=>n.audience==='resident'),assistance:assistanceList(u.id),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all(),communityContacts:db.prepare("SELECT id,name,phone,hours,description,updated FROM community_contacts ORDER BY CASE id WHEN 'management' THEN 0 ELSE 1 END").all(),noticesReadAt:u.notices_read_at});
  }
  if(path==='/api/notifications'&&method==='GET')return send(res,200,{notifications:notifications(u.id)});
  const notificationMatch=path.match(/^\/api\/notifications\/(all|[a-zA-Z0-9-]+)\/read$/);
@@ -172,7 +174,19 @@ export const server=http.createServer(async(req,res)=>{
   if(path==='/api/admin/data'&&method==='GET'){
    const users=db.prepare('SELECT * FROM users ORDER BY created DESC').all().map(publicUser);
    const rows=db.prepare("SELECT r.*,u.name resident_name,u.email resident_email FROM records r JOIN users u ON u.id=r.user_id WHERE r.kind!='contacts' ORDER BY r.created DESC").all();
-   return send(res,200,{notifications:notifications(u.id),assistance:assistanceList(),communityContacts:db.prepare('SELECT id,name,phone,hours,description,updated FROM community_contacts ORDER BY id DESC').all(),users,bookings:rows.filter(r=>r.kind==='bookings').map(record),reports:rows.filter(r=>r.kind==='reports').map(record),services:rows.filter(r=>r.kind==='services').map(record),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all()});
+   return send(res,200,{facilities:facilityList(),notifications:notifications(u.id),assistance:assistanceList(),communityContacts:db.prepare('SELECT id,name,phone,hours,description,updated FROM community_contacts ORDER BY id DESC').all(),users,bookings:rows.filter(r=>r.kind==='bookings').map(record),reports:rows.filter(r=>r.kind==='reports').map(record),services:rows.filter(r=>r.kind==='services').map(record),notices:db.prepare('SELECT id,title,body,created,updated FROM notices ORDER BY updated DESC').all()});
+  }
+  if(path==='/api/admin/facilities'&&method==='POST'){
+   const b=await body(req),f=facilityDetails(b),name=text(b.name,'Facility name',80),id=randomUUID(),t=now();
+   try{transaction(()=>{db.prepare('INSERT INTO facilities(id,name,category,description,icon,is_open,closure_reason,created,updated) VALUES(?,?,?,?,?,?,?,?,?)').run(id,name,f.category,f.description,f.icon,+f.isOpen,f.closureReason,t,t);audit(u,'create facility',id)})}catch(e){if(String(e.message).includes('UNIQUE'))fail(409,'A facility with this name already exists.');throw e}
+   return send(res,201,{id});
+  }
+  const facilityMatch=path.match(/^\/api\/admin\/facilities\/([a-zA-Z0-9-]+)$/);
+  if(facilityMatch&&method==='PATCH'){
+   const b=await body(req),f=facilityDetails(b),existing=db.prepare('SELECT * FROM facilities WHERE id=?').get(facilityMatch[1]);
+   if(!existing)fail(404,'Facility not found.');if(b.revision!==existing.revision)fail(409,'Facility changed. Refresh before saving.');
+   transaction(()=>{db.prepare('UPDATE facilities SET category=?,description=?,icon=?,is_open=?,closure_reason=?,revision=revision+1,updated=? WHERE id=?').run(f.category,f.description,f.icon,+f.isOpen,f.closureReason,now(),existing.id);audit(u,f.isOpen?'update/open facility':'close facility',existing.id)});
+   return send(res,200,{ok:true});
   }
   const directoryMatch=path.match(/^\/api\/admin\/community-contacts\/(management|guard)$/);
   if(directoryMatch&&method==='PATCH'){
@@ -194,6 +208,7 @@ export const server=http.createServer(async(req,res)=>{
     const transitions={pending:['approved','rejected','cancelled'],approved:['completed','cancelled']};
     if(!transitions[r.status]?.includes(status))fail(400,'Invalid booking status transition.');
     const p=JSON.parse(r.payload),start=bookingStart(p.date,p.time);
+    if(status==='approved'&&!facilityByName(p.facility).is_open)fail(409,'This facility is closed. Reopen it before approving a booking.');
     if(status==='approved'&&start<=Date.now())fail(409,'This slot has passed and cannot be approved. Reject or cancel it.');
     if(status==='completed'&&start>Date.now())fail(409,'A future booking cannot be marked completed.');
     const note=b.note===undefined?'':typeof b.note==='string'&&b.note.trim().length<=1000?b.note.trim():fail(400,'Update note must be at most 1000 characters.');

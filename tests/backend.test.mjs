@@ -122,6 +122,26 @@ await test('live booking availability, decisions, stale edits and past slots',as
  assert.equal((await a.request(`/records/bookings/${pastId}`,'DELETE',{})).status,409);
  assert.equal((await admin.request(`/admin/records/${pastId}`,'PATCH',{status:'completed',expectedStatus:'approved'})).status,200);
 });
+await test('admins manage facilities and closure blocks booking and approval',async()=>{
+ const facility={name:'Swimming pool',category:'Recreation',description:'Community pool',icon:'wellness',isOpen:true,closureReason:''};
+ assert.equal((await a.request('/admin/facilities','POST',facility)).status,403);
+ const created=await admin.request('/admin/facilities','POST',facility);assert.equal(created.status,201);const id=created.data.id;
+ assert.equal((await admin.request('/admin/facilities','POST',{...facility,name:'swimming pool'})).status,409);
+ assert((await a.request('/facilities')).data.facilities.some(f=>f.name==='Swimming pool'));
+ const booking=(await a.request('/records/bookings','POST',{facility:facility.name,date:'2099-12-04',time:'9:00 AM'})).data.record.id;
+ assert.equal((await admin.request(`/admin/facilities/${id}`,'PATCH',{...facility,isOpen:false,revision:1})).status,400);
+ const closed={...facility,isOpen:false,closureReason:'Pump repairs',revision:1};
+ assert.equal((await admin.request(`/admin/facilities/${id}`,'PATCH',closed)).status,200);
+ assert.equal((await admin.request(`/admin/facilities/${id}`,'PATCH',closed)).status,409);
+ const availability=(await a.request('/bookings/availability?facility=Swimming%20pool&date=2099-12-04')).data;assert.equal(availability.isOpen,false);assert(availability.slots.every(s=>!s.available));
+ assert.equal((await a.request('/records/bookings','POST',{facility:facility.name,date:'2099-12-04',time:'2:00 PM'})).status,409);
+ assert.equal((await admin.request(`/admin/records/${booking}`,'PATCH',{status:'approved',expectedStatus:'pending'})).status,409);
+ assert.equal((await a.request('/data')).data.bookings.find(b=>b.id===booking).status,'pending');
+ const disk=new DatabaseSync(process.env.DATABASE_PATH);assert.equal(disk.prepare('SELECT closure_reason FROM facilities WHERE id=?').get(id).closure_reason,'Pump repairs');disk.close();
+ assert.equal((await admin.request(`/admin/facilities/${id}`,'PATCH',{...facility,revision:2})).status,200);
+ assert.equal((await admin.request(`/admin/records/${booking}`,'PATCH',{status:'approved',expectedStatus:'pending'})).status,200);
+ assert((await a.request('/bookings/availability?facility=Swimming%20pool&date=2099-12-04')).data.slots.find(s=>s.time==='2:00 PM').available);
+});
 await test('profile persistence, password change revokes old sessions, and disabled accounts lose access',async()=>{
  await a.request('/profile','PATCH',{name:'Alice Updated',largeText:true,contrast:true});assert.equal((await a.request('/auth/me')).data.user.name,'Alice Updated');
  const second=client();await second.request('/auth/login','POST',{email:'alice@example.test',password});
