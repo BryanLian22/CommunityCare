@@ -142,6 +142,26 @@ await test('admins manage facilities and closure blocks booking and approval',as
  assert.equal((await admin.request(`/admin/records/${booking}`,'PATCH',{status:'approved',expectedStatus:'pending'})).status,200);
  assert((await a.request('/bookings/availability?facility=Swimming%20pool&date=2099-12-04')).data.slots.find(s=>s.time==='2:00 PM').available);
 });
+await test('all request decisions notify the owner with working record references',async()=>{
+ for(const kind of ['bookings','reports','services']){
+  const payload=kind==='bookings'?{facility:'Gym',date:'2099-12-19',time:'4:30 PM'}:kind==='reports'?{category:'Maintenance issue',details:'Broken light.'}:{service:'General repair',address:'Unit A',date:'2099-12-19',time:'4:30 PM'};
+  const id=(await a.request(`/records/${kind}`,'POST',payload)).data.record.id;
+  assert.equal((await admin.request(`/admin/records/${id}`,'PATCH',{status:'rejected',expectedStatus:'pending'})).status,400);
+  assert.equal((await admin.request(`/admin/records/${id}`,'PATCH',{status:'rejected',expectedStatus:'pending',note:'Please provide more information.'})).status,200);
+  const notification=(await a.request('/notifications')).data.notifications.find(n=>n.requestId===id);assert(notification);assert.equal(notification.kind,kind);assert.match(notification.body,/Please provide/);assert.equal(notification.readAt,'');
+  assert(!(await b.request('/notifications')).data.notifications.some(n=>n.requestId===id));
+  assert.equal((await b.request(`/notifications/${notification.id}/read`,'POST',{})).status,404);
+  assert.equal((await a.request(`/notifications/${notification.id}/read`,'POST',{})).status,200);
+  assert((await a.request('/notifications')).data.notifications.find(n=>n.id===notification.id).readAt);
+ }
+ const id=(await a.request('/records/services','POST',{service:'General repair',address:'Unit C',date:'2099-12-20',time:'4:30 PM'})).data.record.id;
+ assert.equal((await admin.request(`/admin/records/${id}`,'PATCH',{status:'approved'})).status,200);
+ assert.equal((await admin.request(`/admin/records/${id}`,'PATCH',{status:'approved'})).status,200);
+ assert.equal((await a.request('/notifications')).data.notifications.filter(n=>n.requestId===id).length,1);
+ const unread=(await a.request('/notifications')).data.notifications.filter(n=>!n.readAt);
+ await a.request('/notifications/all/read','POST',{ids:unread.map(n=>n.id)});
+ assert((await a.request('/notifications')).data.notifications.every(n=>n.readAt));
+});
 await test('profile persistence, password change revokes old sessions, and disabled accounts lose access',async()=>{
  await a.request('/profile','PATCH',{name:'Alice Updated',largeText:true,contrast:true});assert.equal((await a.request('/auth/me')).data.user.name,'Alice Updated');
  const second=client();await second.request('/auth/login','POST',{email:'alice@example.test',password});

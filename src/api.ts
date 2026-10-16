@@ -1,5 +1,5 @@
 export type Facility={id:string;name:string;category:string;description:string;icon:string;isOpen:boolean;closureReason:string;revision:number;created:string;updated:string};
-export type AppNotification={id:string;title:string;body:string;requestId:string;audience:'resident'|'admin';created:string;readAt:string};
+export type AppNotification={kind:'assistance'|'bookings'|'reports'|'services';id:string;title:string;body:string;requestId:string;audience:'resident'|'admin';created:string;readAt:string};
 export type Assistance = {id:string;category:string;location:string;details:string;status:string;assignee:string;note:string;revision:number;created:string;updated:string;residentName:string;residentEmail:string;history:{status:string;at:string;assignee:string;note:string}[]};
 export type User = {id:string; name:string; email:string; role:'resident'|'admin'; active:boolean; largeText:boolean; contrast:boolean; created:string};
 export type Entry = {id:string; userId:string; created:string; status:string; facility?:string; date?:string; time?:string; category?:string; details?:string; name?:string; phone?:string; service?:string; address?:string; residentName?:string; residentEmail?:string; note?:string; history?:{status:string;at:string;note:string}[]};

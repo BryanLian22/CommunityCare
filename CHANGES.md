@@ -1,3 +1,9 @@
+# Version 2.7 — Notifications for every request decision
+
+Connected facility booking, report and home-service status decisions to persistent notifications for the owning resident. Approval/rejection messages include request details and management notes. Rejection/cancellation reasons are required. Assistance alerts continue working. Notifications link to the appropriate record, preserve read state and do not repeat for unchanged statuses.
+
+Record status, audit entry and notification creation are committed together. Added record_notifications without replacing existing assistance alerts. Only new decisions generate alerts; earlier decisions are not backfilled. Build, API checks and existing simulated-browser flows passed. Full user testing remains for the final phase.
+
 # Version 2.6 — Admin-managed facilities
 
 Added Manage facilities in the admin dashboard: create facilities, edit category/description/icon, close for repairs with a resident-visible notice, and reopen. The facility catalogue is stored in SQLite. Seed migration preserves existing records and admin settings. Resident search/category filters and admin booking filters use the live catalogue.

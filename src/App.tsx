@@ -1,3 +1,4 @@
+import RequestUpdate from './RequestUpdate';
 import BookFacility,{BookingHistory,bookingStarted} from './Bookings';
 import Notifications from './Notifications';
 import {ResidentAssistance} from './Assistance';
@@ -98,7 +99,7 @@ function Button({ children, className = "", onClick, label, disabled }: {
 }
 
 type Tab = "market" | "home" | "community" | "safety" | "routes";
-type Sheet = "service" | "offer" | "booking" | "report" | "suspicious" | "sos" | "contacts" | "notice" | "profile" | "services" | "forecast" | "history" | "notifications" | null;
+type Sheet = "service" | "offer" | "booking" | "report" | "suspicious" | "sos" | "contacts" | "notice" | "profile" | "services" | "forecast" | "history" | "notifications" | "request-update" | null;
 
 const quickActions: { title: string; subtitle: string; icon: IconName; tone: string; sheet?: Sheet }[] = [
   { title: "Contacts", subtitle: "People & management", icon: "contact", tone: "blue", sheet: "contacts" },
@@ -487,7 +488,8 @@ export default function App() {
                 <label className="form-field">Details<textarea value={details} maxLength={2000} onChange={e => setDetails(e.target.value)} placeholder="What happened and where?" rows={4} /></label>
                 <Button className="primary-action" disabled={busy||!details.trim()} onClick={() => saveReport(category)}>Submit report</Button>
               </>}
-              {sheet === "notifications" && <Notifications items={data.notifications} onRefresh={refresh} onOpen={n=>{setRequestTarget(n.requestId);setSheet("services")}}/>}
+              {sheet === "request-update" && <RequestUpdate record={[...data.bookings,...data.reports,...data.services].find(r=>r.id===requestTarget)}/>}
+              {sheet === "notifications" && <Notifications items={data.notifications} onRefresh={refresh} onOpen={n=>{setRequestTarget(n.requestId);setSheet(n.kind==='assistance'?"services":"request-update")}}/>}
               {sheet === "contacts" && <ContactDirectory contacts={contacts} directory={data.communityContacts} onRefresh={refresh} loading={loading}/>}
               {sheet === "profile" && <>
                 <div className="sheet-title">Profile & accessibility</div>

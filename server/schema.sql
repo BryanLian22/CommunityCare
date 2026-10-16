@@ -55,4 +55,11 @@ CREATE TABLE IF NOT EXISTS facilities (
  is_open INTEGER NOT NULL DEFAULT 1, closure_reason TEXT NOT NULL DEFAULT '',
  revision INTEGER NOT NULL DEFAULT 1, created TEXT NOT NULL, updated TEXT NOT NULL
 );
-PRAGMA user_version = 5;
+CREATE TABLE IF NOT EXISTS record_notifications (
+ id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ title TEXT NOT NULL, body TEXT NOT NULL, request_id TEXT NOT NULL REFERENCES records(id) ON DELETE CASCADE,
+ kind TEXT NOT NULL CHECK(kind IN ('bookings','reports','services')),
+ created TEXT NOT NULL, read_at TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS record_notification_owner ON record_notifications(user_id,created);
+PRAGMA user_version = 6;

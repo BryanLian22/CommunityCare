@@ -30,11 +30,11 @@ Pending bookings hold their slot. Admins open **Facility bookings**, filter by f
 
 Residents see decisions, notes and dated history under **My bookings & reports** and may cancel before the booking starts. Admin cancellation or rejection releases the slot. Past booking changes require management. Existing records remain; older bookings start recording history with their next update.
 
-This version uses four fixed slots: 9:00 AM, 10:30 AM, 2:00 PM and 4:30 PM. Facility capacity, booking durations and editable schedules are not configured here; maintenance closures are managed through Manage facilities. Booking updates appear in booking history; the notification centre currently covers assistance activity.
+This version uses four fixed slots: 9:00 AM, 10:30 AM, 2:00 PM and 4:30 PM. Facility capacity, booking durations and editable schedules are not configured here; maintenance closures are managed through Manage facilities. Booking updates appear in booking history and in the notification centre.
 
 ## In-app notifications
 
-Residents use the bell on Home to see assistance assignment and progress updates. Administrators use **Notifications** in the sidebar for new requests, cancellations and updates to any requests they submitted themselves. Badges count unread alerts. Filter All/Unread, mark one or all as read, or choose **View request** to open the linked request. Read state is stored separately for each account in SQLite.
+Residents use the bell on Home to see assistance updates and facility-booking, report and home-service decisions. Approvals, rejections, completions, resolutions and other admin status changes create a notification for the request owner. Rejection/cancellation requires a reason. Each notification links to the correct request and its history. Administrators use **Notifications** in the sidebar for new requests, cancellations and updates to any requests they submitted themselves. Badges count unread alerts. Filter All/Unread, mark one or all as read, or choose **View request** to open the linked request. Read state is stored separately for each account in SQLite.
 
 Notifications are generated for new activity after installing this update; historical events are not backfilled. Admin notification counts refresh every 15 seconds while the page is visible, and on focus. Resident data and alerts refresh every 30 seconds while visible, and on focus. Refresh/reopen to fetch sooner. These are in-app alerts, not operating-system push, email or SMS. No alert appears outside the app.
 

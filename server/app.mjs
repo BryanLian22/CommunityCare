@@ -34,7 +34,9 @@ function record(r){return {...JSON.parse(r.payload),id:r.id,created:r.created,st
 function audit(u,action,id){db.prepare('INSERT INTO audit_log(actor_id,action,target_id,created) VALUES(?,?,?,?)').run(u.id,action,id,now())}
 function assistance(r){return {...r,history:JSON.parse(r.history)}}
 function assistanceList(userId){return db.prepare('SELECT a.*,u.name residentName,u.email residentEmail FROM assistance_requests a JOIN users u ON u.id=a.user_id '+(userId?'WHERE a.user_id=? ':'')+'ORDER BY a.created DESC').all(...(userId?[userId]:[])).map(assistance)}
-function notifications(userId){return db.prepare('SELECT id,title,body,request_id requestId,audience,created,read_at readAt FROM notifications WHERE user_id=? ORDER BY created DESC,id DESC').all(userId)}
+function notifications(userId){return db.prepare("SELECT id,title,body,request_id requestId,audience,created,read_at readAt,'assistance' kind FROM notifications WHERE user_id=? UNION ALL SELECT id,title,body,request_id requestId,'resident' audience,created,read_at readAt,kind FROM record_notifications WHERE user_id=? ORDER BY created DESC,id DESC").all(userId,userId)}
+function notifyRecord(r,p,status,note){const type={bookings:'Facility booking',reports:'Report',services:'Home-service request'}[r.kind];const subject=p.facility||p.category||p.service;db.prepare('INSERT INTO record_notifications(id,user_id,title,body,request_id,kind,created) VALUES(?,?,?,?,?,?,?)').run(randomUUID(),r.user_id,`${type} ${status.replaceAll('_',' ')}`,`${subject}: ${status.replaceAll('_',' ')}.${p.date?' '+p.date+' · '+p.time+'.':''}${note?' '+note:''}`,r.id,r.kind,now())}
+
 function notifyUser(userId,title,body,requestId,audience){db.prepare('INSERT INTO notifications(id,user_id,title,body,request_id,audience,created) VALUES(?,?,?,?,?,?,?)').run(randomUUID(),userId,title,body,requestId,audience,now())}
 function notifyAdmins(title,body,requestId){for(const admin of db.prepare("SELECT id FROM users WHERE role='admin' AND active=1").all())notifyUser(admin.id,title,body,requestId,'admin')}
 function transaction(fn){db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result}catch(e){db.exec('ROLLBACK');throw e}}
@@ -111,10 +113,10 @@ export const server=http.createServer(async(req,res)=>{
  if(notificationMatch&&method==='POST'){
   if(notificationMatch[1]==='all'){
    const b=await body(req);if(!Array.isArray(b.ids)||b.ids.length>500||b.ids.some(id=>typeof id!=='string'||id.length>100))fail(400,'Invalid notification selection.');
-   transaction(()=>{for(const id of b.ids)db.prepare("UPDATE notifications SET read_at=? WHERE id=? AND user_id=? AND read_at=''").run(now(),id,u.id)});
+   transaction(()=>{for(const id of b.ids)for(const table of ['notifications','record_notifications'])db.prepare(`UPDATE ${table} SET read_at=? WHERE id=? AND user_id=? AND read_at=''`).run(now(),id,u.id)});
   }else{
-   const result=db.prepare("UPDATE notifications SET read_at=CASE WHEN read_at='' THEN ? ELSE read_at END WHERE id=? AND user_id=?").run(now(),notificationMatch[1],u.id);
-   if(!result.changes)fail(404,'Notification not found.');
+   const changes=transaction(()=>['notifications','record_notifications'].reduce((n,table)=>n+Number(db.prepare(`UPDATE ${table} SET read_at=CASE WHEN read_at='' THEN ? ELSE read_at END WHERE id=? AND user_id=?`).run(now(),notificationMatch[1],u.id).changes),0));
+   if(!changes)fail(404,'Notification not found.');
   }
   return send(res,200,{ok:true});
  }
@@ -203,20 +205,22 @@ export const server=http.createServer(async(req,res)=>{
    const b=await body(req);const r=db.prepare("SELECT * FROM records WHERE id=? AND kind!='contacts'").get(recMatch[1]);if(!r)fail(404,'Record not found.');
    if(['cancelled','completed','resolved','rejected'].includes(r.status))fail(409,'This record is closed.');
    const status=choice(b.status,r.kind==='reports'?['pending','in_progress','resolved','rejected']:['pending','approved','completed','rejected','cancelled']);
+   if(status===r.status)return send(res,200,{ok:true});
+   const p=JSON.parse(r.payload);
+   const note=b.note===undefined?'':typeof b.note==='string'&&b.note.trim().length<=1000?b.note.trim():fail(400,'Update note must be at most 1000 characters.');
+   if(['rejected','cancelled'].includes(status)&&!note)fail(400,'Enter a reason for the resident.');
    if(r.kind==='bookings'){
     if(b.expectedStatus!==r.status)fail(409,'Booking changed. Refresh before updating.');
     const transitions={pending:['approved','rejected','cancelled'],approved:['completed','cancelled']};
     if(!transitions[r.status]?.includes(status))fail(400,'Invalid booking status transition.');
-    const p=JSON.parse(r.payload),start=bookingStart(p.date,p.time);
+    const start=bookingStart(p.date,p.time);
     if(status==='approved'&&!facilityByName(p.facility).is_open)fail(409,'This facility is closed. Reopen it before approving a booking.');
     if(status==='approved'&&start<=Date.now())fail(409,'This slot has passed and cannot be approved. Reject or cancel it.');
     if(status==='completed'&&start>Date.now())fail(409,'A future booking cannot be marked completed.');
-    const note=b.note===undefined?'':typeof b.note==='string'&&b.note.trim().length<=1000?b.note.trim():fail(400,'Update note must be at most 1000 characters.');
-    if(['rejected','cancelled'].includes(status)&&!note)fail(400,'Enter a reason for the resident.');
-    p.note=note;p.history=[...(p.history||[]),{status,at:now(),note}];
-    try{db.prepare('UPDATE records SET status=?,payload=? WHERE id=?').run(status,JSON.stringify(p),r.id)}catch(err){if(String(err.message).includes('UNIQUE'))fail(409,'Facility slot conflict.');throw err}
-   }else{try{db.prepare('UPDATE records SET status=? WHERE id=?').run(status,r.id)}catch(err){if(String(err.message).includes('UNIQUE'))fail(409,'Facility slot conflict.');throw err}}
-   audit(u,'set status '+status,r.id);return send(res,200,{ok:true});
+   }
+   p.note=note;p.history=[...(p.history||[]),{status,at:now(),note}];
+   try{transaction(()=>{db.prepare('UPDATE records SET status=?,payload=? WHERE id=?').run(status,JSON.stringify(p),r.id);audit(u,'set status '+status,r.id);notifyRecord(r,p,status,note)})}catch(err){if(String(err.message).includes('UNIQUE'))fail(409,'Facility slot conflict.');throw err}
+   return send(res,200,{ok:true});
   }
   const noticeMatch=path.match(/^\/api\/admin\/notices(?:\/([a-zA-Z0-9-]+))?$/);
   if(noticeMatch){const id=noticeMatch[1];
