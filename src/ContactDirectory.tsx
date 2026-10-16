@@ -1,25 +1,181 @@
-import {useEffect,useRef,useState} from 'react';
-import {api,type CommunityContact,type Entry} from './api';
+import { useEffect, useRef, useState } from 'react';
+import { api, type CommunityContact, type Entry } from './api';
 import './contacts.css';
-function Phone(){return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M6.6 3h3l1.5 4.2-2 1.6a16 16 0 0 0 6.1 6.1l1.6-2 4.2 1.5v3c0 2-1.6 3.6-3.6 3.4A16.5 16.5 0 0 1 3.2 6.6C3 4.6 4.6 3 6.6 3Z"/></svg>}
-function TeamIcon({guard=false}:{guard?:boolean}){return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{guard?<><path d="m12 3-8 3v6c0 4 4 7 8 9 4-2 8-5 8-9V6l-8-3Z"/><path d="m8 12 3 3 5-6"/></>:<><path d="M4 21V3h12v18m0-12h4v12M2 21h20M8 7h4m-4 4h4m-4 4h4"/></>}</svg>}
-export default function ContactDirectory({contacts,directory,onRefresh,loading}:{contacts:Entry[];directory:CommunityContact[];onRefresh:()=>Promise<void>;loading:boolean}){
- const [editing,setEditing]=useState<string|null>(null),[name,setName]=useState(''),[phone,setPhone]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');const lock=useRef(false);const nameInput=useRef<HTMLInputElement>(null);
- useEffect(()=>{if(editing!==null)nameInput.current?.focus()},[editing]);
- function begin(c?:Entry){setEditing(c?.id||'new');setName(c?.name||'');setPhone(c?.phone||'');setError('');setMessage('')}
- async function save(e:React.FormEvent){e.preventDefault();if(lock.current)return;lock.current=true;setBusy(true);setError('');try{await api(editing==='new'?'/records/contacts':`/records/contacts/${editing}`,editing==='new'?'POST':'PATCH',{name,phone});setEditing(null);setMessage('Contact saved.');try{await onRefresh()}catch{setError('Saved, but the list could not refresh. Close and reopen Contacts to retry.')}}catch(e){setError((e as Error).message)}finally{lock.current=false;setBusy(false)}}
- async function remove(c:Entry){if(lock.current||!window.confirm(`Remove ${c.name} from your personal contacts?`))return;lock.current=true;setBusy(true);setError('');try{await api(`/records/contacts/${c.id}`,'DELETE',{});if(editing===c.id)setEditing(null);setMessage('Contact removed.');await onRefresh()}catch(e){setError((e as Error).message)}finally{lock.current=false;setBusy(false)}}
- return <div className="contact-directory"><header className="contact-heading"><span className="contact-eyebrow">YOUR COMMUNITY, ONE CALL AWAY</span><h2>Contacts</h2><p>The right people, whenever you need them.</p></header>{error&&<div className="contact-error" role="alert">{error}</div>}{message&&<div className="contact-success" role="status">{message}</div>}
- <div className="contact-section-heading"><h3>Community team</h3><span>Managed by admin</span></div>
- {loading?<p role="status">Loading community contacts…</p>:<div className="team-contact-list">{directory.map(c=><article className={`team-contact ${c.id}`} key={c.id}><div className="team-contact-top"><span className="team-symbol"><TeamIcon guard={c.id==='guard'}/></span><div><span className="team-category">{c.id==='guard'?'SECURITY':'RESIDENT SERVICES'}</span><h4>{c.name}</h4></div></div>{c.description&&<p className="team-description">{c.description}</p>}<div className="team-hours">{c.hours||'Hours not provided'}</div><div className="team-contact-bottom"><div><small>CONTACT NUMBER</small><strong>{c.phone||'Not added yet'}</strong></div>{c.phone?<a className="contact-call" href={`tel:${c.phone}`} aria-label={`Call ${c.name}`}><Phone/><span>Call</span></a>:<span className="contact-unavailable">Awaiting number</span>}</div></article>)}</div>}
- <div className="contact-section-heading personal-heading"><div><h3>My personal contacts</h3><p>Only visible to you</p></div><button className="contact-add" disabled={busy} onClick={()=>begin()}>＋ Add</button></div>
- <div className="personal-contact-list">{!loading&&contacts.length===0&&<div className="contacts-empty"><span>＋</span><b>Keep someone close</b><p>Add family, a caregiver, or a trusted neighbour.</p></div>}{contacts.map(c=><article className="personal-contact" key={c.id}><div className="personal-contact-top"><span className="person-initials">{(c.name||'?').split(/\s+/).slice(0,2).map(s=>s[0]).join('').toUpperCase()}</span><div className="personal-contact-info"><h4>{c.name}</h4><span>{c.phone}</span></div><a className="personal-call" href={`tel:${c.phone}`} aria-label={`Call ${c.name}`}><Phone/></a></div><div className="personal-contact-actions"><button disabled={busy} onClick={()=>begin(c)}>Edit contact</button><button className="remove-contact" disabled={busy} onClick={()=>void remove(c)}>Remove</button></div></article>)}</div>
- {editing!==null&&<form className="contact-edit-form" onSubmit={save}><div className="contact-section-heading"><h3>{editing==='new'?'Add personal contact':'Edit personal contact'}</h3><button type="button" disabled={busy} onClick={()=>setEditing(null)}>Cancel</button></div><label>Full name<input ref={nameInput} required maxLength={80} autoComplete="off" value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Family member"/></label><label>Phone number<input type="tel" required maxLength={30} autoComplete="off" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Enter phone number"/></label><button className="contact-save" disabled={busy}>{busy?'Saving…':'Save contact'}</button></form>}
- <p className="contact-footer">Community numbers are shared with all residents. Your personal contacts stay private.</p></div>;
+function Phone() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+    <path d="M6.6 3h3l1.5 4.2-2 1.6a16 16 0 0 0 6.1 6.1l1.6-2 4.2 1.5v3c0 2-1.6 3.6-3.6 3.4A16.5 16.5 0 0 1 3.2 6.6C3 4.6 4.6 3 6.6 3Z" />
+  </svg>
 }
-export function CommunityContactSettings({contacts,onRefresh}:{contacts:CommunityContact[];onRefresh:()=>Promise<void>}){return <div className="directory-settings">{contacts.map(c=><CommunityContactForm key={`${c.id}-${c.updated}`} contact={c} onRefresh={onRefresh}/>)}</div>}
-function CommunityContactForm({contact:c,onRefresh}:{contact:CommunityContact;onRefresh:()=>Promise<void>}){
- const [name,setName]=useState(c.name),[phone,setPhone]=useState(c.phone),[hours,setHours]=useState(c.hours),[description,setDescription]=useState(c.description),[busy,setBusy]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState('');const lock=useRef(false);
- async function submit(e:React.FormEvent){e.preventDefault();if(lock.current)return;lock.current=true;setBusy(true);setError('');setSaved('');try{await api(`/admin/community-contacts/${c.id}`,'PATCH',{name,phone,hours,description});setSaved('Contact details saved for all residents.');try{await onRefresh()}catch{setError('Saved successfully. Refresh the dashboard to reload the directory.')}}catch(e){setError((e as Error).message)}finally{setBusy(false);lock.current=false}}
- return <form className="directory-settings-card" onSubmit={submit}><div className="team-contact-top"><span className={`team-symbol ${c.id}`}><TeamIcon guard={c.id==='guard'}/></span><div><span className="team-category">COMMUNITY DIRECTORY</span><h3>{c.id==='guard'?'Guard House':'Management Office'}</h3></div></div>{error&&<div className="contact-error" role="alert">{error}</div>}{saved&&<div className="contact-success" role="status">{saved}</div>}<label>Display name<input required maxLength={80} value={name} onChange={e=>setName(e.target.value)}/></label><label>Phone number<input type="tel" maxLength={30} value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Enter the actual contact number"/></label><small>Leave blank to show “Not added yet” and disable calling.</small><label>Office / duty hours<input maxLength={120} value={hours} onChange={e=>setHours(e.target.value)} placeholder="Enter the confirmed operating hours"/></label><label>Description<textarea rows={3} maxLength={240} value={description} onChange={e=>setDescription(e.target.value)}/></label><button className="contact-save" disabled={busy}>{busy?'Saving…':'Save contact details'}</button>{c.updated&&<p className="contact-footer">Last updated {new Date(c.updated).toLocaleString()}</p>}</form>;
+function TeamIcon({ guard = false }: { guard?: boolean }) {
+  return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {guard ? <><path d="m12 3-8 3v6c0 4 4 7 8 9 4-2 8-5 8-9V6l-8-3Z" /><path d="m8 12 3 3 5-6" /></> : <><path d="M4 21V3h12v18m0-12h4v12M2 21h20M8 7h4m-4 4h4m-4 4h4" /></>}
+  </svg>
+}
+export default function ContactDirectory({ contacts, directory, onRefresh, loading }: { contacts: Entry[]; directory: CommunityContact[]; onRefresh: () => Promise<void>; loading: boolean }) {
+  const [editing, setEditing] = useState<string | null>(null), [name, setName] = useState(''), [phone, setPhone] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('');
+  const lock = useRef(false);
+  const nameInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (editing !== null) nameInput.current?.focus()
+  }, [editing]);
+  function begin(c?: Entry) {
+    setEditing(c?.id || 'new');
+    setName(c?.name || '');
+    setPhone(c?.phone || '');
+    setError('');
+    setMessage('')
+  }
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      await api(editing === 'new' ? '/records/contacts' : `/records/contacts/${editing}`, editing === 'new' ? 'POST' : 'PATCH', { name, phone });
+      setEditing(null);
+      setMessage('Contact saved.');
+      try {
+        await onRefresh()
+      } catch {
+        setError('Saved, but the list could not refresh. Close and reopen Contacts to retry.')
+      }
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      lock.current = false;
+      setBusy(false)
+    }
+  }
+  async function remove(c: Entry) {
+    if (lock.current || !window.confirm(`Remove ${c.name} from your personal contacts?`)) return;
+    lock.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      await api(`/records/contacts/${c.id}`, 'DELETE', {});
+      if (editing === c.id) setEditing(null);
+      setMessage('Contact removed.');
+      await onRefresh()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      lock.current = false;
+      setBusy(false)
+    }
+  }
+  return <div className="contact-directory">
+    <header className="contact-heading">
+      <span className="contact-eyebrow">YOUR COMMUNITY, ONE CALL AWAY</span>
+      <h2>Contacts</h2>
+      <p>The right people, whenever you need them.</p>
+    </header>
+    {error && <div className="contact-error" role="alert">{error}</div>}
+    {message && <div className="contact-success" role="status">{message}</div>}
+    <div className="contact-section-heading">
+      <h3>Community team</h3>
+      <span>Managed by admin</span>
+    </div>
+    {loading ? <p role="status">Loading community contacts…</p> : <div className="team-contact-list">
+      {directory.map(c => <article className={`team-contact ${c.id}`} key={c.id}>
+        <div className="team-contact-top">
+          <span className="team-symbol"><TeamIcon guard={c.id === 'guard'} /></span>
+          <div>
+            <span className="team-category">{c.id === 'guard' ? 'SECURITY' : 'RESIDENT SERVICES'}</span>
+            <h4>{c.name}</h4>
+          </div>
+        </div>
+        {c.description && <p className="team-description">{c.description}</p>}
+        <div className="team-hours">{c.hours || 'Hours not provided'}</div>
+        <div className="team-contact-bottom">
+          <div><small>CONTACT NUMBER</small><strong>{c.phone || 'Not added yet'}</strong></div>
+          {c.phone ? <a className="contact-call" href={`tel:${c.phone}`} aria-label={`Call ${c.name}`}>
+            <Phone />
+            <span>Call</span>
+          </a> : <span className="contact-unavailable">Awaiting number</span>}
+        </div>
+      </article>)}
+    </div>}
+    <div className="contact-section-heading personal-heading">
+      <div><h3>My personal contacts</h3><p>Only visible to you</p></div>
+      <button className="contact-add" disabled={busy} onClick={() => begin()}>＋ Add</button>
+    </div>
+    <div className="personal-contact-list">
+      {!loading && contacts.length === 0 && <div className="contacts-empty">
+        <span>＋</span>
+        <b>Keep someone close</b>
+        <p>Add family, a caregiver, or a trusted neighbour.</p>
+      </div>}
+      {contacts.map(c => <article className="personal-contact" key={c.id}>
+        <div className="personal-contact-top">
+          <span className="person-initials">{(c.name || '?').split(/\s+/).slice(0, 2).map(s => s[0]).join('').toUpperCase()}</span>
+          <div className="personal-contact-info"><h4>{c.name}</h4><span>{c.phone}</span></div>
+          <a className="personal-call" href={`tel:${c.phone}`} aria-label={`Call ${c.name}`}><Phone /></a>
+        </div>
+        <div className="personal-contact-actions">
+          <button disabled={busy} onClick={() => begin(c)}>Edit contact</button>
+          <button className="remove-contact" disabled={busy} onClick={() => void remove(c)}>Remove</button>
+        </div>
+      </article>)}
+    </div>
+    {editing !== null && <form className="contact-edit-form" onSubmit={save}>
+      <div className="contact-section-heading">
+        <h3>{editing === 'new' ? 'Add personal contact' : 'Edit personal contact'}</h3>
+        <button type="button" disabled={busy} onClick={() => setEditing(null)}>Cancel</button>
+      </div>
+      <label>Full name<input ref={nameInput} required maxLength={80} autoComplete="off" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Family member" /></label>
+      <label>Phone number<input type="tel" required maxLength={30} autoComplete="off" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Enter phone number" /></label>
+      <button className="contact-save" disabled={busy}>{busy ? 'Saving…' : 'Save contact'}</button>
+    </form>}
+    <p className="contact-footer">Community numbers are shared with all residents. Your personal contacts stay private.</p>
+  </div>;
+}
+export function CommunityContactSettings({ contacts, onRefresh }: { contacts: CommunityContact[]; onRefresh: () => Promise<void> }) {
+  return <div className="directory-settings">
+    {contacts.map(c => <CommunityContactForm key={`${c.id}-${c.updated}`} contact={c} onRefresh={onRefresh} />)}
+  </div>
+}
+function CommunityContactForm({ contact: c, onRefresh }: { contact: CommunityContact; onRefresh: () => Promise<void> }) {
+  const [name, setName] = useState(c.name), [phone, setPhone] = useState(c.phone), [hours, setHours] = useState(c.hours), [description, setDescription] = useState(c.description), [busy, setBusy] = useState(false), [error, setError] = useState(''), [saved, setSaved] = useState('');
+  const lock = useRef(false);
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setError('');
+    setSaved('');
+    try {
+      await api(`/admin/community-contacts/${c.id}`, 'PATCH', { name, phone, hours, description });
+      setSaved('Contact details saved for all residents.');
+      try {
+        await onRefresh()
+      } catch {
+        setError('Saved successfully. Refresh the dashboard to reload the directory.')
+      }
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false);
+      lock.current = false
+    }
+  }
+  return <form className="directory-settings-card" onSubmit={submit}>
+    <div className="team-contact-top">
+      <span className={`team-symbol ${c.id}`}><TeamIcon guard={c.id === 'guard'} /></span>
+      <div>
+        <span className="team-category">COMMUNITY DIRECTORY</span>
+        <h3>{c.id === 'guard' ? 'Guard House' : 'Management Office'}</h3>
+      </div>
+    </div>
+    {error && <div className="contact-error" role="alert">{error}</div>}
+    {saved && <div className="contact-success" role="status">{saved}</div>}
+    <label>Display name<input required maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label>
+    <label>Phone number<input type="tel" maxLength={30} value={phone} onChange={e => setPhone(e.target.value)} placeholder="Enter the actual contact number" /></label>
+    <small>Leave blank to show “Not added yet” and disable calling.</small>
+    <label>Office / duty hours<input maxLength={120} value={hours} onChange={e => setHours(e.target.value)} placeholder="Enter the confirmed operating hours" /></label>
+    <label>Description<textarea rows={3} maxLength={240} value={description} onChange={e => setDescription(e.target.value)} /></label>
+    <button className="contact-save" disabled={busy}>{busy ? 'Saving…' : 'Save contact details'}</button>
+    {c.updated && <p className="contact-footer">Last updated {new Date(c.updated).toLocaleString()}</p>}
+  </form>;
 }

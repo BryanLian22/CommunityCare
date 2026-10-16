@@ -1,3 +1,567 @@
-.account-stage{min-height:100vh;display:grid;grid-template-columns:1fr 460px;align-items:center;gap:70px;padding:70px max(6vw,24px);background:radial-gradient(at 20% 10%,#edf5eb,#dce7df);font-family:'DM Sans',sans-serif}.account-brand{font-family:Manrope,sans-serif;font-size:22px;font-weight:700;color:#17543f}.account-intro h1{font-family:Manrope,sans-serif;font-size:clamp(38px,4.8vw,68px);line-height:1.12;letter-spacing:-2px;margin:35px 0 24px;color:#183d2f}.account-intro p{font-size:18px;line-height:1.7;max-width:440px;color:#52685b}.intro-tags{display:flex;gap:10px;margin-top:32px}.intro-tags span{border:1px solid #b4c7b9;border-radius:30px;padding:8px 14px;font-size:13px}.account-card{background:#fff;padding:36px;border:1px solid #d5e2d8;border-radius:24px;box-shadow:0 22px 70px #284d3512}.eyebrow{font-size:11px;font-weight:700;letter-spacing:1.8px;color:#5e7b69;margin:0 0 12px}.account-card h2{font-family:Manrope,sans-serif;font-size:30px;margin:0 0 12px;letter-spacing:-1px}.account-card p{font-size:14px;color:#62756a;line-height:1.6}.account-card label,.admin-panel label{display:grid;gap:8px;font-size:14px;font-weight:600;margin:20px 0 12px}.account-card input,.admin-panel input,.admin-panel select,.admin-panel textarea{width:100%;padding:12px 14px;border:1px solid #c7d5cb;border-radius:9px;background:white;color:#173e2d;font:inherit;min-height:44px}.account-primary{background:#17644c;color:white;border:0;padding:14px 20px;border-radius:10px;font-weight:600;width:100%;margin-top:20px}.account-primary:disabled{opacity:.55}.account-link{background:none;border:0;color:#17644c;padding:14px 0;font-size:14px;display:block}.account-alert{padding:12px 16px;background:#fff0ee;color:#9d3428;border:1px solid #ecc4bd;border-radius:10px;margin:14px 0;line-height:1.5}.account-footnote{font-size:12px!important;border-top:1px solid #e4eae5;padding-top:18px}.session-toolbar{min-height:48px;padding:8px 24px;display:flex;align-items:center;justify-content:space-between;background:#153f30;color:white;font-size:13px;gap:10px}.session-toolbar div{display:flex;gap:8px}.session-toolbar button{border:1px solid #6a8f7c;border-radius:7px;background:transparent;color:white;padding:7px 12px}.session-toolbar~.stage{min-height:calc(100vh - 48px)}.session-toolbar~.stage .phone-app{height:min(844px,calc(100vh - 96px))}.admin-layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 48px);background:#f3f6f2}.admin-sidebar{background:#fff;border-right:1px solid #dde5dc;padding:32px 22px;display:flex;flex-direction:column;gap:20px}.admin-sidebar .account-brand{font-size:20px}.admin-sidebar>p{font-size:10px;letter-spacing:1.2px;color:#87978b}.admin-sidebar nav{display:grid;gap:8px}.admin-sidebar nav button{display:flex;justify-content:space-between;border:0;border-radius:9px;padding:14px;text-align:left;background:transparent;color:#51675a;font-weight:500}.admin-sidebar nav button.selected{background:#e4f0e8;color:#17543f;font-weight:700}.admin-sidebar nav button span{background:#17644c;color:white;border-radius:20px;padding:0 6px}.sidebar-note{margin-top:auto;font-size:13px;line-height:1.8;color:#65776a}.sidebar-note small{font-size:11px}.admin-main{padding:40px;min-width:0;max-width:1600px;width:100%}.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;gap:15px}.admin-header h1{font-size:32px;font-family:Manrope,sans-serif;margin:0;letter-spacing:-1px}.admin-header p:last-child{font-size:14px;color:#697d6d;margin:10px 0 0}.admin-secondary{padding:11px 18px;border-radius:9px;background:white;border:1px solid #cbd8cc;color:#28563f}.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:26px}.metric{padding:24px;background:white;border:1px solid #dfe7dd;border-radius:14px;display:grid;gap:16px}.metric span{font-size:13px;color:#657969}.metric strong{font-size:38px;line-height:1;color:#194a35}.admin-panel{background:#fff;border:1px solid #dfe7dd;border-radius:16px;padding:26px;min-width:0}.admin-panel h2{font-size:18px;font-family:Manrope,sans-serif;margin:0 0 12px}.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}.panel-heading h2{margin:0}.panel-heading>span{font-size:13px;color:#6d806e}.panel-heading>input{max-width:300px}.attention-list>button{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;padding:22px 0;background:none;border:0;border-bottom:1px solid #e5ebe3}.attention-list>button:last-child{border:0}.attention-list b{font-size:15px}.attention-list small{display:block;margin-top:7px;color:#7c8c7c}.attention-list strong{color:#17644c}.admin-note{padding:18px;margin-top:24px;color:#657461;font-size:13px;line-height:1.6}.admin-success{padding:12px 16px;border:1px solid #b5d6be;background:#e8f7eb;border-radius:10px;color:#245736;margin-bottom:20px}.table-scroll{overflow:auto}table{border-collapse:collapse;width:100%;text-align:left;font-size:14px}th{color:#758671;font-size:11px;text-transform:uppercase;letter-spacing:.8px;padding:14px 12px;border-bottom:1px solid #d7e1d5}td{padding:18px 12px;border-bottom:1px solid #e9eee6;overflow-wrap:anywhere}td button,.notice-admin button{border:1px solid #cad8c5;border-radius:7px;background:white;color:#2b5d3d;padding:8px 12px}.status-pill{display:inline-block;font-size:11px;font-weight:600;padding:6px 10px;border-radius:20px;background:#f4f0db;color:#806b27;white-space:nowrap}.status-pill.approved,.status-pill.active,.status-pill.completed,.status-pill.resolved{background:#e7f3e7;color:#326943}.status-pill.rejected,.status-pill.cancelled{background:#f8e9e4;color:#9b4d3c}.status-pill.in_progress{background:#e7eff8;color:#416b9e}.admin-filters{display:flex;gap:10px}.admin-filters input{max-width:280px}.admin-filters select{max-width:150px}.request-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}.request-card{border:1px solid #dfe6db;border-radius:12px;padding:20px;min-width:0;overflow-wrap:anywhere}.request-title{display:flex;justify-content:space-between;gap:8px;align-items:start;margin-bottom:18px}.request-title h3{font-size:16px;margin:0}.request-card>small{display:block;color:#768371;line-height:1.5;margin:5px 0}.request-card>p{font-size:14px}.request-details,.notice-admin p{white-space:pre-wrap;line-height:1.6}.empty-state{color:#7c8d77;padding:30px 0}.notice-admin-grid{display:grid;grid-template-columns:minmax(260px,1fr) minmax(280px,1.2fr);gap:24px}.notice-admin{border-bottom:1px solid #e2e9de;padding:18px 0}.notice-admin h3{margin:0;font-size:17px}.notice-admin p{font-size:14px;overflow-wrap:anywhere}.notice-admin small{color:#7e8a77}.notice-admin>div{display:flex;gap:8px;margin-top:15px}.admin-panel button:disabled{opacity:.5;cursor:not-allowed}.password-section{border-top:1px solid #dce5dc;margin-top:24px;padding-top:16px}.phone-app .data-banner{font-size:12px;padding:10px 16px;background:#e6f3e9;color:#235c37}.resident-notice-body{white-space:pre-wrap;overflow-wrap:anywhere}.status-text{display:block;font-size:12px;color:#17644c;font-weight:600}
-@media(max-width:1000px){.account-stage{grid-template-columns:1fr 420px;gap:30px;padding:40px 25px}.admin-layout{grid-template-columns:190px 1fr}.admin-main{padding:24px}.admin-sidebar{padding:24px 14px}.metric-grid{grid-template-columns:repeat(2,1fr)}.notice-admin-grid{grid-template-columns:1fr}}
-@media(max-width:720px){.account-stage{display:flex;flex-direction:column;padding:30px 18px;gap:25px;align-items:stretch}.account-intro h1{font-size:32px;margin:20px 0 10px}.account-intro p,.intro-tags{display:none}.account-card{padding:26px}.admin-layout{display:block}.admin-sidebar{padding:18px}.admin-sidebar>p,.sidebar-note{display:none}.admin-sidebar nav{display:flex;overflow:auto;gap:6px}.admin-sidebar nav button{white-space:nowrap;padding:10px 13px}.admin-main{padding:20px 14px}.admin-header h1{font-size:26px}.admin-panel{padding:18px}.admin-filters{width:100%}.metric{padding:18px}.session-toolbar{padding:8px 12px;font-size:12px;flex-wrap:wrap}.session-toolbar~.stage .phone-app{height:calc(100dvh - 60px)}.session-toolbar~.stage{padding:0;min-height:0}.request-grid{grid-template-columns:1fr}}
+.account-stage {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 460px;
+  align-items: center;
+  gap: 70px;
+  padding: 70px max(6vw,24px);
+  background: radial-gradient(at 20% 10%,#edf5eb,#dce7df);
+  font-family: 'DM Sans',sans-serif
+}
+.account-brand {
+  font-family: Manrope,sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #17543f
+}
+.account-intro h1 {
+  font-family: Manrope,sans-serif;
+  font-size: clamp(38px,4.8vw,68px);
+  line-height: 1.12;
+  letter-spacing: -2px;
+  margin: 35px 0 24px;
+  color: #183d2f
+}
+.account-intro p {
+  font-size: 18px;
+  line-height: 1.7;
+  max-width: 440px;
+  color: #52685b
+}
+.intro-tags {
+  display: flex;
+  gap: 10px;
+  margin-top: 32px
+}
+.intro-tags span {
+  border: 1px solid #b4c7b9;
+  border-radius: 30px;
+  padding: 8px 14px;
+  font-size: 13px
+}
+.account-card {
+  background: #fff;
+  padding: 36px;
+  border: 1px solid #d5e2d8;
+  border-radius: 24px;
+  box-shadow: 0 22px 70px #284d3512
+}
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  color: #5e7b69;
+  margin: 0 0 12px
+}
+.account-card h2 {
+  font-family: Manrope,sans-serif;
+  font-size: 30px;
+  margin: 0 0 12px;
+  letter-spacing: -1px
+}
+.account-card p {
+  font-size: 14px;
+  color: #62756a;
+  line-height: 1.6
+}
+.account-card label,.admin-panel label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 20px 0 12px
+}
+.account-card input,.admin-panel input,.admin-panel select,.admin-panel textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #c7d5cb;
+  border-radius: 9px;
+  background: white;
+  color: #173e2d;
+  font: inherit;
+  min-height: 44px
+}
+.account-primary {
+  background: #17644c;
+  color: white;
+  border: 0;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  width: 100%;
+  margin-top: 20px
+}
+.account-primary:disabled {
+  opacity: .55
+}
+.account-link {
+  background: none;
+  border: 0;
+  color: #17644c;
+  padding: 14px 0;
+  font-size: 14px;
+  display: block
+}
+.account-alert {
+  padding: 12px 16px;
+  background: #fff0ee;
+  color: #9d3428;
+  border: 1px solid #ecc4bd;
+  border-radius: 10px;
+  margin: 14px 0;
+  line-height: 1.5
+}
+.account-footnote {
+  font-size: 12px!important;
+  border-top: 1px solid #e4eae5;
+  padding-top: 18px
+}
+.session-toolbar {
+  min-height: 48px;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #153f30;
+  color: white;
+  font-size: 13px;
+  gap: 10px
+}
+.session-toolbar div {
+  display: flex;
+  gap: 8px
+}
+.session-toolbar button {
+  border: 1px solid #6a8f7c;
+  border-radius: 7px;
+  background: transparent;
+  color: white;
+  padding: 7px 12px
+}
+.session-toolbar~.stage {
+  min-height: calc(100vh - 48px)
+}
+.session-toolbar~.stage .phone-app {
+  height: min(844px,calc(100vh - 96px))
+}
+.admin-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: calc(100vh - 48px);
+  background: #f3f6f2
+}
+.admin-sidebar {
+  background: #fff;
+  border-right: 1px solid #dde5dc;
+  padding: 32px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px
+}
+.admin-sidebar .account-brand {
+  font-size: 20px
+}
+.admin-sidebar>p {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  color: #87978b
+}
+.admin-sidebar nav {
+  display: grid;
+  gap: 8px
+}
+.admin-sidebar nav button {
+  display: flex;
+  justify-content: space-between;
+  border: 0;
+  border-radius: 9px;
+  padding: 14px;
+  text-align: left;
+  background: transparent;
+  color: #51675a;
+  font-weight: 500
+}
+.admin-sidebar nav button.selected {
+  background: #e4f0e8;
+  color: #17543f;
+  font-weight: 700
+}
+.admin-sidebar nav button span {
+  background: #17644c;
+  color: white;
+  border-radius: 20px;
+  padding: 0 6px
+}
+.sidebar-note {
+  margin-top: auto;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #65776a
+}
+.sidebar-note small {
+  font-size: 11px
+}
+.admin-main {
+  padding: 40px;
+  min-width: 0;
+  max-width: 1600px;
+  width: 100%
+}
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  gap: 15px
+}
+.admin-header h1 {
+  font-size: 32px;
+  font-family: Manrope,sans-serif;
+  margin: 0;
+  letter-spacing: -1px
+}
+.admin-header p:last-child {
+  font-size: 14px;
+  color: #697d6d;
+  margin: 10px 0 0
+}
+.admin-secondary {
+  padding: 11px 18px;
+  border-radius: 9px;
+  background: white;
+  border: 1px solid #cbd8cc;
+  color: #28563f
+}
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 18px;
+  margin-bottom: 26px
+}
+.metric {
+  padding: 24px;
+  background: white;
+  border: 1px solid #dfe7dd;
+  border-radius: 14px;
+  display: grid;
+  gap: 16px
+}
+.metric span {
+  font-size: 13px;
+  color: #657969
+}
+.metric strong {
+  font-size: 38px;
+  line-height: 1;
+  color: #194a35
+}
+.admin-panel {
+  background: #fff;
+  border: 1px solid #dfe7dd;
+  border-radius: 16px;
+  padding: 26px;
+  min-width: 0
+}
+.admin-panel h2 {
+  font-size: 18px;
+  font-family: Manrope,sans-serif;
+  margin: 0 0 12px
+}
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px
+}
+.panel-heading h2 {
+  margin: 0
+}
+.panel-heading>span {
+  font-size: 13px;
+  color: #6d806e
+}
+.panel-heading>input {
+  max-width: 300px
+}
+.attention-list>button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: 22px 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid #e5ebe3
+}
+.attention-list>button:last-child {
+  border: 0
+}
+.attention-list b {
+  font-size: 15px
+}
+.attention-list small {
+  display: block;
+  margin-top: 7px;
+  color: #7c8c7c
+}
+.attention-list strong {
+  color: #17644c
+}
+.admin-note {
+  padding: 18px;
+  margin-top: 24px;
+  color: #657461;
+  font-size: 13px;
+  line-height: 1.6
+}
+.admin-success {
+  padding: 12px 16px;
+  border: 1px solid #b5d6be;
+  background: #e8f7eb;
+  border-radius: 10px;
+  color: #245736;
+  margin-bottom: 20px
+}
+.table-scroll {
+  overflow: auto
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+  font-size: 14px
+}
+th {
+  color: #758671;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  padding: 14px 12px;
+  border-bottom: 1px solid #d7e1d5
+}
+td {
+  padding: 18px 12px;
+  border-bottom: 1px solid #e9eee6;
+  overflow-wrap: anywhere
+}
+td button,.notice-admin button {
+  border: 1px solid #cad8c5;
+  border-radius: 7px;
+  background: white;
+  color: #2b5d3d;
+  padding: 8px 12px
+}
+.status-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #f4f0db;
+  color: #806b27;
+  white-space: nowrap
+}
+.status-pill.approved,.status-pill.active,.status-pill.completed,.status-pill.resolved {
+  background: #e7f3e7;
+  color: #326943
+}
+.status-pill.rejected,.status-pill.cancelled {
+  background: #f8e9e4;
+  color: #9b4d3c
+}
+.status-pill.in_progress {
+  background: #e7eff8;
+  color: #416b9e
+}
+.admin-filters {
+  display: flex;
+  gap: 10px
+}
+.admin-filters input {
+  max-width: 280px
+}
+.admin-filters select {
+  max-width: 150px
+}
+.request-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(270px,1fr));
+  gap: 18px
+}
+.request-card {
+  border: 1px solid #dfe6db;
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 0;
+  overflow-wrap: anywhere
+}
+.request-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: start;
+  margin-bottom: 18px
+}
+.request-title h3 {
+  font-size: 16px;
+  margin: 0
+}
+.request-card>small {
+  display: block;
+  color: #768371;
+  line-height: 1.5;
+  margin: 5px 0
+}
+.request-card>p {
+  font-size: 14px
+}
+.request-details,.notice-admin p {
+  white-space: pre-wrap;
+  line-height: 1.6
+}
+.empty-state {
+  color: #7c8d77;
+  padding: 30px 0
+}
+.notice-admin-grid {
+  display: grid;
+  grid-template-columns: minmax(260px,1fr) minmax(280px,1.2fr);
+  gap: 24px
+}
+.notice-admin {
+  border-bottom: 1px solid #e2e9de;
+  padding: 18px 0
+}
+.notice-admin h3 {
+  margin: 0;
+  font-size: 17px
+}
+.notice-admin p {
+  font-size: 14px;
+  overflow-wrap: anywhere
+}
+.notice-admin small {
+  color: #7e8a77
+}
+.notice-admin>div {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px
+}
+.admin-panel button:disabled {
+  opacity: .5;
+  cursor: not-allowed
+}
+.password-section {
+  border-top: 1px solid #dce5dc;
+  margin-top: 24px;
+  padding-top: 16px
+}
+.phone-app .data-banner {
+  font-size: 12px;
+  padding: 10px 16px;
+  background: #e6f3e9;
+  color: #235c37
+}
+.resident-notice-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere
+}
+.status-text {
+  display: block;
+  font-size: 12px;
+  color: #17644c;
+  font-weight: 600
+}
+@media(max-width:1000px) {
+  .account-stage {
+    grid-template-columns: 1fr 420px;
+    gap: 30px;
+    padding: 40px 25px
+  }
+  .admin-layout {
+    grid-template-columns: 190px 1fr
+  }
+  .admin-main {
+    padding: 24px
+  }
+  .admin-sidebar {
+    padding: 24px 14px
+  }
+  .metric-grid {
+    grid-template-columns: repeat(2,1fr)
+  }
+  .notice-admin-grid {
+    grid-template-columns: 1fr
+  }
+}
+@media(max-width:720px) {
+  .account-stage {
+    display: flex;
+    flex-direction: column;
+    padding: 30px 18px;
+    gap: 25px;
+    align-items: stretch
+  }
+  .account-intro h1 {
+    font-size: 32px;
+    margin: 20px 0 10px
+  }
+  .account-intro p,.intro-tags {
+    display: none
+  }
+  .account-card {
+    padding: 26px
+  }
+  .admin-layout {
+    display: block
+  }
+  .admin-sidebar {
+    padding: 18px
+  }
+  .admin-sidebar>p,.sidebar-note {
+    display: none
+  }
+  .admin-sidebar nav {
+    display: flex;
+    overflow: auto;
+    gap: 6px
+  }
+  .admin-sidebar nav button {
+    white-space: nowrap;
+    padding: 10px 13px
+  }
+  .admin-main {
+    padding: 20px 14px
+  }
+  .admin-header h1 {
+    font-size: 26px
+  }
+  .admin-panel {
+    padding: 18px
+  }
+  .admin-filters {
+    width: 100%
+  }
+  .metric {
+    padding: 18px
+  }
+  .session-toolbar {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex-wrap: wrap
+  }
+  .session-toolbar~.stage .phone-app {
+    height: calc(100dvh - 60px)
+  }
+  .session-toolbar~.stage {
+    padding: 0;
+    min-height: 0
+  }
+  .request-grid {
+    grid-template-columns: 1fr
+  }
+}

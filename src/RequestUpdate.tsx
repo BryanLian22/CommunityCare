@@ -1,5 +1,28 @@
-import type {Entry} from './api';
-export default function RequestUpdate({record:r}:{record?:Entry}){
- if(!r)return <section className="help-card"><h2>Request unavailable</h2><p>This request could not be found. Refresh your requests and try again.</p></section>;
- return <section className="help-card"><span className="contact-eyebrow">YOUR REQUEST UPDATE</span><h2>{r.facility||r.service||r.category}</h2><span className={`status-pill ${r.status}`}>{r.status.replaceAll('_',' ')}</span>{r.date&&<p>{r.date} · {r.time}</p>}{r.address&&<p>{r.address}</p>}{r.details&&<p className="help-description">{r.details}</p>}<small>Reference {r.id.slice(0,8)} · Submitted {new Date(r.created).toLocaleString()}</small>{r.note&&<p className="help-update"><b>Management note:</b> {r.note}</p>}<h3>Progress history</h3>{r.history?.length?<ol className="request-update-history">{r.history.map((h,i)=><li key={i}><b>{h.status.replaceAll('_',' ')}</b><time>{new Date(h.at).toLocaleString()}</time>{h.note&&<p>{h.note}</p>}</li>)}</ol>:<p>Current status: {r.status.replaceAll('_',' ')}</p>}</section>
+import type { Entry } from './api';
+export default function RequestUpdate({ record: r }: { record?: Entry }) {
+  if (!r) return <section className="help-card">
+    <h2>Request unavailable</h2>
+    <p>This request could not be found. Refresh your requests and try again.</p>
+  </section>;
+  return <section className="help-card">
+    <span className="contact-eyebrow">YOUR REQUEST UPDATE</span>
+    <h2>{r.facility || r.service || r.category}</h2>
+    <span className={`status-pill ${r.status}`}>{r.status.replaceAll('_', ' ')}</span>
+    {r.date && <p>{r.date} · {r.time}</p>}
+    {r.address && <p>{r.address}</p>}
+    {r.details && <p className="help-description">{r.details}</p>}
+    <small>Reference {r.id.slice(0, 8)} · Submitted {new Date(r.created).toLocaleString()}</small>
+    {r.note && <p className="help-update">
+      <b>Management note:</b>
+      {r.note}
+    </p>}
+    <h3>Progress history</h3>
+    {r.history?.length ? <ol className="request-update-history">
+      {r.history.map((h, i) => <li key={i}>
+        <b>{h.status.replaceAll('_', ' ')}</b>
+        <time>{new Date(h.at).toLocaleString()}</time>
+        {h.note && <p>{h.note}</p>}
+      </li>)}
+    </ol> : <p>Current status: {r.status.replaceAll('_', ' ')}</p>}
+  </section>
 }

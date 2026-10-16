@@ -1,1 +1,181 @@
-.assistance{color:var(--text,#1b3029)}.assistance h2{font-size:26px;margin:8px 0}.help-intro{color:#62776d;margin:0 0 20px}.help-tabs{display:flex;gap:8px;background:#edf3ef;padding:5px;border-radius:14px;margin:20px 0}.help-tabs button{flex:1;min-height:46px;border:0;border-radius:10px;background:transparent;font:inherit;font-weight:700;color:#526b5e}.help-tabs button[aria-pressed=true]{background:#fff;color:#205b40;box-shadow:0 2px 8px #193b2512}.help-form{display:grid;gap:16px}.help-form label{display:grid;gap:8px;font-size:14px;font-weight:650}.help-form input,.help-form select,.help-form textarea{width:100%;box-sizing:border-box;min-height:48px;border:1px solid #cbd9d0;border-radius:10px;padding:12px;background:#fff;color:#243a2e;font:inherit}.help-form textarea{resize:vertical}.help-note{font-size:13px;line-height:1.6;color:#617369;background:#f1f5f2;padding:12px;border-radius:10px}.help-list{display:grid;gap:16px}.help-card{background:#fff;border:1px solid #dce6df;border-radius:18px;padding:20px;min-width:0;overflow-wrap:anywhere}.help-card-heading{display:flex;align-items:flex-start;gap:12px;justify-content:space-between}.help-card h3{font-size:17px;line-height:1.4;margin:0}.help-card p{line-height:1.6}.help-description,.help-update{white-space:pre-wrap}.help-assignment{display:grid;gap:6px;background:#eff6f1;padding:12px;border-radius:10px;font-size:14px}.help-assignment small,.help-resident small{font-size:12px;color:#64796d}.help-timeline{margin:16px 0}.help-timeline summary{min-height:36px;cursor:pointer;font-weight:650}.help-timeline ol{padding-left:20px;border-left:2px solid #d8e6dd;margin-left:6px;list-style:none}.help-timeline li{display:grid;gap:5px;margin:0 0 18px;font-size:13px}.help-timeline time{color:#687b70;font-size:12px}.help-timeline p{margin:0;white-space:pre-wrap}.help-cancel{min-height:44px;border:1px solid #d8dfda;background:white;border-radius:10px;padding:10px 16px;color:#8f3737;font:inherit}.help-resident{display:grid;gap:5px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #e4ebe6}.help-update{background:#f5f8f6;border-radius:10px;padding:12px}.status-pill.accepted{background:#e5f2e9;color:#24603b}.status-pill.in_progress{background:#e6efff;color:#285b96}.assistance button:focus-visible,.assistance input:focus-visible,.assistance select:focus-visible,.assistance textarea:focus-visible{outline:3px solid #39875d;outline-offset:3px}.large-text .assistance{font-size:18px}.large-text .help-form label{font-size:17px}.high-contrast .assistance,.high-contrast .help-note,.high-contrast .help-assignment small{color:#000}.assistance button:disabled{opacity:.6;cursor:wait}
+.assistance {
+  color: var(--text,#1b3029)
+}
+.assistance h2 {
+  font-size: 26px;
+  margin: 8px 0
+}
+.help-intro {
+  color: #62776d;
+  margin: 0 0 20px
+}
+.help-tabs {
+  display: flex;
+  gap: 8px;
+  background: #edf3ef;
+  padding: 5px;
+  border-radius: 14px;
+  margin: 20px 0
+}
+.help-tabs button {
+  flex: 1;
+  min-height: 46px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  color: #526b5e
+}
+.help-tabs button[aria-pressed=true] {
+  background: #fff;
+  color: #205b40;
+  box-shadow: 0 2px 8px #193b2512
+}
+.help-form {
+  display: grid;
+  gap: 16px
+}
+.help-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 650
+}
+.help-form input,.help-form select,.help-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  border: 1px solid #cbd9d0;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff;
+  color: #243a2e;
+  font: inherit
+}
+.help-form textarea {
+  resize: vertical
+}
+.help-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #617369;
+  background: #f1f5f2;
+  padding: 12px;
+  border-radius: 10px
+}
+.help-list {
+  display: grid;
+  gap: 16px
+}
+.help-card {
+  background: #fff;
+  border: 1px solid #dce6df;
+  border-radius: 18px;
+  padding: 20px;
+  min-width: 0;
+  overflow-wrap: anywhere
+}
+.help-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  justify-content: space-between
+}
+.help-card h3 {
+  font-size: 17px;
+  line-height: 1.4;
+  margin: 0
+}
+.help-card p {
+  line-height: 1.6
+}
+.help-description,.help-update {
+  white-space: pre-wrap
+}
+.help-assignment {
+  display: grid;
+  gap: 6px;
+  background: #eff6f1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px
+}
+.help-assignment small,.help-resident small {
+  font-size: 12px;
+  color: #64796d
+}
+.help-timeline {
+  margin: 16px 0
+}
+.help-timeline summary {
+  min-height: 36px;
+  cursor: pointer;
+  font-weight: 650
+}
+.help-timeline ol {
+  padding-left: 20px;
+  border-left: 2px solid #d8e6dd;
+  margin-left: 6px;
+  list-style: none
+}
+.help-timeline li {
+  display: grid;
+  gap: 5px;
+  margin: 0 0 18px;
+  font-size: 13px
+}
+.help-timeline time {
+  color: #687b70;
+  font-size: 12px
+}
+.help-timeline p {
+  margin: 0;
+  white-space: pre-wrap
+}
+.help-cancel {
+  min-height: 44px;
+  border: 1px solid #d8dfda;
+  background: white;
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: #8f3737;
+  font: inherit
+}
+.help-resident {
+  display: grid;
+  gap: 5px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #e4ebe6
+}
+.help-update {
+  background: #f5f8f6;
+  border-radius: 10px;
+  padding: 12px
+}
+.status-pill.accepted {
+  background: #e5f2e9;
+  color: #24603b
+}
+.status-pill.in_progress {
+  background: #e6efff;
+  color: #285b96
+}
+.assistance button:focus-visible,.assistance input:focus-visible,.assistance select:focus-visible,.assistance textarea:focus-visible {
+  outline: 3px solid #39875d;
+  outline-offset: 3px
+}
+.large-text .assistance {
+  font-size: 18px
+}
+.large-text .help-form label {
+  font-size: 17px
+}
+.high-contrast .assistance,.high-contrast .help-note,.high-contrast .help-assignment small {
+  color: #000
+}
+.assistance button:disabled {
+  opacity: .6;
+  cursor: wait
+}

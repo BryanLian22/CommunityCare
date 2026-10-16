@@ -1,20 +1,180 @@
-import {useRef,useState} from 'react';
-import {api,type Assistance} from './api';
+import { useRef, useState } from 'react';
+import { api, type Assistance } from './api';
 import './assistance.css';
-const categories=['Wheelchair / mobility support','Shopping / carrying groceries','Transport assistance','Home maintenance','Other assistance'];
-const next:Record<string,string[]>={pending:['accepted','rejected','cancelled'],accepted:['in_progress','cancelled'],in_progress:['completed','cancelled'],completed:[],rejected:[],cancelled:[]};
-const label=(s:string)=>s.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase());
-function RequestDetails({request:r}:{request:Assistance}){return <><div className="help-card-heading"><h3>{r.category}</h3><span className={`status-pill ${r.status}`}>{label(r.status)}</span></div><p><b>Location</b><br/>{r.location}</p><p className="help-description">{r.details}</p><div className="help-assignment"><b>{r.assignee?'Assigned to '+r.assignee:'Waiting for assignment'}</b><small>Submitted {new Date(r.created).toLocaleString()} · Ref {r.id.slice(0,8)}</small></div><details className="help-timeline"><summary>Progress history ({r.history.length})</summary><ol>{r.history.map((event,i)=><li key={i}><strong>{label(event.status)}</strong><time>{new Date(event.at).toLocaleString()}</time>{event.assignee&&<span>Staff: {event.assignee}</span>}{event.note&&<p>{event.note}</p>}</li>)}</ol></details>{r.note&&<p className="help-update"><b>Latest update:</b> {r.note}</p>}</>}
-export function ResidentAssistance({requests,onRefresh,targetId}:{requests:Assistance[];onRefresh:()=>Promise<void>;targetId?:string}){
- const [view,setView]=useState<'new'|'requests'>(targetId?'requests':'new'),[category,setCategory]=useState(categories[0]),[location,setLocation]=useState(''),[details,setDetails]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('');const lock=useRef(false);const [focused,setFocused]=useState(targetId);
- async function perform(path:string,method:string,body:unknown,done:()=>void){if(lock.current)return;lock.current=true;setBusy(true);setError('');setMessage('');try{await api(path,method,body);done();try{await onRefresh()}catch{setError('Saved, but the list could not refresh. Reopen this panel to reload.')}}catch(e){setError((e as Error).message)}finally{lock.current=false;setBusy(false)}}
- return <section className="assistance"><span className="contact-eyebrow">A LITTLE HELP, CLOSE TO HOME</span><h2>Request Assistance</h2><p className="help-intro">Tell your community team what you need.</p><div className="help-tabs"><button disabled={busy} aria-pressed={view==='new'} onClick={()=>setView('new')}>New request</button><button disabled={busy} aria-pressed={view==='requests'} onClick={()=>setView('requests')}>My requests ({requests.length})</button></div>{error&&<div role="alert" className="contact-error">{error}</div>}{message&&<div role="status" className="contact-success">{message}</div>}{view==='new'?<form className="help-form" onSubmit={e=>{e.preventDefault();void perform('/assistance','POST',{category,location,details},()=>{setLocation('');setDetails('');setView('requests');setMessage('Request sent to management. You can track progress here.')})}}><label>What do you need help with?<select value={category} onChange={e=>setCategory(e.target.value)}>{categories.map(c=><option key={c}>{c}</option>)}</select></label><label>Where do you need help?<input required maxLength={200} value={location} onChange={e=>setLocation(e.target.value)} placeholder="Block, unit, floor or meeting point"/></label><label>Tell us more<textarea required maxLength={2000} rows={4} value={details} onChange={e=>setDetails(e.target.value)} placeholder="Describe the help you need and any access instructions."/></label><p className="help-note">For everyday assistance. Requests are reviewed by management; submitting does not dispatch emergency help.</p><button className="contact-save" disabled={busy}>{busy?'Sending…':'Send assistance request'}</button></form>:<div className="help-list">{focused&&<div className="help-target-banner">Opened from notification. <button onClick={()=>setFocused(undefined)}>Show all requests</button>{!requests.some(r=>r.id===focused)&&<p>This request is no longer available.</p>}</div>}{requests.length===0&&<div className="contacts-empty"><b>No requests yet</b><p>Your requests and updates will appear here.</p></div>}{requests.filter(r=>!focused||r.id===focused).map(r=><article className="help-card" key={r.id}><RequestDetails request={r}/>{['pending','accepted'].includes(r.status)&&<button className="help-cancel" disabled={busy} onClick={()=>{if(window.confirm('Cancel this assistance request?'))void perform(`/assistance/${r.id}`,'PATCH',{status:'cancelled',revision:r.revision},()=>setMessage('Request cancelled.'))}}>Cancel request</button>}{r.status==='in_progress'&&<p className="help-note">Work has started. Contact management if your needs change.</p>}</article>)}</div>}</section>
+const categories = ['Wheelchair / mobility support', 'Shopping / carrying groceries', 'Transport assistance', 'Home maintenance', 'Other assistance'];
+const next: Record<string, string[]> = {
+  pending: ['accepted', 'rejected', 'cancelled'],
+  accepted: ['in_progress', 'cancelled'],
+  in_progress: ['completed', 'cancelled'],
+  completed: [],
+  rejected: [],
+  cancelled: []
+};
+const label = (s: string) => s.replaceAll('_', ' ').replace(/^./, c => c.toUpperCase());
+function RequestDetails({ request: r }: { request: Assistance }) {
+  return <>
+    <div className="help-card-heading">
+      <h3>{r.category}</h3>
+      <span className={`status-pill ${r.status}`}>{label(r.status)}</span>
+    </div>
+    <p>
+      <b>Location</b>
+      <br />
+      {r.location}
+    </p>
+    <p className="help-description">{r.details}</p>
+    <div className="help-assignment">
+      <b>{r.assignee ? 'Assigned to ' + r.assignee : 'Waiting for assignment'}</b>
+      <small>Submitted {new Date(r.created).toLocaleString()} · Ref {r.id.slice(0, 8)}</small>
+    </div>
+    <details className="help-timeline">
+      <summary>Progress history ({r.history.length})</summary>
+      <ol>
+        {r.history.map((event, i) => <li key={i}>
+          <strong>{label(event.status)}</strong>
+          <time>{new Date(event.at).toLocaleString()}</time>
+          {event.assignee && <span>Staff: {event.assignee}</span>}
+          {event.note && <p>{event.note}</p>}
+        </li>)}
+      </ol>
+    </details>
+    {r.note && <p className="help-update">
+      <b>Latest update:</b>
+      {r.note}
+    </p>}
+  </>
 }
-export function AdminAssistance({requests,onRefresh,targetId}:{requests:Assistance[];onRefresh:()=>Promise<void>;targetId?:string}){
- const [focused,setFocused]=useState(targetId);const [query,setQuery]=useState(''),[filter,setFilter]=useState('all');const filtered=requests.filter(r=>(!focused||r.id===focused)&&(filter==='all'||r.status===filter)&&[r.residentName,r.residentEmail,r.category,r.location,r.assignee,r.details].join(' ').toLowerCase().includes(query.toLowerCase()));
- return <section className="admin-panel assistance"><div className="panel-heading"><div><h2>Resident assistance</h2><p>Assign responsibility and keep residents updated.</p></div><div className="admin-filters"><input aria-label="Search assistance" placeholder="Resident, location or staff" value={query} onChange={e=>setQuery(e.target.value)}/><select aria-label="Assistance status filter" value={filter} onChange={e=>setFilter(e.target.value)}>{['all',...Object.keys(next)].map(s=><option key={s} value={s}>{label(s)}</option>)}</select></div></div><p className="help-note">Staff assignment is recorded by name. Residents receive in-app updates. Staff accounts and staff alerts are not connected.</p><div>{focused&&<div className="help-target-banner">Opened from notification. <button onClick={()=>setFocused(undefined)}>Show all requests</button></div>}</div><div className="request-grid">{filtered.length===0&&<p>No matching assistance requests.</p>}{filtered.map(r=><AdminRequest key={`${r.id}-${r.revision}`} request={r} onRefresh={onRefresh}/>)}</div></section>
+export function ResidentAssistance({ requests, onRefresh, targetId }: { requests: Assistance[]; onRefresh: () => Promise<void>; targetId?: string }) {
+  const [view, setView] = useState<'new' | 'requests'>(targetId ? 'requests' : 'new'), [category, setCategory] = useState(categories[0]), [location, setLocation] = useState(''), [details, setDetails] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('');
+  const lock = useRef(false);
+  const [focused, setFocused] = useState(targetId);
+  async function perform(path: string, method: string, body: unknown, done: () => void) {
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      await api(path, method, body);
+      done();
+      try {
+        await onRefresh()
+      } catch {
+        setError('Saved, but the list could not refresh. Reopen this panel to reload.')
+      }
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      lock.current = false;
+      setBusy(false)
+    }
+  }
+  return <section className="assistance">
+    <span className="contact-eyebrow">A LITTLE HELP, CLOSE TO HOME</span>
+    <h2>Request Assistance</h2>
+    <p className="help-intro">Tell your community team what you need.</p>
+    <div className="help-tabs">
+      <button disabled={busy} aria-pressed={view === 'new'} onClick={() => setView('new')}>New request</button>
+      <button disabled={busy} aria-pressed={view === 'requests'} onClick={() => setView('requests')}>My requests ({requests.length})</button>
+    </div>
+    {error && <div role="alert" className="contact-error">{error}</div>}
+    {message && <div role="status" className="contact-success">{message}</div>}
+    {view === 'new' ? <form className="help-form" onSubmit={e => {
+      e.preventDefault();
+      void perform('/assistance', 'POST', { category, location, details }, () => {
+        setLocation('');
+        setDetails('');
+        setView('requests');
+        setMessage('Request sent to management. You can track progress here.')
+      })
+    }}>
+      <label>What do you need help with?<select value={category} onChange={e => setCategory(e.target.value)}>{categories.map(c => <option key={c}>{c}</option>)}</select></label>
+      <label>Where do you need help?<input required maxLength={200} value={location} onChange={e => setLocation(e.target.value)} placeholder="Block, unit, floor or meeting point" /></label>
+      <label>Tell us more<textarea required maxLength={2000} rows={4} value={details} onChange={e => setDetails(e.target.value)} placeholder="Describe the help you need and any access instructions." /></label>
+      <p className="help-note">For everyday assistance. Requests are reviewed by management; submitting does not dispatch emergency help.</p>
+      <button className="contact-save" disabled={busy}>{busy ? 'Sending…' : 'Send assistance request'}</button>
+    </form> : <div className="help-list">
+      {focused && <div className="help-target-banner">Opened from notification. <button onClick={() => setFocused(undefined)}>Show all requests</button>{!requests.some(r => r.id === focused) && <p>This request is no longer available.</p>}</div>}
+      {requests.length === 0 && <div className="contacts-empty">
+        <b>No requests yet</b>
+        <p>Your requests and updates will appear here.</p>
+      </div>}
+      {requests.filter(r => !focused || r.id === focused).map(r => <article className="help-card" key={r.id}>
+        <RequestDetails request={r} />
+        {['pending', 'accepted'].includes(r.status) && <button className="help-cancel" disabled={busy} onClick={() => {
+          if (window.confirm('Cancel this assistance request?')) void perform(`/assistance/${r.id}`, 'PATCH', { status: 'cancelled', revision: r.revision }, () => setMessage('Request cancelled.'))
+        }}>Cancel request</button>}
+        {r.status === 'in_progress' && <p className="help-note">Work has started. Contact management if your needs change.</p>}
+      </article>)}
+    </div>}
+  </section>
 }
-function AdminRequest({request:r,onRefresh}:{request:Assistance;onRefresh:()=>Promise<void>}){
- const [status,setStatus]=useState(r.status),[assignee,setAssignee]=useState(r.assignee),[note,setNote]=useState(r.note),[busy,setBusy]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState('');const lock=useRef(false),closed=next[r.status].length===0;
- return <article className="help-card"><div className="help-resident"><b>{r.residentName}</b><small>{r.residentEmail}</small></div><RequestDetails request={r}/>{!closed&&<form className="help-form" onSubmit={async e=>{e.preventDefault();if(lock.current)return;lock.current=true;setBusy(true);setError('');try{await api(`/admin/assistance/${r.id}`,'PATCH',{status,assignee,note,revision:r.revision});setSaved('Update saved.');try{await onRefresh()}catch{setError('Saved. Refresh the dashboard to reload.')}}catch(e){setError((e as Error).message)}finally{lock.current=false;setBusy(false)}}}><label>Assigned staff member<input maxLength={100} required={['accepted','in_progress','completed'].includes(status)} value={assignee} onChange={e=>setAssignee(e.target.value)} placeholder="Enter the responsible staff member's name"/></label><label>Request status<select value={status} onChange={e=>setStatus(e.target.value)}>{[r.status,...next[r.status]].map(s=><option key={s} value={s}>{label(s)}</option>)}</select></label><label>Update for resident<textarea maxLength={1000} required={['rejected','cancelled'].includes(status)} rows={3} value={note} onChange={e=>setNote(e.target.value)} placeholder="Progress update or reason for closure"/></label>{error&&<div role="alert" className="contact-error">{error}</div>}{saved&&<p role="status">{saved}</p>}<button className="contact-save" disabled={busy}>{busy?'Saving…':'Save request update'}</button></form>}{closed&&<p className="help-note">Closed request · retained in history</p>}</article>
+export function AdminAssistance({ requests, onRefresh, targetId }: { requests: Assistance[]; onRefresh: () => Promise<void>; targetId?: string }) {
+  const [focused, setFocused] = useState(targetId);
+  const [query, setQuery] = useState(''), [filter, setFilter] = useState('all');
+  const filtered = requests.filter(r => (!focused || r.id === focused) && (filter === 'all' || r.status === filter) && [r.residentName, r.residentEmail, r.category, r.location, r.assignee, r.details].join(' ').toLowerCase().includes(query.toLowerCase()));
+  return <section className="admin-panel assistance">
+    <div className="panel-heading">
+      <div>
+        <h2>Resident assistance</h2>
+        <p>Assign responsibility and keep residents updated.</p>
+      </div>
+      <div className="admin-filters">
+        <input aria-label="Search assistance" placeholder="Resident, location or staff" value={query} onChange={e => setQuery(e.target.value)} />
+        <select aria-label="Assistance status filter" value={filter} onChange={e => setFilter(e.target.value)}>
+          {['all', ...Object.keys(next)].map(s => <option key={s} value={s}>{label(s)}</option>)}
+        </select>
+      </div>
+    </div>
+    <p className="help-note">Staff assignment is recorded by name. Residents receive in-app updates. Staff accounts and staff alerts are not connected.</p>
+    <div>
+      {focused && <div className="help-target-banner">Opened from notification. <button onClick={() => setFocused(undefined)}>Show all requests</button></div>}
+    </div>
+    <div className="request-grid">
+      {filtered.length === 0 && <p>No matching assistance requests.</p>}
+      {filtered.map(r => <AdminRequest key={`${r.id}-${r.revision}`} request={r} onRefresh={onRefresh} />)}
+    </div>
+  </section>
+}
+function AdminRequest({ request: r, onRefresh }: { request: Assistance; onRefresh: () => Promise<void> }) {
+  const [status, setStatus] = useState(r.status), [assignee, setAssignee] = useState(r.assignee), [note, setNote] = useState(r.note), [busy, setBusy] = useState(false), [error, setError] = useState(''), [saved, setSaved] = useState('');
+  const lock = useRef(false), closed = next[r.status].length === 0;
+  return <article className="help-card">
+    <div className="help-resident">
+      <b>{r.residentName}</b>
+      <small>{r.residentEmail}</small>
+    </div>
+    <RequestDetails request={r} />
+    {!closed && <form className="help-form" onSubmit={async e => {
+      e.preventDefault();
+      if (lock.current) return;
+      lock.current = true;
+      setBusy(true);
+      setError('');
+      try {
+        await api(`/admin/assistance/${r.id}`, 'PATCH', { status, assignee, note, revision: r.revision });
+        setSaved('Update saved.');
+        try {
+          await onRefresh()
+        } catch {
+          setError('Saved. Refresh the dashboard to reload.')
+        }
+      } catch (e) {
+        setError((e as Error).message)
+      } finally {
+        lock.current = false;
+        setBusy(false)
+      }
+    }}>
+      <label>Assigned staff member<input maxLength={100} required={['accepted', 'in_progress', 'completed'].includes(status)} value={assignee} onChange={e => setAssignee(e.target.value)} placeholder="Enter the responsible staff member's name" /></label>
+      <label>Request status<select value={status} onChange={e => setStatus(e.target.value)}>
+        {[r.status, ...next[r.status]].map(s => <option key={s} value={s}>{label(s)}</option>)}
+      </select></label>
+      <label>Update for resident<textarea maxLength={1000} required={['rejected', 'cancelled'].includes(status)} rows={3} value={note} onChange={e => setNote(e.target.value)} placeholder="Progress update or reason for closure" /></label>
+      {error && <div role="alert" className="contact-error">{error}</div>}
+      {saved && <p role="status">{saved}</p>}
+      <button className="contact-save" disabled={busy}>{busy ? 'Saving…' : 'Save request update'}</button>
+    </form>}
+    {closed && <p className="help-note">Closed request · retained in history</p>}
+  </article>
 }
