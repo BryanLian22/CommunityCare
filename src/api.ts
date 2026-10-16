@@ -1,9 +1,10 @@
+export type Assistance = {id:string;category:string;location:string;details:string;status:string;assignee:string;note:string;revision:number;created:string;updated:string;residentName:string;residentEmail:string;history:{status:string;at:string;assignee:string;note:string}[]};
 export type User = {id:string; name:string; email:string; role:'resident'|'admin'; active:boolean; largeText:boolean; contrast:boolean; created:string};
 export type Entry = {id:string; userId:string; created:string; status:string; facility?:string; date?:string; time?:string; category?:string; details?:string; name?:string; phone?:string; service?:string; address?:string; residentName?:string; residentEmail?:string};
 export type Notice = {id:string; title:string; body:string; created:string; updated:string};
 export type CommunityContact = {id:"management"|"guard"; name:string; phone:string; hours:string; description:string; updated:string};
-export type ResidentData = {bookings:Entry[]; reports:Entry[]; contacts:Entry[]; services:Entry[]; notices:Notice[]; communityContacts:CommunityContact[]; noticesReadAt:string};
-export type AdminData = {users:User[]; bookings:Entry[]; reports:Entry[]; services:Entry[]; notices:Notice[]; communityContacts:CommunityContact[]};
+export type ResidentData = {bookings:Entry[]; reports:Entry[]; contacts:Entry[]; services:Entry[]; notices:Notice[]; communityContacts:CommunityContact[]; assistance:Assistance[]; noticesReadAt:string};
+export type AdminData = {users:User[]; bookings:Entry[]; reports:Entry[]; services:Entry[]; notices:Notice[]; communityContacts:CommunityContact[]; assistance:Assistance[]};
 export async function api<T = {ok:boolean}>(path:string, method='GET', body?:unknown):Promise<T> {
  let response:Response;
  try { response=await fetch(`/api${path}`, {method,credentials:'same-origin',headers:{'Content-Type':'application/json','X-CommunityCare-Request':'1'},...(body===undefined?{}:{body:JSON.stringify(body)})}); }

@@ -6,6 +6,16 @@ React + TypeScript frontend with a Node.js API and SQLite database. The existing
 
 Stop the app first and back up the whole old project. Extract this ZIP into a new folder, then copy your old `data` folder and optional `.env` into the new `CommunityCare` folder. If `.env` uses a custom DATABASE_PATH, preserve that database location. Run `npm.cmd ci` and `npm.cmd run dev`. Existing accounts and records remain; the contacts table is added automatically. You do not need to create another admin.
 
+## Request Assistance
+
+Residents: open **Request Assistance** on Home or Community. Select a help category, enter the unit/meeting point and details, then send. **My requests** shows assignment, current status and dated progress history. Residents can cancel pending or accepted requests; once work starts, contact management.
+
+Admins: open **Assistance requests** in the dashboard. Search by resident, location or staff and filter by status. Enter the responsible staff member's name, choose **Accepted**, and save. Later move to **In progress**, then **Completed**. Rejection/cancellation requires a reason visible to the resident. Closed requests are retained. Conflicting edits are rejected; refresh before retrying.
+
+Assignment records a staff name, not a staff account. Notifications and automatic dispatch are not included in this update. Resident data refreshes on window focus or every 30 seconds while visible; admins use Refresh.
+
+The `assistance_requests` table is created automatically on startup. Existing home-service bookings and accessibility reports remain in their original sections.
+
 ## Contact directory
 
 Open **Admin dashboard > Community contacts** to enter and edit the Management Office and Guard House phone numbers, names, operating hours and descriptions. Click **Save contact details** for each card. These details are saved in SQLite and shown to all signed-in residents. Phone numbers start blank because actual numbers were not provided. Call buttons appear after numbers are saved.

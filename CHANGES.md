@@ -1,3 +1,9 @@
+# Version 2.2 — Request Assistance
+
+Added assistance submission, private resident tracking, cancellation before work begins, admin assignment by staff name, search and status filters, sequential progress updates and timestamped history. All request data is stored in SQLite. Existing installations receive an additive schema migration. Revision checks prevent overwriting concurrent updates.
+
+Build and targeted API checks completed; full user testing remains for the final phase. Staff logins, notifications and emergency dispatch are not part of this update.
+
 # Version 2.1 — Professional contact directory
 
 Added separate Management Office and Guard House cards with call buttons, descriptions and operating hours. Unconfigured numbers are clearly marked and cannot be called. Personal contacts now support editing as well as adding and removal.

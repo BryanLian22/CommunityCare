@@ -60,6 +60,28 @@ await test('admin account, moderation, notice publication, and private contacts'
  await admin.request(`/admin/notices/${notice}`,'PATCH',{title:'Lift reopened',body:'Lift A is available.'});assert.equal((await b.request('/data')).data.notices[0].title,'Lift reopened');
  assert.equal((await admin.request(`/admin/users/${id}`,'PATCH',{active:false})).status,403);
 });
+await test('assistance ownership, assignment, ordered progression, conflicts and persistence',async()=>{
+ const payload={category:'Wheelchair / mobility support',location:'Block A lobby',details:'Help reaching the lift.',status:'completed',assignee:'Injected'};
+ assert.equal((await a.request('/assistance','POST',{...payload,location:''})).status,400);
+ const created=await a.request('/assistance','POST',payload);assert.equal(created.status,201);const id=created.data.id;
+ const get=async()=> (await a.request('/data')).data.assistance.find(r=>r.id===id);
+ assert.equal((await get()).status,'pending');assert.equal((await get()).assignee,'');
+ assert.equal((await b.request('/data')).data.assistance.length,0);
+ assert.equal((await b.request(`/assistance/${id}`,'PATCH',{status:'cancelled',revision:1})).status,404);
+ assert.equal((await a.request(`/admin/assistance/${id}`,'PATCH',{})).status,403);
+ const update=(status,revision,assignee='Staff A')=>admin.request(`/admin/assistance/${id}`,'PATCH',{status,revision,assignee,note:'Progress update'});
+ assert.equal((await update('completed',1)).status,400);
+ assert.equal((await update('accepted',1,'')).status,400);
+ assert.equal((await update('accepted',1)).status,200);
+ assert.equal((await update('in_progress',1)).status,409);
+ assert.equal((await update('in_progress',2)).status,200);
+ assert.equal((await a.request(`/assistance/${id}`,'PATCH',{status:'cancelled',revision:3})).status,409);
+ assert.equal((await update('completed',3)).status,200);
+ assert.equal((await get()).history.length,4);assert.equal((await update('accepted',4)).status,409);
+ const disk=new DatabaseSync(process.env.DATABASE_PATH);assert.equal(disk.prepare('SELECT status FROM assistance_requests WHERE id=?').get(id).status,'completed');disk.close();
+ const cancelId=(await a.request('/assistance','POST',payload)).data.id;
+ assert.equal((await a.request(`/assistance/${cancelId}`,'PATCH',{status:'cancelled',revision:1})).status,200);
+});
 await test('cancelled booking frees its slot and records persist on disk',async()=>{
  assert.equal((await a.request(`/records/bookings/${booking}`,'DELETE',{})).status,200);
  assert.equal((await b.request('/records/bookings','POST',{facility:'Gym',date:'2099-12-01',time:'9:00 AM'})).status,201);

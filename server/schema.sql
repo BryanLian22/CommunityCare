@@ -34,4 +34,13 @@ CREATE TABLE IF NOT EXISTS community_contacts (
 INSERT OR IGNORE INTO community_contacts(id,name,description) VALUES
  ('management','Management Office','Bookings, maintenance and resident enquiries.'),
  ('guard','Guard House','Security assistance and visitor access.');
-PRAGMA user_version = 2;
+CREATE TABLE IF NOT EXISTS assistance_requests (
+ id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ category TEXT NOT NULL, location TEXT NOT NULL, details TEXT NOT NULL,
+ status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','accepted','in_progress','completed','rejected','cancelled')),
+ assignee TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '',
+ history TEXT NOT NULL DEFAULT '[]', revision INTEGER NOT NULL DEFAULT 1,
+ created TEXT NOT NULL, updated TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS assistance_owner ON assistance_requests(user_id,created);
+PRAGMA user_version = 3;
