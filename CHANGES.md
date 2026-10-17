@@ -128,3 +128,9 @@ Validation: production build and TypeScript check passed; all 8 backend integrat
 - Standardized close controls across panels, route previews, weather settings and facility creation.
 - Preserved account persistence and password functionality. Added readable large-text/high-contrast overrides and keyboard focus states.
 - Production build passed.
+
+
+### Route popup screen fit
+- Route preview stays within the viewport with a persistent header and Back button.
+- Compact map, spacing and endpoint cards reduce scrolling on phones.
+- Internal scrolling supports touch, mouse and keyboard without a visible scrollbar; long instructions remain accessible.

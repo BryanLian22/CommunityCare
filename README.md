@@ -294,3 +294,9 @@ A shared `CloseButton` component provides a consistent rounded icon-and-label co
 
 Added: `src/CloseButton.tsx`, `src/Profile.css`.
 Modified: `src/App.tsx`, `src/ResidentialMap.tsx`, `src/Weather.tsx`, `src/FacilityManagement.tsx`, `README.md`, `CHANGES.md`, rebuilt `dist/`. No database/API changes. Production build passed.
+
+
+### Route popup screen fit
+- Route preview stays within the viewport with a persistent header and Back button.
+- Compact map, spacing and endpoint cards reduce scrolling on phones.
+- Internal scrolling supports touch, mouse and keyboard without a visible scrollbar; long instructions remain accessible.

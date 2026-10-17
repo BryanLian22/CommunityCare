@@ -155,6 +155,7 @@ export default function ResidentialMap() {
     <dialog ref={dialog} className="res-route-dialog" aria-labelledby="res-preview-title" onCancel={() => setPreview(false)} onClose={() => setPreview(false)} onClick={e => { if (e.target === e.currentTarget) setPreview(false); }}>
       <div className="res-preview-content">
         <header className="res-preview-header"><div><span className="res-eyebrow">YOUR ROUTE, STEP BY STEP</span><h2 id="res-preview-title">{wheelchair ? 'Wheelchair route' : 'Residential route'}</h2></div><CloseButton autoFocus label="Close route preview" onClick={() => setPreview(false)} /></header>
+        <div className="res-preview-body" tabIndex={0} role="region" aria-label="Route map and instructions">
         <div className="res-preview-endpoints"><p><span>A</span>{startName || 'Choose your position'}</p><p><span>B</span>{endName || 'Choose a destination'}</p></div>
         {changed && <p className="res-warning" role="status">Availability changed. Review the updated route before continuing.</p>}
         {route ? <>
@@ -165,6 +166,7 @@ export default function ResidentialMap() {
           <div className="res-step-chips" aria-label="Choose a route step">{route.edges.map((id, i) => <button key={id} aria-label={`Show step ${i + 1}`} aria-pressed={i === stepIndex} onClick={() => setStep(i)}>{i + 1}</button>)}</div>
           <p className="res-preview-note">Review the route using Next step. This does not update your location. Check the surroundings and current access conditions as you travel.</p>
         </> : <div className="res-preview-unavailable" role="status"><span>!</span><h3>{stale ? 'Waiting for live status' : 'No confirmed route available'}</h3><p>{stale ? 'The preview is paused until status reconnects.' : 'A required path or lift is closed or unconfirmed. Try a different destination or contact management for assistance.'}</p><button onClick={refresh}>Refresh status</button></div>}
+        </div>
         <button className="res-preview-done" onClick={() => setPreview(false)}>Back to residential map</button>
       </div>
     </dialog>
