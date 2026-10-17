@@ -16,3 +16,34 @@
 .demo-result { text-align:center; }.demo-result-icon { display:grid; place-items:center; width:68px; height:68px; border-radius:50%; margin:26px auto 10px; font-size:32px; background:#f9ead4; color:#8a6330; }.demo-result-icon.success { background:#ddf2e3; color:#246647; }.demo-result>strong { font-size:30px; }.demo-result p { font-size:13px; line-height:1.7; }.demo-result dl { text-align:left; padding:18px; background:white; border:1px solid #dce6d7; border-radius:14px; font-size:12px; }.demo-result dt { color:#7b8d7c; margin-top:10px; }.demo-result dd { margin:4px 0 0; overflow-wrap:anywhere; }
 .demo-bill-actions { padding:0 12px 14px; }.demo-bill-actions button { min-height:44px; border-radius:12px; border:1px solid #c9ddcc; background:#eaf4ed; color:#285c3e; padding:10px 14px; cursor:pointer; }.demo-bill-actions details { margin-top:10px; font-size:12px; }.demo-bill-actions li { margin:10px 0; }.demo-bill-actions small { display:block; margin:6px 0; }
 .demo-admin { margin-top:24px; }.demo-admin article { display:grid; gap:6px; padding:16px 0; border-top:1px solid #dce5d9; }.demo-admin small { overflow-wrap:anywhere; }.demo-admin button { min-height:44px; justify-self:start; border-radius:9px; border:1px solid #cfdfce; background:white; padding:8px 12px; color:#285c3e; }
+
+/* Primary payment action, distinct from the receipt/history controls. */
+.demo-bill-actions .bill-pay-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 58px;
+  padding: 12px 16px;
+  border: 1px solid #21664d;
+  border-radius: 16px;
+  background: #21664d;
+  color: #fff;
+  box-shadow: 0 5px 14px #1d5b3e1c;
+  font-family: inherit;
+  text-align: left;
+  transition: background .16s ease, box-shadow .16s ease;
+}
+.bill-pay-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 34px; border-radius: 10px; background: #ffffff1a; color: #e6f3eb; }
+.bill-pay-label { flex: 1; font-size: 14px; font-weight: 600; }
+.bill-pay-button strong { font-size: 16px; font-weight: 750; letter-spacing: -.3px; white-space: nowrap; }
+.bill-pay-arrow { flex-shrink: 0; opacity: .85; }
+.demo-bill-actions .bill-pay-button:hover { background: #174e39; border-color: #174e39; box-shadow: 0 6px 18px #1d5b3e30; }
+.demo-bill-actions .bill-pay-button:active { background: #123f2f; }
+.demo-bill-actions .bill-pay-button:focus-visible { outline: 3px solid #d2a54c; outline-offset: 3px; }
+@media(max-width:360px) {
+  .demo-bill-actions .bill-pay-button { gap: 8px; padding: 10px 12px; }
+  .bill-pay-button strong { font-size: 14px; }
+  .bill-pay-arrow { display: none; }
+}
+@media(prefers-reduced-motion:reduce) { .demo-bill-actions .bill-pay-button { transition: none; } }

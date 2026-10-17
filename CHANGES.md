@@ -178,3 +178,10 @@ Validation: production build and TypeScript check passed; all 8 backend integrat
 - Both screens use the same balance. Previous successful demo attempts apply once on startup, capped at remaining balance.
 - Retry/upgrade checks prevent duplicate deductions. Decline/cancel do not change balances.
 - Build and six focused checks passed.
+
+
+### Cleaner bill payment action
+- Removed the two explanatory paragraphs shown in the supplied screenshots.
+- Replaced the small outlined Pay … Demo button with a full-width green Pay bill action, card icon and right-aligned amount.
+- Demo checkout/receipt labels and shared resident/admin balance logic remain in place.
+- Modified src/Household.tsx and src/DemoPayment.css.
