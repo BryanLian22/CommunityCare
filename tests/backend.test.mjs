@@ -62,6 +62,23 @@ try {
     assert.equal((await b.request('/auth/register', 'POST', { name: 'Duplicate', email: 'alice@example.test', password })).status, 409);
     assert.equal((await a.request('/admin/data')).status, 403);
   });
+  await test('optional profile contact number saves, validates and can be removed', async () => {
+    const initial = (await a.request('/auth/me')).data.user;
+    assert.equal(initial.phone, '');
+    const fields = { name: 'Alice', largeText: false, contrast: false };
+    const saved = await a.request('/profile', 'PATCH', { ...fields, phone: '+60 12-345 6789' });
+    assert.equal(saved.status, 200);
+    assert.equal(saved.data.user.phone, '+60 12-345 6789');
+    assert.equal((await a.request('/auth/me')).data.user.phone, '+60 12-345 6789');
+    assert.equal(db.prepare('SELECT phone FROM users WHERE id=?').get(aid).phone, '+60 12-345 6789');
+    assert.equal((await a.request('/profile', 'PATCH', { ...fields, phone: 'invalid-phone' })).status, 400);
+    assert.equal((await a.request('/auth/me')).data.user.phone, '+60 12-345 6789');
+    assert.equal((await a.request('/profile', 'PATCH', fields)).data.user.phone, '+60 12-345 6789');
+    const cleared = await a.request('/profile', 'PATCH', { ...fields, phone: '' });
+    assert.equal(cleared.status, 200);
+    assert.equal(cleared.data.user.phone, '');
+    assert.equal((await a.request('/auth/me')).data.user.phone, '');
+  });
   await test('login errors and server session restoration', async () => {
     const c = client();
     assert.equal((await c.request('/auth/login', 'POST', { email: 'alice@example.test', password: 'wrong password 123' })).status, 401);
