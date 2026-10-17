@@ -1,3 +1,4 @@
+import CloseButton from './CloseButton';
 import { useRef, useState } from 'react';
 import { api, type Facility, type Entry } from './api';
 import { bookingStarted } from './Bookings';
@@ -10,7 +11,7 @@ export default function FacilityManagement({ facilities, bookings, onRefresh }: 
         <h2>Manage community facilities</h2>
         <p>Add spaces when needed, or close them temporarily for repairs.</p>
       </div>
-      <button className="account-primary" onClick={() => setAdding(!adding)}>{adding ? 'Close new facility form' : '+ Add facility'}</button>
+      {adding ? <CloseButton label="Close new facility form" onClick={() => setAdding(false)} /> : <button className="account-primary" onClick={() => setAdding(true)}>+ Add facility</button>}
     </div>
     <div className="booking-admin-filters">
       <input aria-label="Search managed facilities" placeholder="Search name or category" value={query} onChange={e => setQuery(e.target.value)} />

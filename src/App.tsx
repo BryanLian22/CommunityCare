@@ -1,3 +1,4 @@
+import CloseButton from './CloseButton';
 import MarketAds from './MarketAds';
 import HouseholdHome from './Household';
 import Routes from './Routes';
@@ -697,8 +698,8 @@ export default function App() {
         {sheet && (
           <div className="sheet-layer" role="dialog" aria-modal="true" aria-label={`${sheet} panel`}>
             <Button className="sheet-backdrop" label="Close" onClick={() => setSheet(null)} />
-            <section className={`bottom-sheet ${sheet === "contacts" ? "contacts-sheet" : ""}`} ref={dialog}>
-              <Button className="close-sheet" label="Close panel" onClick={() => setSheet(null)}>Close ×</Button>
+            <section className={`bottom-sheet ${sheet === "contacts" ? "contacts-sheet" : ""} ${sheet === "profile" ? "profile-sheet" : ""}`} ref={dialog}>
+              <div className="cc-sheet-tools"><CloseButton label="Close panel" onClick={() => setSheet(null)} /></div>
               <div className="sheet-handle" />
               {dataError && <div className="account-alert" role="alert">{dataError}</div>}
               {busy && <p role="status">Saving…</p>}
@@ -779,24 +780,39 @@ export default function App() {
                 setSheet(n.kind === 'emergency' ? "sos" : n.kind === 'assistance' ? "services" : "request-update")
               }} />}
               {sheet === "contacts" && <ContactDirectory contacts={contacts} directory={data.communityContacts} onRefresh={refresh} loading={loading} />}
-              {sheet === "profile" && <>
-                <div className="sheet-title">Profile & accessibility</div>
-                <label className="form-field">Your name<input value={profile.name} maxLength={40} onChange={e => setProfile({ ...profile, name: e.target.value })} /></label>
-                <label className="setting-row"><input type="checkbox" checked={profile.largeText} onChange={e => setProfile({ ...profile, largeText: e.target.checked })} />Larger text</label>
-                <label className="setting-row"><input type="checkbox" checked={profile.contrast} onChange={e => setProfile({ ...profile, contrast: e.target.checked })} />Higher contrast</label>
-                <p className="demo-note">Save your name and accessibility settings to your account.</p>
-                <Button className="primary-action" disabled={busy || !profile.name.trim()} onClick={() => void saveProfile()}>Save profile</Button>
-                <Button className="outline-action" onClick={() => setSheet("history")}>My bookings & reports</Button>
-                <div className="password-section">
-                  <b>Change password</b>
-                  <label className="form-field">Current password<input type="password" autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} /></label>
-                  <label className="form-field">New password (12–128 characters)<input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={newPassword} onChange={e => setNewPassword(e.target.value)} /></label>
-                  <Button className="outline-action" disabled={busy || newPassword.length < 12 || !currentPassword} onClick={() => void perform("/auth/password", "POST", { currentPassword, password: newPassword }, "Password updated. Other sessions signed out.", () => {
-                    setCurrentPassword("");
-                    setNewPassword("")
-                  })}>Update password</Button>
-                </div>
-              </>}
+              {sheet === "profile" && <div className="profile-page">
+                <header className="profile-hero">
+                  <div className="profile-avatar" aria-hidden="true">{(profile.name.trim() || user.name).split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase()}</div>
+                  <span className="profile-eyebrow">YOUR COMMUNITY ACCOUNT</span>
+                  <h2>{profile.name.trim() || user.name}</h2>
+                  <p>{user.email}</p>
+                  <span className="profile-role">{user.role === 'admin' ? 'Administrator' : 'Resident'}</span>
+                </header>
+                <section className="profile-card">
+                  <div className="profile-card-heading"><span className="profile-symbol" aria-hidden="true">◎</span><div><h3>Personal details</h3><p>How you appear in your community</p></div></div>
+                  <label className="form-field">Display name<input autoComplete="name" value={profile.name} maxLength={40} onChange={e => setProfile({ ...profile, name: e.target.value })} placeholder="Your name" /></label>
+                  <div className="profile-email"><span>Email address</span><b>{user.email}</b><small>Your sign-in email</small></div>
+                </section>
+                <section className="profile-card">
+                  <div className="profile-card-heading"><span className="profile-symbol" aria-hidden="true">Aa</span><div><h3>Accessibility</h3><p>Make the app comfortable for you</p></div></div>
+                  <label className="profile-toggle"><span><b>Larger text</b><small>Increase text size for easier reading</small></span><input type="checkbox" role="switch" checked={profile.largeText} onChange={e => setProfile({ ...profile, largeText: e.target.checked })} /><i aria-hidden="true" /></label>
+                  <label className="profile-toggle"><span><b>Higher contrast</b><small>Make text and controls stand out</small></span><input type="checkbox" role="switch" checked={profile.contrast} onChange={e => setProfile({ ...profile, contrast: e.target.checked })} /><i aria-hidden="true" /></label>
+                </section>
+                <Button className="primary-action profile-save" disabled={busy || !profile.name.trim()} onClick={() => void saveProfile()}>{busy ? 'Saving…' : 'Save changes'}</Button>
+                <Button className="profile-history" onClick={() => setSheet("history")}><span className="profile-symbol" aria-hidden="true">≡</span><span><b>My activity</b><small>Bookings, reports & service requests</small></span><Icon name="arrow" size="sm" /></Button>
+                <details className="profile-card profile-security">
+                  <summary><span className="profile-symbol"><Icon name="lock" /></span><span><b>Password & security</b><small>Update your account password</small></span><span className="profile-expand" aria-hidden="true">+</span></summary>
+                  <div className="profile-security-body">
+                    <label className="form-field">Current password<input type="password" autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} /></label>
+                    <label className="form-field">New password<input type="password" autoComplete="new-password" minLength={12} maxLength={128} value={newPassword} onChange={e => setNewPassword(e.target.value)} aria-describedby="profile-password-help" /></label>
+                    <p id="profile-password-help">Use 12–128 characters. Updating signs out your other sessions.</p>
+                    <Button className="outline-action" disabled={busy || newPassword.length < 12 || !currentPassword} onClick={() => void perform("/auth/password", "POST", { currentPassword, password: newPassword }, "Password updated. Other sessions signed out.", () => {
+                      setCurrentPassword("");
+                      setNewPassword("");
+                    })}>Update password</Button>
+                  </div>
+                </details>
+              </div>}
               {sheet === "history" && <>
                 <div className="sheet-title">My bookings & reports</div>
                 <p className="sheet-subtitle">Your submitted requests and management updates.</p>

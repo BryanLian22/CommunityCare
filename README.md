@@ -283,3 +283,14 @@ Admins receive the notification in **Notifications**, and opening it takes them 
 
 Added: `src/MarketAds.tsx`, `src/MarketAds.css`, `tests/market.test.mjs`.
 Modified: `src/App.tsx`, `src/Admin.tsx`, `server/app.mjs`, `README.md`, `CHANGES.md`, rebuilt `dist/`. No database migration required. Build and focused Market submission/admin notification/decision checks passed. Full testing remains deferred.
+
+### Market automatic-sliding fix
+Automatic rotation now advances every five seconds while the page is visible, including while the card is hovered or its controls have focus. The pause button was removed. Reduced-motion preferences remove the sliding transition but do not stop the five-second content rotation. Arrows, indicators and service buttons remain functional. This supersedes the earlier carousel pause description. Changed source: `src/MarketAds.tsx`, `src/MarketAds.css`. Production build and a focused rendered-component timer check passed (full cycle, hover/focus, manual controls, service callback, hidden-page guard and timer cleanup).
+
+## Profile and close-button design
+Profile now has an avatar/account header, personal-details card, read-only sign-in email, accessible switch-style preferences, Save changes action, My activity shortcut and an expandable password/security card. Name, accessibility and password changes use the existing APIs and saved account settings. The large-text and high-contrast preferences remain functional.
+
+A shared `CloseButton` component provides a consistent rounded icon-and-label control, 44px minimum target, hover feedback and keyboard focus styling. It is used in all shared bottom panels, the residential route-preview dialog, weather settings and the new-facility form.
+
+Added: `src/CloseButton.tsx`, `src/Profile.css`.
+Modified: `src/App.tsx`, `src/ResidentialMap.tsx`, `src/Weather.tsx`, `src/FacilityManagement.tsx`, `README.md`, `CHANGES.md`, rebuilt `dist/`. No database/API changes. Production build passed.

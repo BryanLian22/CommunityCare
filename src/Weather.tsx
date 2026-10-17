@@ -1,3 +1,4 @@
+import CloseButton from './CloseButton';
 import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import './weather.css';
@@ -137,7 +138,7 @@ export default function Weather() {
           <span className="contact-eyebrow">LOCAL WEATHER</span>
           <h3>{location?.name || 'Choose your area'}</h3>
         </div>
-        <button onClick={() => setSettings(!settings)}>{settings ? 'Close' : 'Change'}</button>
+        {settings ? <CloseButton label="Close weather settings" onClick={() => setSettings(false)} /> : <button onClick={() => setSettings(true)}>Change</button>}
       </header>
       {settings && <div className="weather-settings">
         <form onSubmit={async e => {

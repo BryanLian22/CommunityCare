@@ -1,3 +1,4 @@
+import CloseButton from './CloseButton';
 import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import { effectiveStatus, residentialRoute } from '../shared/residential-routing.mjs';
@@ -153,7 +154,7 @@ export default function ResidentialMap() {
     </>}
     <dialog ref={dialog} className="res-route-dialog" aria-labelledby="res-preview-title" onCancel={() => setPreview(false)} onClose={() => setPreview(false)} onClick={e => { if (e.target === e.currentTarget) setPreview(false); }}>
       <div className="res-preview-content">
-        <header className="res-preview-header"><div><span className="res-eyebrow">YOUR ROUTE, STEP BY STEP</span><h2 id="res-preview-title">{wheelchair ? 'Wheelchair route' : 'Residential route'}</h2></div><button autoFocus aria-label="Close route preview" onClick={() => setPreview(false)}>✕</button></header>
+        <header className="res-preview-header"><div><span className="res-eyebrow">YOUR ROUTE, STEP BY STEP</span><h2 id="res-preview-title">{wheelchair ? 'Wheelchair route' : 'Residential route'}</h2></div><CloseButton autoFocus label="Close route preview" onClick={() => setPreview(false)} /></header>
         <div className="res-preview-endpoints"><p><span>A</span>{startName || 'Choose your position'}</p><p><span>B</span>{endName || 'Choose a destination'}</p></div>
         {changed && <p className="res-warning" role="status">Availability changed. Review the updated route before continuing.</p>}
         {route ? <>

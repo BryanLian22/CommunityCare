@@ -116,3 +116,15 @@ Validation: production build and TypeScript check passed; all 8 backend integrat
 - Saved new-service notifications to active admins atomically with the request, plus audit logging and duplicate/past-slot checks.
 - Admin notification opens Home services; dashboard refresh includes new requests. Existing approval/rejection notifications to residents remain active.
 - Replaced sample service prices and availability with request/quote wording. Production build and focused integration check passed.
+
+## Market auto-slide correction
+- Removed hover/focus/reduced-motion timer gates that could leave the carousel stationary.
+- Kept a single five-second interval with hidden-page protection and cleanup on unmount.
+- Removed the pause button; retained arrows, indicators and service actions.
+- Build and focused rendered-component checks passed.
+
+## Profile and shared close controls
+- Redesigned profile with account identity, grouped personal details and accessibility preferences, switch controls, activity shortcut and collapsible password form.
+- Standardized close controls across panels, route previews, weather settings and facility creation.
+- Preserved account persistence and password functionality. Added readable large-text/high-contrast overrides and keyboard focus states.
+- Production build passed.
