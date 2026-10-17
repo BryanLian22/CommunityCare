@@ -1,3 +1,4 @@
+import { initializeDemoPayments } from './demo-payments.mjs';
 import { initializeHousehold } from './household.mjs';
 import { initializeResidential } from './residential.mjs';
 import seedFacilities from '../shared/facilities.json' with {type: 'json'};
@@ -17,6 +18,7 @@ if (!db.prepare('PRAGMA table_info(users)').all().some(column => column.name ===
 }
 initializeResidential(db);
 initializeHousehold(db);
+initializeDemoPayments(db);
 // Seed once per name, preserving administrator changes on every later startup.
 for (const f of seedFacilities) db.prepare('INSERT OR IGNORE INTO facilities(id,name,category,description,icon,created,updated) VALUES(?,?,?,?,?,?,?)').run(randomUUID(), f.name, f.category, f.description, f.icon, new Date().toISOString(), new Date().toISOString());
 // Preserve any facility already referenced by an older database.

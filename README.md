@@ -325,3 +325,18 @@ Modified: `src/App.tsx`, `src/ResidentialMap.tsx`, `src/Weather.tsx`, `src/Facil
 - Used for service date/time, visitor date, bill due date, billing month, booking filter and facility month navigation. Facility availability checks remain active.
 - Added src/DateTimeField.tsx and src/PickerWheel.tsx; modified src/App.tsx, src/Household.tsx, src/Bookings.tsx, src/BookingPicker.tsx and src/bookings.css.
 - Native date/month fields replaced. Production build passed; full interaction testing remains deferred.
+
+
+## Simulated payment demo (shared resident/admin balance)
+
+No API key or payment gateway is needed. No real money is charged.
+
+1. Keep your existing `.env` and `data` folder. Restart the server after updating.
+2. Resident → Bills → View bills → Pay · Demo. Choose a sample method and outcome.
+3. Success records a labelled `demo_payment` in the bill history and reduces the same database balance used by residents and admins. Fully paid bills show Paid. Decline/cancel leaves the balance unchanged.
+4. Admin → Bills refreshes automatically within 15 seconds; the Refresh control can update it sooner. Demo transactions and downloadable demo records remain available separately.
+5. Existing successful demo transactions from the earlier version are applied once on startup, capped at each bill's remaining balance. Voided bills are not paid. Repeated restarts and retries cannot deduct twice.
+
+This is a demonstration workflow: recorded paid totals now include simulated payments. Bill history and receipts identify them explicitly; they are not proof of funds received.
+
+Modified for this update: `server/demo-payments.mjs`, `src/Household.tsx`, `src/DemoPayment.tsx`, `tests/demo-payments.test.mjs`, plus documentation and rebuilt dist. Production build and six focused payment tests passed. Full application testing remains deferred.

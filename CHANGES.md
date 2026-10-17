@@ -159,3 +159,22 @@ Validation: production build and TypeScript check passed; all 8 backend integrat
 - Used for service date/time, visitor date, bill due date, billing month, booking filter and facility month navigation. Facility availability checks remain active.
 - Added src/DateTimeField.tsx and src/PickerWheel.tsx; modified src/App.tsx, src/Household.tsx, src/Bookings.tsx, src/BookingPicker.tsx and src/bookings.css.
 - Native date/month fields replaced. Production build passed; full interaction testing remains deferred.
+
+
+### SOS callback from Profile
+- src/Emergency.tsx initializes the optional callback phone from the signed-in user’s saved profile phone when SOS opens.
+- Manual changes and clearing affect only the SOS; an empty profile phone leaves the field blank. Existing submission saves the displayed callback number with the SOS.
+- Built from the supplied CommunityCare_1.zip. Production build passed. No database changes.
+
+
+### Simulated bill payment
+- Added card/bank/wallet demo checkout, success/decline/cancellation outcomes, demo balance, downloadable demo receipts, resident history and separate admin transaction list.
+- Added persistent demo_payments table with owner checks, server-side amount/revision checks and idempotent submission. Actual bills and payment history are unchanged.
+- Build and five focused payment checks passed. See README for demo steps and changed files.
+
+
+### Shared admin/resident demo balance (supersedes separate-ledger display)
+- Successful demos now update household_bills paid totals and add labelled demo_payment history, atomically with the transaction.
+- Both screens use the same balance. Previous successful demo attempts apply once on startup, capped at remaining balance.
+- Retry/upgrade checks prevent duplicate deductions. Decline/cancel do not change balances.
+- Build and six focused checks passed.

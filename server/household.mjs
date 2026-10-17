@@ -51,7 +51,7 @@ function pass(row) {
 export async function householdRoutes({ db, u, path, method, readBody, send, res, audit, transaction, throttle }) {
   const reply = data => { send(res, 200, data); return true; };
   if (path === '/api/household' && method === 'GET') return reply({
-    bills: db.prepare('SELECT * FROM household_bills WHERE user_id=? ORDER BY due_date DESC,created DESC').all(u.id).map(bill),
+    bills: db.prepare('SELECT * FROM household_bills WHERE user_id=? ORDER BY due_date DESC,created DESC').all(u.id).map(row => ({ ...bill(row), demo_payments: db.prepare('SELECT * FROM demo_payments WHERE user_id=? AND bill_id=? ORDER BY created DESC').all(u.id,row.id) })),
     passes: db.prepare('SELECT * FROM visitor_passes WHERE user_id=? ORDER BY visit_date DESC,created DESC').all(u.id).map(pass), today: today()
   });
   if (path === '/api/visitor-passes' && method === 'POST') {
