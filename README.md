@@ -260,3 +260,16 @@ Keep your existing `.env` and `data/` folder. Run `npm install`, `npm run build`
 Added: `src/Household.tsx`, `src/Household.css`, `server/household.mjs`, `tests/household.test.mjs`.
 Modified: `src/App.tsx`, `src/Admin.tsx`, `server/app.mjs`, `server/db.mjs`, `package.json`, `package-lock.json`, `README.md`, `CHANGES.md`; rebuilt `dist/`.
 Verification: `npm run build` and `node --test tests/household.test.mjs` passed. These focused checks cover ownership/admin permissions, integer balances and partial payments, stale revision rejection, QR generation, creation retries, cancellation, expiry and single-entry enforcement. Full user/phone testing remains deferred.
+
+## Animated residential route preview
+
+Choose **A · Your position** and **B · Destination** above the schematic, then select **Preview route**. The confirmed path has a thick green outline, animated direction marks, static arrows and numbered landmarks; unrelated paths are dimmed. **Expand** reopens the larger preview. The popup shows the selected step in amber with Previous/Next controls and numbered step buttons. Lift steps include floor changes.
+
+The animated path is an explanatory preview, not the user's movement. Animation can be paused and is disabled when the device requests reduced motion. The dialog supports Escape, keyboard focus containment and a close button. Live status changes still recalculate routes; a closed/unknown route is replaced by an unavailable message. Route setup is now above the map so residents see how to select a journey before inspecting the drawing.
+
+Files changed for this presentation update: `src/ResidentialMap.tsx`, `src/ResidentialMap.css`, `README.md`, `CHANGES.md`, rebuilt `dist/`. No database or routing algorithm changes. Production build passed; full device testing remains for the final phase.
+
+### Residential location selection update
+The residential map now uses manual position selection only (the dropdown or **I'm here**). The **Locate near a landmark** feature and its explanatory warning were removed. Earlier residential GPS instructions above no longer apply; existing stored reference coordinates are preserved. Real-map GPS and weather location controls are unchanged. The weather explanatory paragraph and the residential route-selection hint card were also removed as requested.
+
+Changed source files: `src/Weather.tsx`, `src/ResidentialMap.tsx`. Documentation and production `dist/` were updated. No database changes.

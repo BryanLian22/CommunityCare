@@ -96,3 +96,16 @@ Validation: production build and TypeScript check passed; all 8 backend integrat
 - Added admin QR/code verification, check-in/out and cancellation, enforcing Malaysia visit dates and one-entry use.
 - Added private database records, creation retry keys, validation and automatic additive table initialization.
 - Production build and three focused household integration checks passed; full acceptance testing remains deferred.
+
+## Clearer residential route presentation
+- Moved start/destination selection above the schematic and added a clear route-selection hint.
+- Added thicker route lines, animated directional dashes, static arrowheads, A/B markers and numbered intermediate stops.
+- Added an expanded native dialog with step instructions, amber segment highlighting, lift-floor information and Previous/Next controls.
+- Added pause/reduced-motion support and preserved live availability updates, route blocking and privacy of location selections.
+- Production build passed. No database changes.
+
+## Requested interface cleanup
+- Removed the weather location-storage explanatory paragraph.
+- Removed the choose-position/destination hint card from the residential map.
+- Removed Locate near a landmark, its GPS handler and the related warning message.
+- Preview route now occupies the full action row; manual position selection and route animations remain.

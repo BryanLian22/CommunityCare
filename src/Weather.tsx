@@ -174,7 +174,6 @@ export default function Weather() {
           <button disabled={busy || locating} onClick={locate}>{locating ? 'Finding location…' : 'Use my location'}</button>
           <button disabled={busy || locating} onClick={() => void save({ name: 'Kuala Lumpur, Malaysia', latitude: 3.139, longitude: 101.687 })}>Use Kuala Lumpur</button>
         </div>
-        <p className="weather-small">Your chosen area is saved to your account. Approximate coordinates are sent to Open-Meteo for weather; GPS is requested only when you press “Use my location”.</p>
         {locationError && <p className="contact-error" role="alert">{locationError}</p>}
       </div>}
       {error && <p className="contact-error" role="alert">
