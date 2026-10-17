@@ -1,3 +1,4 @@
+import DateTimeField from './DateTimeField';
 import ResidenceLocations from './ResidenceLocations';
 import CloseButton from './CloseButton';
 import MarketAds from './MarketAds';
@@ -728,10 +729,7 @@ export default function App() {
                   <label className="form-field">Contact phone (optional)<input type="tel" maxLength={30} value={servicePhone} onChange={e => setServicePhone(e.target.value)} placeholder="Number management can call" /></label>
                   <label className="form-field">What do you need help with? (optional)<textarea maxLength={2000} value={serviceDetails} onChange={e => setServiceDetails(e.target.value)} placeholder="Describe the issue or any access requirements" /></label>
                   <label className="form-field">Service address<input value={serviceAddress} onChange={e => setServiceAddress(e.target.value)} placeholder="Building, unit and street" maxLength={200} /></label>
-                  <label className="form-field">Appointment date<input type="date" min={today()} value={date} onChange={e => setDate(e.target.value)} /></label>
-                  <label className="form-field">Appointment time<select value={time} onChange={e => setTime(e.target.value)}>
-                    {["9:00 AM", "10:30 AM", "2:00 PM", "4:30 PM"].map(slot => <option key={slot}>{slot}</option>)}
-                  </select></label>
+                  <label className="form-field">Appointment date & time<DateTimeField label="Service appointment" min={today()} value={date} time={time} times={["9:00 AM", "10:30 AM", "2:00 PM", "4:30 PM"]} onChange={(d, t) => { setDate(d); if (t) setTime(t); }} /></label>
                   <div className="booking-summary">
                     <span>Service fee</span>
                     <b>Confirmed by management</b>

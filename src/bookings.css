@@ -564,3 +564,12 @@
   background: #f1f4f1;
   color: #65776b
 }
+
+.date-time-field { display: block; position: relative; min-width: 0; }
+.date-time-field .date-time-trigger { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid #bccfc1; border-radius: 12px; background: white; color: #244f37; font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.picker-required { position: absolute; width: 1px !important; height: 1px !important; min-height: 0 !important; padding: 0 !important; opacity: 0; pointer-events: none; }
+dialog.unified-picker { margin: auto; width: min(440px, calc(100vw - 24px)); box-sizing: border-box; max-height: calc(100dvh - 24px); scrollbar-width: none; }
+dialog.unified-picker::backdrop { background: #17241fb3; backdrop-filter: blur(4px); }
+.unified-picker::-webkit-scrollbar { display: none; }
+.picker-wheels.single-wheel,.picker-column-labels.single-wheel { grid-template-columns: 1fr; }
+.picker-month-nav>.date-time-field { flex: 1; }

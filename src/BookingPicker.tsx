@@ -1,43 +1,9 @@
+import Wheel from './PickerWheel';
+import DateTimeField from './DateTimeField';
 import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
 const dayString = (d: Date) => d.toISOString().slice(0, 10);
 const prettyDay = (date: string) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-MY', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
-function Wheel({ label, options, value, onChange }: { label: string; options: { value: string; label: string }[]; value: string; onChange: (value: string) => void }) {
-  const ref = useRef<HTMLDivElement>(null), timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const index = Math.max(0, options.findIndex(o => o.value === value));
-  const signature = options.map(o => o.value).join('|');
-  useEffect(() => {
-    clearTimeout(timer.current);
-    const el = ref.current;
-    if (el && Math.abs(el.scrollTop - index * 48) > 2) el.scrollTop = index * 48
-  }, [index, signature]);
-  useEffect(() => () => clearTimeout(timer.current), []);
-  return <div className="booking-wheel" role="listbox" aria-label={label} aria-activedescendant={`${label.replaceAll(' ', '-')}-${index}`} tabIndex={0} ref={ref} onKeyDown={e => {
-    const offset = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
-    if (offset) {
-      e.preventDefault();
-      onChange(options[Math.max(0, Math.min(options.length - 1, index + offset))].value)
-    }
-    if (e.key === 'Home' || e.key === 'End') {
-      e.preventDefault();
-      onChange(options[e.key === 'Home' ? 0 : options.length - 1].value)
-    }
-  }} onScroll={() => {
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      const el = ref.current;
-      if (!el) return;
-      const nearest = Math.max(0, Math.min(options.length - 1, Math.round(el.scrollTop / 48)));
-      if (options[nearest]) onChange(options[nearest].value)
-    }, 100)
-  }}>
-    <div className="wheel-spacer" />
-    {options.map((option, i) => <div className={option.value === value ? 'wheel-option chosen' : 'wheel-option'} id={`${label.replaceAll(' ', '-')}-${i}`} role="option" aria-selected={option.value === value} key={option.value} onClick={() => onChange(option.value)}>
-      {option.label}
-    </div>)}
-    <div className="wheel-spacer" />
-  </div>
-}
 export default function BookingPicker({ facility, date, time, today, onCancel, onConfirm }: {
   facility: string;
   date: string;
@@ -117,11 +83,9 @@ export default function BookingPicker({ facility, date, time, today, onCancel, o
         <button aria-label="Previous month" disabled={month <= today.slice(0, 7)} onClick={() => moveMonth(-1)}>‹</button>
         <label>
           <span className="sr-only">Booking month</span>
-          <input aria-label="Booking month" type="month" value={month} min={today.slice(0, 7)} onChange={e => {
-            if (/^\d{4}-\d{2}$/.test(e.target.value) && e.target.value >= today.slice(0, 7)) {
-              const first = e.target.value + '-01';
-              changeDate(first < today ? today : first)
-            }
+          <DateTimeField label="Booking month" mode="month" value={month} min={today.slice(0, 7)} onChange={value => {
+            const first = value + '-01';
+            changeDate(first < today ? today : first);
           }} />
         </label>
         <button aria-label="Next month" onClick={() => moveMonth(1)}>›</button>

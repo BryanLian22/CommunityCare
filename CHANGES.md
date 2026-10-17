@@ -152,3 +152,10 @@ Validation: production build and TypeScript check passed; all 8 backend integrat
 - Startup automatically creates resident_locations without replacing existing data. Keep your existing .env and data directory and restart the server.
 - Added src/ResidenceLocations.tsx. Modified src/Session.tsx, src/App.tsx, src/account.css, src/api.ts, server/app.mjs, server/db.mjs, server/schema.sql.
 - Build and focused location persistence/ownership checks passed. Full testing remains deferred.
+
+
+### Consistent date and time pickers
+- Shared wheel picker follows the facility booking design: green selection band, month navigation, Cancel and Confirm.
+- Used for service date/time, visitor date, bill due date, billing month, booking filter and facility month navigation. Facility availability checks remain active.
+- Added src/DateTimeField.tsx and src/PickerWheel.tsx; modified src/App.tsx, src/Household.tsx, src/Bookings.tsx, src/BookingPicker.tsx and src/bookings.css.
+- Native date/month fields replaced. Production build passed; full interaction testing remains deferred.

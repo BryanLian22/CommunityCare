@@ -1,3 +1,4 @@
+import DateTimeField from './DateTimeField';
 import BookingPicker from './BookingPicker';
 import { useEffect, useRef, useState } from 'react';
 import { api, type Entry, type Facility } from './api';
@@ -229,7 +230,7 @@ export function AdminBookings({ records, facilities, onRefresh }: { records: Ent
       <select aria-label="Filter booking status" value={status} onChange={e => setStatus(e.target.value)}>
         {['all', 'pending', 'approved', 'completed', 'rejected', 'cancelled'].map(s => <option key={s} value={s}>{label(s)}</option>)}
       </select>
-      <input type="date" aria-label="Filter booking date" value={date} onChange={e => setDate(e.target.value)} />
+      <DateTimeField label="Filter booking date" value={date} onChange={setDate} />
       <button onClick={() => {
         setQuery('');
         setFacility('all');
