@@ -11,6 +11,10 @@ if (databasePath !== ':memory:') mkdirSync(dirname(resolve(databasePath)), { rec
 export const db = new DatabaseSync(databasePath);
 db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
 db.exec(readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'));
+// Existing installations need the optional contact number column added once.
+if (!db.prepare('PRAGMA table_info(users)').all().some(column => column.name === 'phone')) {
+  db.exec("ALTER TABLE users ADD COLUMN phone TEXT NOT NULL DEFAULT ''");
+}
 initializeResidential(db);
 initializeHousehold(db);
 // Seed once per name, preserving administrator changes on every later startup.
@@ -21,6 +25,7 @@ export const publicUser = u => ({
   id: u.id,
   name: u.name,
   email: u.email,
+  phone: u.phone ?? '',
   role: u.role,
   active: !!u.active,
   largeText: !!u.large_text,

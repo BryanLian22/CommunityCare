@@ -56,3 +56,10 @@ button.cc-close svg { flex-shrink: 0; }
 .high-contrast .profile-page small,.high-contrast .profile-page p,.high-contrast .profile-email b { color: #354d34; }
 .high-contrast .profile-card,.high-contrast .profile-history { border-color: #426345; }
 @media(prefers-reduced-motion:reduce) { button.cc-close,.profile-toggle i,.profile-toggle i::after { transition: none; } }
+
+/* Optional contact number uses the same input appearance as the display name. */
+.profile-card .profile-phone { display: block; margin-top: 20px; margin-bottom: 0; }
+.profile-phone > span { display: block; margin-bottom: 9px; }
+.profile-phone .profile-optional { color: #82927e; font-weight: 400; }
+.profile-phone input { width: 100%; }
+.profile-phone small { display: block; margin-top: 8px; font-size: 11px; line-height: 1.5; color: #82927e; }

@@ -207,7 +207,7 @@ export default function App() {
     noticesReadAt: ""
   });
   const { bookings, reports, contacts, services: serviceRequests, notices } = data;
-  const [profile, setProfile] = useState({ name: user.name, largeText: user.largeText, contrast: user.contrast });
+  const [profile, setProfile] = useState({ name: user.name, phone: user.phone ?? '', largeText: user.largeText, contrast: user.contrast });
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [dataError, setDataError] = useState("");
   const [currentPassword, setCurrentPassword] = useState(""), [newPassword, setNewPassword] = useState("");
   const unreadCount = notices.filter(n => n.updated > data.noticesReadAt).length;
@@ -792,6 +792,11 @@ export default function App() {
                   <div className="profile-card-heading"><span className="profile-symbol" aria-hidden="true">◎</span><div><h3>Personal details</h3><p>How you appear in your community</p></div></div>
                   <label className="form-field">Display name<input autoComplete="name" value={profile.name} maxLength={40} onChange={e => setProfile({ ...profile, name: e.target.value })} placeholder="Your name" /></label>
                   <div className="profile-email"><span>Email address</span><b>{user.email}</b><small>Your sign-in email</small></div>
+                  <label className="form-field profile-phone">
+                    <span>Contact number <span className="profile-optional">(optional)</span></span>
+                    <input type="tel" inputMode="tel" autoComplete="tel" maxLength={30} value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} placeholder="e.g. +60 12-345 6789" aria-describedby="profile-phone-help" />
+                    <small id="profile-phone-help">Leave blank if you prefer not to add a number.</small>
+                  </label>
                 </section>
                 <section className="profile-card">
                   <div className="profile-card-heading"><span className="profile-symbol" aria-hidden="true">Aa</span><div><h3>Accessibility</h3><p>Make the app comfortable for you</p></div></div>

@@ -346,7 +346,10 @@ export const server = http.createServer(async (req, res) => {
       const b = await body(req);
       const name = text(b.name, 'Name', 80);
       if (typeof b.largeText !== 'boolean' || typeof b.contrast !== 'boolean') fail(400, 'Invalid settings.');
-      db.prepare('UPDATE users SET name=?,large_text=?,contrast=? WHERE id=?').run(name, +b.largeText, +b.contrast, u.id);
+      // The number is optional; omitted values from older clients keep the saved number.
+      const phone = b.phone === undefined ? (u.phone ?? '') : optionalText(b.phone, 'Contact number', 30);
+      if (phone && !/^\+?[0-9]{6,15}$/.test(phone.replace(/[ ()-]/g, ''))) fail(400, 'Enter a valid contact number or leave it blank.');
+      db.prepare('UPDATE users SET name=?,phone=?,large_text=?,contrast=? WHERE id=?').run(name, phone, +b.largeText, +b.contrast, u.id);
       return send(res, 200, { user: publicUser(db.prepare('SELECT * FROM users WHERE id=?').get(u.id)) });
     }
     if (path === '/api/auth/password' && method === 'POST') {
