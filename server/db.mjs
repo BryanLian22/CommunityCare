@@ -25,5 +25,6 @@ export const publicUser = u => ({
   active: !!u.active,
   largeText: !!u.large_text,
   contrast: !!u.contrast,
+  locations: db.prepare('SELECT id,residence,block,floor FROM resident_locations WHERE user_id=? ORDER BY rowid').all(u.id),
   created: u.created
 });

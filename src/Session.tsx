@@ -61,6 +61,8 @@ export default function Session() {
   </SessionContext.Provider>;
 }
 function Auth({ onSuccess, banner }: { onSuccess: (u: User) => void; banner: string }) {
+  const [location, setLocation] = useState({ residence: '', block: '', floor: '' });
+  const [portal, setPortal] = useState<'resident' | 'admin' | null>(null);
   const [register, setRegister] = useState(false), [name, setName] = useState(''), [email, setEmail] = useState(''), [password, setPassword] = useState(''), [confirm, setConfirm] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,7 +73,7 @@ function Auth({ onSuccess, banner }: { onSuccess: (u: User) => void; banner: str
     }
     setBusy(true);
     try {
-      const r = await api<{ user: User }>(register ? '/auth/register' : '/auth/login', 'POST', { name, email, password });
+      const r = await api<{ user: User }>(register ? '/auth/register' : '/auth/login', 'POST', { name, email, password, portal, ...(portal === 'resident' && Object.values(location).some(v => v.trim()) ? { location } : {}) });
       onSuccess(r.user)
     } catch (e) {
       setError((e as Error).message)
@@ -79,7 +81,31 @@ function Auth({ onSuccess, banner }: { onSuccess: (u: User) => void; banner: str
       setBusy(false)
     }
   }
-  return <div className="account-stage">
+  function choosePortal(value: 'resident' | 'admin' | null) {
+    setPortal(value);
+    setLocation({ residence: '', block: '', floor: '' });
+    setRegister(false);
+    setName('');
+    setEmail('');
+    setPassword('');
+    setConfirm('');
+    setError('');
+  }
+  if (!portal) return <main className="portal-stage">
+    <section className="portal-picker" aria-labelledby="portal-title">
+      <div className="account-brand">◉ CommunityCare</div>
+      <p className="eyebrow">A LITTLE CLOSER, EVERY DAY</p>
+      <h1 id="portal-title">Welcome to your community</h1>
+      <p>Choose how you would like to sign in.</p>
+      {banner && <div className="account-alert" role="alert">{banner}</div>}
+      <div className="portal-options">
+        <button onClick={() => choosePortal('resident')}><span className="portal-icon" aria-hidden="true">⌂</span><span><strong>Resident</strong><small>Your home, services and community updates</small></span><span aria-hidden="true">→</span></button>
+        <button onClick={() => choosePortal('admin')}><span className="portal-icon" aria-hidden="true">▦</span><span><strong>Administrator</strong><small>Manage your community and resident requests</small></span><span aria-hidden="true">→</span></button>
+      </div>
+      <p className="portal-help">One community. Connected with care.</p>
+    </section>
+  </main>;
+  return <main className={`account-stage${portal === 'resident' ? ' resident-auth-stage' : ''}`}>
     <div className="account-intro">
       <div className="account-brand">◉ CommunityCare</div>
       <h1>Your community.<br />Closer together.</h1>
@@ -91,9 +117,11 @@ function Auth({ onSuccess, banner }: { onSuccess: (u: User) => void; banner: str
       </div>
     </div>
     <section className="account-card">
-      <p className="eyebrow">WELCOME TO COMMUNITYCARE</p>
+      <button type="button" className="account-portal-back" disabled={busy} onClick={() => choosePortal(null)}>← Change login type</button>
+      <div className="resident-auth-brand account-brand">◉ CommunityCare</div>
+      <p className="eyebrow">{portal === 'resident' ? 'RESIDENT PORTAL' : 'ADMINISTRATOR PORTAL'}</p>
       <h2>{register ? 'Create your account' : 'Welcome back'}</h2>
-      <p>{register ? 'Register as a resident to get started.' : 'Sign in to your resident or administrator account.'}</p>
+      <p>{register ? 'Register as a resident to get started.' : portal === 'resident' ? 'Your home and community, all in one place.' : 'Sign in to manage your community.'}</p>
       {(error || banner) && <div className="account-alert" role="alert">{error || banner}</div>}
       <form onSubmit={submit}>
         {register && <label>Full name<input autoComplete="name" required maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label>}
@@ -103,21 +131,30 @@ function Auth({ onSuccess, banner }: { onSuccess: (u: User) => void; banner: str
           <small>Use at least 12 characters.</small>
           <label>Confirm password<input type="password" autoComplete="new-password" required value={confirm} onChange={e => setConfirm(e.target.value)} /></label>
         </>}
-        <button className="account-primary" disabled={busy}>{busy ? 'Please wait…' : register ? 'Create account' : 'Sign in'}</button>
+        {portal === 'resident' && <fieldset className="login-residence">
+          <legend>Your residence</legend>
+          <small>{register ? 'Tell us where you live.' : 'Already saved? Leave these blank to keep your current details.'}</small>
+          <label>Residence name<input required={register || Object.values(location).some(v => !!v.trim())} maxLength={100} autoComplete="off" placeholder="e.g. Harmony Residence" value={location.residence} onChange={e => setLocation({ ...location, residence: e.target.value })} /></label>
+          <div className="residence-fields">
+            <label>Block<input required={register || Object.values(location).some(v => !!v.trim())} maxLength={40} placeholder="e.g. A" value={location.block} onChange={e => setLocation({ ...location, block: e.target.value })} /></label>
+            <label>Floor<input required={register || Object.values(location).some(v => !!v.trim())} maxLength={40} placeholder="e.g. 12 or G" value={location.floor} onChange={e => setLocation({ ...location, floor: e.target.value })} /></label>
+          </div>
+        </fieldset>}
+        <button className="account-primary" disabled={busy}>{busy ? 'Please wait…' : register ? 'Create account' : portal === 'resident' ? 'Sign in as resident' : 'Sign in as administrator'}</button>
       </form>
-      <button className="account-link" disabled={busy} onClick={() => {
+      {portal === 'resident' && <button className="account-link" disabled={busy} onClick={() => {
         setRegister(!register);
         setError('');
         setPassword('');
         setConfirm('')
       }}>
         {register ? 'Already have an account? Sign in' : 'New here? Create a resident account'}
-      </button>
+      </button>}
       <p className="account-footnote">
         {register ? 'Administrator accounts are created by the system owner.' : 'Forgot your password? Contact your system administrator. Email reset is not configured.'}
       </p>
     </section>
-  </div>;
+  </main>;
 }
 export function AccountPanel({ children }: { children: ReactNode }) {
   return <section className="account-card">{children}</section>

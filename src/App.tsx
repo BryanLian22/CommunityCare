@@ -1,3 +1,4 @@
+import ResidenceLocations from './ResidenceLocations';
 import CloseButton from './CloseButton';
 import MarketAds from './MarketAds';
 import HouseholdHome from './Household';
@@ -191,7 +192,7 @@ export default function App() {
   const [facility, setFacility] = useState("Gym");
   const [service, setService] = useState("Air conditioner");
 
-  const { user, updateUser } = useSession();
+  const { user, updateUser, logout } = useSession();
   const [data, setData] = useState<ResidentData>({
     bookings: [],
     reports: [],
@@ -405,6 +406,7 @@ export default function App() {
               <section className="greeting">
                 <div className="overline">{new Date().toLocaleDateString("en-MY", { weekday: "long", month: "long", day: "numeric" }).toUpperCase()}</div>
                 <div className="screen-title">Hello, {profile.name}</div>
+                <ResidenceLocations />
                 <div className="muted">Everything you need, right in your community.</div>
               </section>
 
@@ -800,6 +802,7 @@ export default function App() {
                 </section>
                 <Button className="primary-action profile-save" disabled={busy || !profile.name.trim()} onClick={() => void saveProfile()}>{busy ? 'Saving…' : 'Save changes'}</Button>
                 <Button className="profile-history" onClick={() => setSheet("history")}><span className="profile-symbol" aria-hidden="true">≡</span><span><b>My activity</b><small>Bookings, reports & service requests</small></span><Icon name="arrow" size="sm" /></Button>
+                <Button className="profile-signout" onClick={() => void logout()}>Sign out</Button>
                 <details className="profile-card profile-security">
                   <summary><span className="profile-symbol"><Icon name="lock" /></span><span><b>Password & security</b><small>Update your account password</small></span><span className="profile-expand" aria-hidden="true">+</span></summary>
                   <div className="profile-security-body">

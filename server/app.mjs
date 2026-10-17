@@ -21,6 +21,16 @@ function text(value, label, max = 2000) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max) fail(400, `${label} is required (maximum ${max} characters).`);
   return value.trim()
 }
+function locationInput(value) {
+  if (!value || typeof value !== 'object') fail(400, 'Enter your residence, block and floor.');
+  return { residence: text(value.residence, 'Residence', 100), block: text(value.block, 'Block', 40), floor: text(value.floor, 'Floor', 40) };
+}
+function addLocation(userId, value) {
+  const existing = db.prepare('SELECT id FROM resident_locations WHERE user_id=? AND residence=? AND block=? AND floor=?').get(userId, value.residence, value.block, value.floor);
+  if (existing) return;
+  if (db.prepare('SELECT count(*) AS total FROM resident_locations WHERE user_id=?').get(userId).total >= 10) fail(400, 'You can save up to 10 locations.');
+  db.prepare('INSERT INTO resident_locations(id,user_id,residence,block,floor) VALUES(?,?,?,?,?)').run(randomUUID(), userId, value.residence, value.block, value.floor);
+}
 function email(value) {
   const e = text(value, 'Email', 254).toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) fail(400, 'Enter a valid email address.');
@@ -264,6 +274,9 @@ export const server = http.createServer(async (req, res) => {
     if (['/api/auth/register', '/api/auth/login'].includes(path) && method === 'POST') {
       throttle('ip:' + req.socket.remoteAddress, 40);
       const b = await body(req);
+      if (b.portal !== undefined && !['resident', 'admin'].includes(b.portal)) fail(400, 'Choose Resident or Administrator.');
+      if (path.endsWith('/register') && b.portal === 'admin') fail(403, 'Administrator accounts are created by the system owner.');
+      const location = b.location ? locationInput(b.location) : null;
       const e = email(b.email);
       throttle('email:' + e, 12);
       if (!passwordValid(b.password)) fail(400, 'Use a password between 12 and 128 characters.');
@@ -277,12 +290,15 @@ export const server = http.createServer(async (req, res) => {
           if (String(err.message).includes('UNIQUE')) fail(409, 'An account with this email already exists.');
           throw err
         }
+        if (location) addLocation(id, location);
         return send(res, 201, { user: createSession(res, db.prepare('SELECT * FROM users WHERE id=?').get(id)) });
       }
       const u = db.prepare('SELECT * FROM users WHERE email=?').get(e);
       // Always perform the expensive hash, including for an unknown account.
       const valid = await checkPassword(b.password, u?.password_hash || '00000000000000000000000000000000:' + '00'.repeat(64));
       if (!valid || !u?.active) fail(401, 'Email or password is incorrect, or the account is inactive.');
+      if (b.portal && b.portal !== u.role) fail(403, `Please choose the ${u.role === 'admin' ? 'Administrator' : 'Resident'} login for this account.`);
+      if (location && u.role === 'resident') addLocation(u.id, location);
       return send(res, 200, { user: createSession(res, u) });
     }
     if (path === '/api/auth/logout' && method === 'POST') {
@@ -317,6 +333,15 @@ export const server = http.createServer(async (req, res) => {
       }
     }
     if (path === '/api/auth/me' && method === 'GET') return send(res, 200, { user: publicUser(u) });
+    if (path === '/api/profile/locations' && method === 'POST') {
+      addLocation(u.id, locationInput(await body(req)));
+      return send(res, 200, { user: publicUser(u) });
+    }
+    if (path.startsWith('/api/profile/locations/') && method === 'DELETE') {
+      const id = decodeURIComponent(path.slice('/api/profile/locations/'.length));
+      if (!db.prepare('DELETE FROM resident_locations WHERE id=? AND user_id=?').run(id, u.id).changes) fail(404, 'Location not found.');
+      return send(res, 200, { user: publicUser(u) });
+    }
     if (path === '/api/profile' && method === 'PATCH') {
       const b = await body(req);
       const name = text(b.name, 'Name', 80);

@@ -84,3 +84,12 @@ CREATE TABLE IF NOT EXISTS weather_locations (
  name TEXT NOT NULL, latitude REAL NOT NULL, longitude REAL NOT NULL, updated TEXT NOT NULL
 );
 PRAGMA user_version = 8;
+
+CREATE TABLE IF NOT EXISTS resident_locations (
+ id TEXT PRIMARY KEY,
+ user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ residence TEXT NOT NULL,
+ block TEXT NOT NULL,
+ floor TEXT NOT NULL,
+ UNIQUE(user_id, residence, block, floor)
+);

@@ -300,3 +300,21 @@ Modified: `src/App.tsx`, `src/ResidentialMap.tsx`, `src/Weather.tsx`, `src/Facil
 - Route preview stays within the viewport with a persistent header and Back button.
 - Compact map, spacing and endpoint cards reduce scrolling on phones.
 - Internal scrolling supports touch, mouse and keyboard without a visible scrollbar; long instructions remain accessible.
+
+
+### Resident and administrator login portals
+- Choose Resident or Administrator before signing in.
+- Resident sign-in and registration use a compact phone-friendly layout with 16px inputs, generous touch targets and natural scrolling for keyboards and smaller screens.
+- Administrator sign-in retains the existing layout. Change login type returns to the chooser.
+- Server validates the selected portal against the stored account role before issuing a session. Registration remains resident-only; no database migration required.
+- Modified: src/Session.tsx, src/account.css, server/app.mjs. Production build and focused authentication checks passed; full testing remains deferred.
+
+
+### Resident phone frame and saved residence locations
+- Resident login/registration uses a phone border with internal scrolling.
+- Profile includes Sign out.
+- Resident registration collects residence, block and floor. At sign-in these fields are optional for existing accounts; providing them adds a saved location.
+- Home shows saved locations below the greeting. Add/manage supports additional blocks, floors and residences, removing old entries, duplicate prevention and a 10-location limit. These are self-reported profile details, not verified property membership or access permissions.
+- Startup automatically creates resident_locations without replacing existing data. Keep your existing .env and data directory and restart the server.
+- Added src/ResidenceLocations.tsx. Modified src/Session.tsx, src/App.tsx, src/account.css, src/api.ts, server/app.mjs, server/db.mjs, server/schema.sql.
+- Build and focused location persistence/ownership checks passed. Full testing remains deferred.

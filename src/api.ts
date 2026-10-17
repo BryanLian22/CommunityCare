@@ -55,7 +55,9 @@ export type Assistance = {
   residentEmail: string;
   history: { status: string; at: string; assignee: string; note: string }[]
 };
+export type ResidenceLocation = { id: string; residence: string; block: string; floor: string };
 export type User = {
+  locations: ResidenceLocation[];
   id: string;
   name: string;
   email: string;
