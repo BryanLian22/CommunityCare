@@ -185,3 +185,10 @@ Validation: production build and TypeScript check passed; all 8 backend integrat
 - Replaced the small outlined Pay … Demo button with a full-width green Pay bill action, card icon and right-aligned amount.
 - Demo checkout/receipt labels and shared resident/admin balance logic remain in place.
 - Modified src/Household.tsx and src/DemoPayment.css.
+
+
+### Resident popup phone boundaries
+- Added PhonePopupBoundary.tsx and PhonePopupBoundary.css to measure the visible inner phone frame on mount, resize and scrolling, including visual viewport changes.
+- Payment checkout/result, date/month pickers, facility booking and route previews use the frame bounds. Native dialog backdrops are clipped to the frame; long content scrolls internally.
+- Bottom sheets stay clipped within the phone. Admin dialogs retain their existing viewport layout.
+- Modified src/App.tsx and src/BookingPicker.tsx. Production build passed; full browser/device testing remains deferred.

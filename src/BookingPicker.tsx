@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import Wheel from './PickerWheel';
 import DateTimeField from './DateTimeField';
 import { useEffect, useRef, useState } from 'react';
@@ -55,7 +56,7 @@ export default function BookingPicker({ facility, date, time, today, onCancel, o
     const first = dayString(d);
     changeDate(first < today ? today : first)
   }
-  return <div className="booking-picker-overlay" onKeyDown={e => {
+  return createPortal(<div className="booking-picker-overlay" onKeyDown={e => {
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
@@ -113,5 +114,5 @@ export default function BookingPicker({ facility, date, time, today, onCancel, o
         <button disabled={!canConfirm} onClick={() => onConfirm(draftDate, draftTime)}>Confirm</button>
       </div>
     </div>
-  </div>
+  </div>, document.body);
 }

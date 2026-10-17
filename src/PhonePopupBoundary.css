@@ -1,0 +1,59 @@
+/* Scope only to the resident app. Admin dialogs retain their normal layout. */
+html[data-phone-popups] dialog.demo-checkout,
+html[data-phone-popups] dialog.unified-picker,
+html[data-phone-popups] dialog.res-route-dialog {
+  position: fixed;
+  inset: calc(var(--phone-popup-top) + 10px) calc(var(--phone-popup-right) + 10px) calc(var(--phone-popup-bottom) + 10px) calc(var(--phone-popup-left) + 10px);
+  box-sizing: border-box;
+  margin: auto;
+  width: max(0px, calc(var(--phone-popup-width) - 20px));
+  max-width: max(0px, calc(var(--phone-popup-width) - 20px));
+  max-height: max(0px, calc(var(--phone-popup-height) - 20px));
+  min-width: 0;
+  min-height: 0;
+  height: fit-content;
+  box-shadow: none;
+  border-radius: 24px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  animation: none;
+}
+html[data-phone-popups] dialog.demo-checkout::backdrop,
+html[data-phone-popups] dialog.unified-picker::backdrop,
+html[data-phone-popups] dialog.res-route-dialog::backdrop {
+  clip-path: inset(var(--phone-popup-top) var(--phone-popup-right) var(--phone-popup-bottom) var(--phone-popup-left) round var(--phone-popup-radius));
+}
+html[data-phone-popups] .booking-picker-overlay {
+  position: fixed;
+  inset: var(--phone-popup-top) var(--phone-popup-right) var(--phone-popup-bottom) var(--phone-popup-left);
+  width: var(--phone-popup-width);
+  height: var(--phone-popup-height);
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: var(--phone-popup-radius);
+  overflow: hidden;
+}
+html[data-phone-popups] .booking-picker-overlay .booking-picker-dialog {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  border-radius: 24px;
+}
+html[data-phone-popups] .res-route-dialog .res-preview-content { max-height: max(0px, calc(var(--phone-popup-height) - 24px)); padding: 14px; }
+html[data-phone-popups] .res-preview-map .res-canvas svg { height: clamp(150px, calc(var(--phone-popup-height) * .28), 250px); }
+html[data-phone-popups] .demo-checkout,html[data-phone-popups] .unified-picker,html[data-phone-popups] .booking-picker-overlay .booking-picker-dialog { padding: 18px 16px; }
+html[data-phone-popups] .demo-checkout h2 { font-size: 24px; }
+html[data-phone-popups] .demo-checkout header { position: sticky; top: -18px; z-index: 1; background: #fafcf8; padding: 8px 0; }
+html[data-phone-popups] .demo-order { padding: 20px; }
+html[data-phone-popups] .phone-app .sheet-layer { overflow: hidden; border-radius: inherit; }
+html[data-phone-popups] .phone-app .bottom-sheet { box-sizing: border-box; min-width: 0; max-width: 100%; max-height: min(90%, var(--phone-popup-height)); overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: none; }
+html[data-phone-popups] .phone-app .bottom-sheet::-webkit-scrollbar,
+html[data-phone-popups] .booking-picker-dialog::-webkit-scrollbar,
+html[data-phone-popups] dialog::-webkit-scrollbar { display: none; }

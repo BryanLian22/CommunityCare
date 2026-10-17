@@ -340,3 +340,10 @@ No API key or payment gateway is needed. No real money is charged.
 This is a demonstration workflow: recorded paid totals now include simulated payments. Bill history and receipts identify them explicitly; they are not proof of funds received.
 
 Modified for this update: `server/demo-payments.mjs`, `src/Household.tsx`, `src/DemoPayment.tsx`, `tests/demo-payments.test.mjs`, plus documentation and rebuilt dist. Production build and six focused payment tests passed. Full application testing remains deferred.
+
+
+### Resident popup phone boundaries
+- Added PhonePopupBoundary.tsx and PhonePopupBoundary.css to measure the visible inner phone frame on mount, resize and scrolling, including visual viewport changes.
+- Payment checkout/result, date/month pickers, facility booking and route previews use the frame bounds. Native dialog backdrops are clipped to the frame; long content scrolls internally.
+- Bottom sheets stay clipped within the phone. Admin dialogs retain their existing viewport layout.
+- Modified src/App.tsx and src/BookingPicker.tsx. Production build passed; full browser/device testing remains deferred.

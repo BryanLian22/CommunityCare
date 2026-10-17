@@ -1,3 +1,4 @@
+import PhonePopupBoundary from './PhonePopupBoundary';
 import DateTimeField from './DateTimeField';
 import ResidenceLocations from './ResidenceLocations';
 import CloseButton from './CloseButton';
@@ -373,6 +374,7 @@ export default function App() {
   return (
     <div className="stage">
       <div className={`phone-app ${profile.largeText ? "large-text" : ""} ${profile.contrast ? "high-contrast" : ""}`}>
+        <PhonePopupBoundary />
         <div className="phone-status">
           <span>9:41</span>
           <div>
