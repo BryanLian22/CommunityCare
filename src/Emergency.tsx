@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, type CommunityContact, type EmergencyAlert } from './api';
+import { useSession } from './Session';
 import './emergency.css';
 const closed = ['resolved', 'false_alarm', 'cancelled'];
 const statusName = (s: string) => ({
@@ -99,8 +100,9 @@ function AlertDetails({ alert: r }: { alert: EmergencyAlert }) {
   </>
 }
 export default function ResidentEmergency({ contacts, targetId }: { contacts: CommunityContact[]; targetId?: string }) {
+  const { user } = useSession();
   const { alerts, loading, error: loadError, checked, refresh } = useAlerts(false);
-  const [category, setCategory] = useState('Other urgent help'), [location, setLocation] = useState(''), [phone, setPhone] = useState(''), [details, setDetails] = useState(''), [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number; accuracy: number; capturedAt: string } | null>(null), [locating, setLocating] = useState(false), [geoError, setGeoError] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState(''), [history, setHistory] = useState(!!targetId);
+  const [category, setCategory] = useState('Other urgent help'), [location, setLocation] = useState(''), [phone, setPhone] = useState(() => user.phone ?? ''), [details, setDetails] = useState(''), [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number; accuracy: number; capturedAt: string } | null>(null), [locating, setLocating] = useState(false), [geoError, setGeoError] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState(''), [history, setHistory] = useState(!!targetId);
   const lock = useRef(false), token = useRef(crypto.randomUUID()), mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -205,7 +207,8 @@ export default function ResidentEmergency({ contacts, targetId }: { contacts: Co
       </button>
       {geoError && <p role="status">{geoError}</p>}
       {coordinates && <div className="sos-location">Location attached · approximately {Math.round(coordinates.accuracy)} m accuracy.<button type="button" onClick={() => setCoordinates(null)}>Remove location</button></div>}
-      <label>Callback phone (optional)<input type="tel" maxLength={30} value={phone} onChange={e => setPhone(e.target.value)} placeholder="Number management can call" /></label>
+      <label>Callback phone (optional)<input type="tel" inputMode="tel" autoComplete="tel" aria-describedby="sos-phone-help" maxLength={30} value={phone} onChange={e => setPhone(e.target.value)} placeholder="Number management can call" /></label>
+      <p id="sos-phone-help" className="sos-privacy">Your saved profile number is filled in automatically. You can change or clear it for this SOS.</p>
       <label>Additional details (optional)<textarea maxLength={1000} rows={3} value={details} onChange={e => setDetails(e.target.value)} placeholder="Describe what management needs to know" /></label>
       <p className="sos-privacy">Sending shares these details and any attached location with community administrators. They receive an in-app alert only.</p>
       <button className="sos-send" disabled={busy || locating}>{busy ? 'Submitting alert…' : 'Send SOS to management'}</button>
