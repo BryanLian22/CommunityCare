@@ -109,3 +109,10 @@ Validation: production build and TypeScript check passed; all 8 backend integrat
 - Removed the choose-position/destination hint card from the residential map.
 - Removed Locate near a landmark, its GPS handler and the related warning message.
 - Preview route now occupies the full action row; manual position selection and route animations remain.
+
+## Market carousel and service delivery
+- Added a five-second sliding green service carousel with manual navigation, pause and reduced-motion support.
+- Linked ads to the corresponding request form; added optional callback phone and issue description.
+- Saved new-service notifications to active admins atomically with the request, plus audit logging and duplicate/past-slot checks.
+- Admin notification opens Home services; dashboard refresh includes new requests. Existing approval/rejection notifications to residents remain active.
+- Replaced sample service prices and availability with request/quote wording. Production build and focused integration check passed.

@@ -1,3 +1,4 @@
+import MarketAds from './MarketAds';
 import HouseholdHome from './Household';
 import Routes from './Routes';
 import Weather from './Weather';
@@ -282,6 +283,8 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [offer, setOffer] = useState("Home cleaning");
   const [serviceAddress, setServiceAddress] = useState("");
+  const [servicePhone, setServicePhone] = useState("");
+  const [serviceDetails, setServiceDetails] = useState("");
 
   const timer = useRef<number | undefined>(undefined);
   const dialog = useRef<HTMLElement>(null);
@@ -529,35 +532,15 @@ export default function App() {
               <section className="page-heading">
                 <div className="overline">COMMUNITY MARKETPLACE</div>
                 <div className="screen-title">Market</div>
-                <div className="muted">Sample offers and home-service requests to management.</div>
+                <div className="muted">Home services, coordinated by your community team.</div>
               </section>
-              <section className="market-ad">
-                <div className="ad-badge">SAMPLE OFFER</div>
-                <div className="ad-content">
-                  <div>
-                    <small>WELCOME OFFER</small>
-                    <b>20% off home cleaning</b>
-                    <span>Exclusive for Oak Residence members this week.</span>
-                    <Button onClick={() => {
-
-                      setOffer("Home cleaning");
-                      setSheet("offer");
-                    }}>View offer <Icon name="arrow" size="sm" /></Button>
-                  </div>
-                  <span className="ad-graphic"><Icon name="home" size="xl" /></span>
-                </div>
-                <div className="ad-dots">
-                  <i />
-                  <i />
-                  <i />
-                </div>
-              </section>
-              <div className="sponsored-note"><Icon name="shield" size="sm" />Demo listings: providers and prices are not verified.</div>
+              <MarketAds onRequest={name => { setService(name); setSheet("service"); }} />
+              <Button className="outline-action" onClick={() => setSheet("history")}>My service requests ({serviceRequests.length})</Button>
               <section>
                 <div className="section-title-row">
                   <div>
                     <div className="section-title">Book a home service</div>
-                    <div className="section-note">Demo providers · Sample pricing</div>
+                    <div className="section-note">Send a request · Management will confirm availability</div>
                   </div>
                   <Button onClick={() => setSheet("service")}>View all</Button>
                 </div>
@@ -569,8 +552,8 @@ export default function App() {
                   }}>
                     <span className="service-icon aircon"><Icon name="snowflake" size="lg" /></span>
                     <b>Aircon repair</b>
-                    <small>From $45</small>
-                    <em>Today</em>
+                    <small>Request a quote</small>
+                    <em>Request</em>
                   </Button>
                   <Button onClick={() => {
 
@@ -579,8 +562,8 @@ export default function App() {
                   }}>
                     <span className="service-icon doors"><Icon name="door" size="lg" /></span>
                     <b>Door repair</b>
-                    <small>From $35</small>
-                    <em>Tomorrow</em>
+                    <small>Request a quote</small>
+                    <em>Request</em>
                   </Button>
                   <Button onClick={() => {
 
@@ -589,8 +572,8 @@ export default function App() {
                   }}>
                     <span className="service-icon locks"><Icon name="lock" size="lg" /></span>
                     <b>Locksmith</b>
-                    <small>From $30</small>
-                    <em>24/7</em>
+                    <small>Request a quote</small>
+                    <em>Request</em>
                   </Button>
                   <Button onClick={() => {
 
@@ -599,8 +582,8 @@ export default function App() {
                   }}>
                     <span className="service-icon general"><Icon name="services" size="lg" /></span>
                     <b>General repair</b>
-                    <small>From $25</small>
-                    <em>May 21</em>
+                    <small>Request a quote</small>
+                    <em>Request</em>
                   </Button>
                 </div>
               </section>
@@ -734,19 +717,21 @@ export default function App() {
                       <Icon name={icon as IconName} />
                       <span>
                         <b>{name}</b>
-                        <small>{name === "Locksmith" ? "Demo provider" : "Demo provider"}</small>
+                        <small>Request through management</small>
                       </span>
                       <i />
                     </Button>)}
                   </div>
+                  <label className="form-field">Contact phone (optional)<input type="tel" maxLength={30} value={servicePhone} onChange={e => setServicePhone(e.target.value)} placeholder="Number management can call" /></label>
+                  <label className="form-field">What do you need help with? (optional)<textarea maxLength={2000} value={serviceDetails} onChange={e => setServiceDetails(e.target.value)} placeholder="Describe the issue or any access requirements" /></label>
                   <label className="form-field">Service address<input value={serviceAddress} onChange={e => setServiceAddress(e.target.value)} placeholder="Building, unit and street" maxLength={200} /></label>
                   <label className="form-field">Appointment date<input type="date" min={today()} value={date} onChange={e => setDate(e.target.value)} /></label>
                   <label className="form-field">Appointment time<select value={time} onChange={e => setTime(e.target.value)}>
                     {["9:00 AM", "10:30 AM", "2:00 PM", "4:30 PM"].map(slot => <option key={slot}>{slot}</option>)}
                   </select></label>
                   <div className="booking-summary">
-                    <span>Sample call-out fee</span>
-                    <b>{service === "Air conditioner" ? "$45" : service === "Door repair" ? "$35" : service === "Locksmith" ? "$30" : "$25"}</b>
+                    <span>Service fee</span>
+                    <b>Confirmed by management</b>
                   </div>
                   <Button className="primary-action" disabled={busy} onClick={() => {
                     if (!serviceAddress.trim() || !date || date < today()) {
@@ -759,7 +744,7 @@ export default function App() {
                       notify("You already saved this service appointment.");
                       return;
                     }
-                    void perform("/records/services", "POST", { service, address: serviceAddress.trim(), date, time }, "Service request submitted to management.", () => setSheet("history"));
+                    void perform("/records/services", "POST", { service, address: serviceAddress.trim(), phone: servicePhone.trim(), details: serviceDetails.trim(), date, time }, "Service request submitted to management.", () => setSheet("history"));
                   }}>Submit service request</Button>
                 </>
               )}

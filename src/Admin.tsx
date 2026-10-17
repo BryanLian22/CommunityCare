@@ -45,7 +45,7 @@ export default function Admin() {
     void load().catch(e => setError(e.message));
     void refreshNotifications().catch(e => setError(e.message));
     const refresh = () => {
-      if (document.visibilityState === 'visible') void refreshNotifications().catch(e => setError(e.message))
+      if (document.visibilityState === 'visible') { void refreshNotifications().catch(e => setError(e.message)); void load().catch(e => setError(e.message)); }
     };
     const timer = window.setInterval(refresh, 15000);
     window.addEventListener('focus', refresh);
@@ -213,6 +213,7 @@ export default function Admin() {
               <small>{r.residentEmail}</small>
               {r.date && <p>{r.date} · {r.time}</p>}
               {r.address && <p>{r.address}</p>}
+              {r.phone && <p>Contact: <a href={`tel:${r.phone}`}>{r.phone}</a></p>}
               {r.details && <p className="request-details">{r.details}</p>}
               <small>Submitted {new Date(r.created).toLocaleString()}</small>
               <label>Update status<select aria-label={`Status for ${r.id}`} disabled={busy || closed.includes(r.status)} value={r.status} onChange={e => {
@@ -231,7 +232,7 @@ export default function Admin() {
         {section === 'notifications' && <Notifications items={data.notifications} onRefresh={refreshNotifications} onOpen={n => {
           void load().then(() => {
             setRequestTarget(n.requestId);
-            setSection(n.kind === 'emergency' ? 'emergencies' : n.kind === 'assistance' ? 'assistance' : 'request-update')
+            setSection(n.kind === 'emergency' ? 'emergencies' : n.kind === 'assistance' ? 'assistance' : n.kind === 'services' ? 'services' : 'request-update')
           }).catch(e => setError(e.message))
         }} />}
         {section === 'assistance' && <AdminAssistance key={requestTarget || "all"} requests={data.assistance} onRefresh={load} targetId={requestTarget} />}

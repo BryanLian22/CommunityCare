@@ -273,3 +273,13 @@ Files changed for this presentation update: `src/ResidentialMap.tsx`, `src/Resid
 The residential map now uses manual position selection only (the dropdown or **I'm here**). The **Locate near a landmark** feature and its explanatory warning were removed. Earlier residential GPS instructions above no longer apply; existing stored reference coordinates are preserved. Real-map GPS and weather location controls are unchanged. The weather explanatory paragraph and the residential route-selection hint card were also removed as requested.
 
 Changed source files: `src/Weather.tsx`, `src/ResidentialMap.tsx`. Documentation and production `dist/` were updated. No database changes.
+
+## Market service carousel and requests
+The green Market card now automatically slides between three service highlights every five seconds. Arrows, indicators and Pause allow manual control. Rotation pauses while hovered, keyboard-focused or the page is hidden; reduced-motion settings disable automatic rotation/transitions. Each ad opens the corresponding home-service request form. These are service highlights, not unverified discount promises.
+
+Residents choose a service, address and future appointment time, and may add a callback phone and issue/access details. Submissions are saved in the existing `records` table, with an audit entry and an in-app notification for each active administrator. Duplicate pending/approved requests for the same resident/service/time are rejected. **My service requests** opens the existing account history.
+
+Admins receive the notification in **Notifications**, and opening it takes them to **Home services** to review the request. The dashboard refreshes while visible every 15 seconds and on focus. Approval/rejection decisions use the existing resident notification system. Optional callback phone and issue details are visible on the admin request card. Scheduling, providers and quotations still require management confirmation; the app does not dispatch a contractor automatically. Sample price/availability labels on request cards were replaced with request/quote wording.
+
+Added: `src/MarketAds.tsx`, `src/MarketAds.css`, `tests/market.test.mjs`.
+Modified: `src/App.tsx`, `src/Admin.tsx`, `server/app.mjs`, `README.md`, `CHANGES.md`, rebuilt `dist/`. No database migration required. Build and focused Market submission/admin notification/decision checks passed. Full testing remains deferred.

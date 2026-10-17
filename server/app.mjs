@@ -90,10 +90,17 @@ function payload(kind, b) {
     if (!/^\+?[0-9]{6,15}$/.test(phone)) fail(400, 'Enter a valid phone number.');
     return { name: text(b.name, 'Name', 80), phone }
   }
+  const phone = typeof b.phone === 'string' ? b.phone.trim().replace(/[ ()-]/g, '') : '';
+  if (phone && !/^\+?[0-9]{6,15}$/.test(phone)) fail(400, 'Enter a valid contact phone number.');
+  const slot = appointment(b);
+  if (bookingStart(slot.date, slot.time) <= Date.now()) fail(400, 'Choose a future service appointment.');
+  const details = b.details === undefined || b.details === '' ? '' : text(b.details, 'Service details', 2000);
   return {
+    phone, details,
+    history: [{ status: 'pending', at: now(), note: 'Service request submitted to management.' }],
     service: choice(b.service, ['Air conditioner', 'Door repair', 'Locksmith', 'General repair']),
     address: text(b.address, 'Address', 200),
-    ...appointment(b)
+    ...slot
   };
 }
 function record(r) {
@@ -511,7 +518,16 @@ export const server = http.createServer(async (req, res) => {
         const p = payload(kind, await body(req));
         const id = randomUUID(), created = now();
         try {
+          transaction(() => {
+            if (kind === 'services' && db.prepare("SELECT id FROM records WHERE user_id=? AND kind='services' AND status IN ('pending','approved') AND json_extract(payload,'$.service')=? AND json_extract(payload,'$.date')=? AND json_extract(payload,'$.time')=?").get(u.id, p.service, p.date, p.time)) fail(409, 'You already have an active request for this service and time.');
           db.prepare('INSERT INTO records(id,user_id,kind,payload,status,created,facility,booking_date,booking_time) VALUES(?,?,?,?,?,?,?,?,?)').run(id, u.id, kind, JSON.stringify(p), kind === 'contacts' ? 'active' : 'pending', created, p.facility || null, kind === 'bookings' ? p.date : null, kind === 'bookings' ? p.time : null)
+            if (kind === 'services') {
+              for (const admin of db.prepare("SELECT id FROM users WHERE role='admin' AND active=1").all()) {
+                db.prepare('INSERT INTO record_notifications(id,user_id,title,body,request_id,kind,created) VALUES(?,?,?,?,?,?,?)').run(randomUUID(), admin.id, 'New home-service request', `${u.name} requested ${p.service} for ${p.date}, ${p.time}.`, id, 'services', created);
+              }
+              audit(u, 'submit home-service request', id);
+            }
+          });
         } catch (err) {
           if (String(err.message).includes('UNIQUE')) fail(409, 'This facility slot is already reserved. Choose another time.');
           throw err
