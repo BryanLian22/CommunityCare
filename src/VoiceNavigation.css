@@ -1,7 +1,7 @@
 /* Anchor to the app frame, outside the scrolling page content. */
 .round-button.voice-launch {
   position: absolute;
-  left: 16px;
+  right: 16px;
   bottom: 80px;
   z-index: 60;
   width: 52px;
@@ -19,19 +19,51 @@
 .high-contrast .voice-launch { background: #104d3a; border-color: white; color: white; }
 .voice-launch:hover { background: #104d3a; }
 .voice-launch:focus-visible { outline: 3px solid #d69a24; outline-offset: 3px; }
-.voice-dialog { width: min(390px, calc(100% - 24px)); max-height: calc(100dvh - 32px); margin: auto; overflow-y: auto; padding: 20px; border: 1px solid #b8cabe; border-radius: 20px; background: #f7faf7; color: #183e30; font-size: 14px; line-height: 1.5; }
-.voice-dialog::backdrop { background: #102c3c99; }
-.voice-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.voice-heading h2 { font-size: 20px; margin: 0; }
-.voice-dialog button { min-height: 44px; padding: 10px 14px; border: 1px solid #b8cabe; border-radius: 12px; background: white; color: #183e30; }
-.voice-dialog .voice-status { padding: 12px; background: #e2eee5; border-radius: 12px; font-weight: 600; }
-.voice-heard { overflow-wrap: anywhere; }
-.voice-dialog ul { padding-left: 22px; list-style: disc; }
-.voice-dialog li { margin: 7px 0; }
-.voice-dialog .voice-listen { width: 100%; background: #17644c; color: white; }
-.voice-dialog .voice-note { font-size: 12px; color: #435b4e; }
+
+.voice-dialog { width: min(390px, calc(100% - 24px)); max-height: calc(100dvh - 32px); margin: auto; padding: 0; border: 1px solid #c9d9d0; border-radius: 24px; background: #fff; color: #183e30; font-size: 14px; line-height: 1.5; overflow: hidden; }
+.voice-dialog[open] { display: flex; flex-direction: column; }
+.voice-dialog::backdrop { background: #102b2499; backdrop-filter: blur(3px); }
+.voice-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 20px 16px; border-bottom: 1px solid #e4ece6; flex-shrink: 0; }
+.voice-heading > div { min-width: 0; }
+.voice-eyebrow { display: block; color: #496a59; font-size: 9px; font-weight: 700; letter-spacing: 1.4px; margin-bottom: 6px; }
+.voice-heading h2 { font-size: 21px; font-weight: 650; line-height: 1.25; letter-spacing: -.5px; margin: 0; }
+.voice-dialog .voice-close { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; background: #f3f7f4; color: #284f3c; border: 1px solid #dce6df; border-radius: 50%; }
+.voice-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 20px 10px; }
+.voice-listening-card { text-align: center; padding: 18px 14px; border-radius: 18px; border: 1px solid #dce9e1; background: linear-gradient(145deg,#f0f7f2,#f8faf7); }
+.voice-orb { display: grid; place-items: center; width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%; background: #e0eee5; color: #17644c; }
+.is-listening .voice-orb { background: #17644c; color: white; box-shadow: 0 0 0 6px #17644c0c; }
+.voice-language { display: block; font-size: 9px; font-weight: 650; color: #486753; letter-spacing: .9px; }
+.voice-dialog .voice-status { margin: 7px 0 0; font-weight: 600; font-size: 15px; line-height: 1.5; overflow-wrap: anywhere; }
+.voice-wave { display: flex; justify-content: center; align-items: center; gap: 4px; height: 22px; margin-top: 12px; }
+.voice-wave i { width: 3px; height: 8px; background: #287557; border-radius: 2px; animation: voice-wave 1s ease-in-out infinite alternate; }
+.voice-wave i:nth-child(2n) { height: 18px; animation-delay: -.3s; }
+.voice-wave i:nth-child(3n) { height: 13px; animation-delay: -.6s; }
+@keyframes voice-wave { to { transform: scaleY(.45); } }
+.voice-heard { overflow-wrap: anywhere; border-top: 1px solid #d5e4da; margin: 12px 0 0; padding-top: 10px; }
+.voice-heard > span { display: block; font-size: 9px; letter-spacing: 1px; font-weight: 700; color: #496a59; margin-bottom: 4px; }
+.voice-examples-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 18px 0 10px; }
+.voice-examples-heading h3 { font-size: 14px; font-weight: 700; margin: 0; }
+.voice-examples-heading > span { color: #536a5c; font-size: 11px; }
+.voice-examples { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; list-style: none; margin: 0; padding: 0; }
+.voice-examples li { display: flex; gap: 6px; align-items: flex-start; padding: 11px 9px; background: #fff; border: 1px solid #e0e8e2; border-radius: 12px; min-width: 0; }
+.voice-example-quote { color: #639178; font-family: Georgia,serif; font-size: 26px; line-height: 1; }
+.voice-examples li > div { min-width: 0; overflow-wrap: anywhere; }
+.voice-examples b { display: block; font-size: 13px; font-weight: 650; }
+.voice-examples li div > span { display: block; font-size: 10px; line-height: 1.4; color: #536a5c; margin-top: 3px; }
+.voice-more { font-size: 12px; color: #355e47; margin-top: 10px; }
+.voice-more summary { cursor: pointer; min-height: 44px; padding: 12px 0; }
+.voice-more p { margin: 0 0 10px; line-height: 1.8; }
+.voice-footer { padding: 14px 20px 8px; border-top: 1px solid #e4ece6; background: #fff; flex-shrink: 0; }
+.voice-dialog .voice-listen { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 48px; padding: 12px 16px; border-radius: 13px; border: 1px solid #17644c; background: #17644c; color: white; font-size: 14px; font-weight: 650; }
+.voice-listen > span { font-size: 11px; }
+.voice-privacy { font-size: 11px; color: #4b6254; }
+.voice-privacy summary { text-align: center; padding: 12px 0; cursor: pointer; min-height: 44px; }
+.voice-privacy p { margin: 0 0 10px; line-height: 1.6; }
 .large-text .voice-dialog { font-size: 17px; }
-.large-text .voice-dialog .voice-note { font-size: 14px; }
-.high-contrast .voice-dialog { border-color: #183e30; color: #10271c; }
-.high-contrast .voice-dialog .voice-note { color: #243e30; }
-@media(max-width:360px) { .app-header { padding-inline: 12px; } .header-actions { gap: 5px; } .brand-lockup { gap: 6px; } }
+.large-text .voice-dialog :is(.voice-status,.voice-listen,.voice-examples b) { font-size: 17px; }
+.large-text .voice-dialog :is(.voice-examples li div > span,.voice-more,.voice-privacy,.voice-examples-heading > span) { font-size: 14px; }
+.high-contrast .voice-dialog { color: #10271c; border-color: #183e30; }
+.high-contrast .voice-dialog :is(.voice-eyebrow,.voice-language,.voice-examples li div > span,.voice-examples-heading > span,.voice-more,.voice-privacy) { color: #243e30; }
+.high-contrast .voice-examples li { border-color: #718c79; }
+@media(max-width:360px) { .voice-heading { padding: 16px; } .voice-body { padding: 14px 16px 8px; } .voice-footer { padding-inline: 16px; } .large-text .voice-examples { grid-template-columns: 1fr; } }
+@media(prefers-reduced-motion:reduce) { .voice-wave i { animation: none; } }
