@@ -308,9 +308,10 @@ export default function App() {
   useEffect(() => {
     if (!sheet) return;
     const previous = document.activeElement as HTMLElement | null;
-    const focusable = () => Array.from(dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input, textarea, select, a[href]') || []);
+    const focusable = () => Array.from(dialog.current?.closest('.sheet-layer')?.querySelectorAll<HTMLElement>('button:not(:disabled):not(.sheet-backdrop), input, textarea, select, a[href]') || []).filter(node => node.getClientRects().length > 0);
     focusable()[0]?.focus();
     const keydown = (e: KeyboardEvent) => {
+      if (document.querySelector('dialog[open]')) return;
       if (e.key === 'Escape') setSheet(null);
       if (e.key === 'Tab') {
 
@@ -417,7 +418,6 @@ export default function App() {
             <span>CommunityCare</span>
           </div>
           <div className="header-actions">
-            <VoiceNavigation onNavigate={navigateByVoice} />
             <Button className="round-button" label={`Notifications${data.notifications.some(n => !n.readAt) ? `, ${data.notifications.filter(n => !n.readAt).length} unread` : ""}`} onClick={() => setSheet("notifications")}>
               <Icon name="bell" size="sm" />
               {data.notifications.some(n => !n.readAt) && <span className="notification-badge">{data.notifications.filter(n => !n.readAt).length}</span>}
@@ -713,6 +713,7 @@ export default function App() {
           {tab === "routes" && <Routes />}
         </main>
 
+        {!sheet && <VoiceNavigation onNavigate={navigateByVoice} />}
         <nav className="bottom-nav" aria-label="App navigation">
           {([
             ["community", "community", "Community"],
@@ -730,6 +731,7 @@ export default function App() {
 
         {sheet && (
           <div className="sheet-layer" role="dialog" aria-modal="true" aria-label={`${sheet} panel`}>
+            <VoiceNavigation onNavigate={navigateByVoice} />
             <Button className="sheet-backdrop" label="Close" onClick={() => setSheet(null)} />
             <section className={`bottom-sheet ${sheet === "contacts" ? "contacts-sheet" : ""} ${sheet === "profile" ? "profile-sheet" : ""}`} ref={dialog}>
               <div className="cc-sheet-tools"><CloseButton label="Close panel" onClick={() => setSheet(null)} /></div>

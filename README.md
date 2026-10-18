@@ -355,10 +355,12 @@ Modified for this update: `server/demo-payments.mjs`, `src/Household.tsx`, `src/
 
 ## English voice navigation
 
-Tap the microphone in the app header, allow microphone access, and speak one English command. Examples: **Pay bills**, **Book gym**, **Book sauna**, **Book court**, **Contacts**, **Show map**, **Report issue**, **Request assistance**, **Notices**, **My bookings**, **Profile**, and **Go home**. Polite forms such as “Please open contacts” also work.
+Tap the floating microphone at the bottom-left, above the navigation bar, allow microphone access, and speak one English command. Examples: **Pay bills**, **Book gym**, **Book sauna**, **Book court**, **Contacts**, **Show map**, **Report issue**, **Request assistance**, **Notices**, **My bookings**, **Profile**, and **Go home**. Polite forms such as “Please open contacts” also work.
 
 Commands only navigate. “Pay bills” opens bill details; it does not pay. “Report issue” opens the form; it does not submit. “SOS” opens the Safety screen; it does not send an alert. Unrecognised, negated, and combined commands do not navigate.
 
 Recognition is configured for English (`en-US`), starts only after a microphone-button press, and stops after a command, cancellation, tab hiding, or a 15-second timeout. The app displays permission, microphone, connection, and unsupported-browser errors with retry instructions. It does not store speech or transcripts. The browser may process audio using its online recognition service. Use HTTPS (or localhost) and a browser with SpeechRecognition or webkitSpeechRecognition support. Standard touch/keyboard navigation remains available.
 
 Validation: TypeScript and production build; `node --test tests/voice-commands.test.mjs` covers command aliases and rejects unrelated, negated, and combined speech. Microphone recognition still needs an end-to-end check on the user's browser and device. API reference: https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition
+
+The floating microphone stays anchored while pages scroll and is available on all resident navigation tabs and standard panels. In a panel it sits at the bottom-left with space reserved below the form. Native checkout and picker dialogs retain their modal behaviour; close or finish those dialogs before using voice navigation.
