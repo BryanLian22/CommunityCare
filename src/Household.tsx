@@ -64,10 +64,17 @@ function PassCard({ pass, cancel }: { pass: Pass; cancel?: () => void }) {
   </article>;
 }
 
-export default function HouseholdHome() {
+export default function HouseholdHome({ voiceRequest = 0 }: { voiceRequest?: number }) {
   const { data, error, refresh } = useLive<HouseholdData>('/household');
   const [checkout, setCheckout] = useState<Bill | null>(null);
   const [billsOpen, setBillsOpen] = useState(false), [parkingOpen, setParkingOpen] = useState(false), [history, setHistory] = useState(false);
+  const billSection = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!voiceRequest) return;
+    setBillsOpen(true); setHistory(false);
+    const frame = requestAnimationFrame(() => { billSection.current?.scrollIntoView({ block: 'start' }); billSection.current?.focus({ preventScroll: true }); });
+    return () => cancelAnimationFrame(frame);
+  }, [voiceRequest]);
   const [form, setForm] = useState({ visitor_name: '', phone: '', plate: '', visit_date: '' });
   const requestKey = useRef(crypto.randomUUID());
   const [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [selected, setSelected] = useState<Pass | null>(null);
@@ -89,7 +96,7 @@ export default function HouseholdHome() {
   }
   const demoBills = data?.bills;
   const total = demoBills?.reduce((sum,b) => sum+b.outstanding_cents,0) || 0;
-  return <section className="hh-home">
+  return <section className="hh-home" ref={billSection} tabIndex={-1} aria-label="Bills and payments">
     <div className="hh-heading"><div><span>YOUR HOUSEHOLD</span><h2>Bills & payments</h2></div><button onClick={refresh} aria-label="Refresh bills and visitor passes">↻</button></div>
     {error && <p className="hh-error" role="alert">{error} Displayed records may be out of date.</p>}
     <div className="hh-balance"><div><small>OUTSTANDING BALANCE</small><strong>{data ? money(total) : 'Loading…'}</strong><p>{data ? `${demoBills!.filter(b => b.outstanding_cents > 0).length} unpaid bills · ${demoBills!.filter(b => b.overdue).length} overdue` : 'Getting your latest bills'}</p></div><span aria-hidden="true">▤</span><button onClick={() => setBillsOpen(!billsOpen)} aria-expanded={billsOpen}>{billsOpen ? 'Hide details ↑' : 'View bills →'}</button></div>

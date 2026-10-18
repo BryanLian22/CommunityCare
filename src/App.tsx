@@ -1,3 +1,5 @@
+import VoiceNavigation from './VoiceNavigation';
+import type { VoiceCommand } from './voiceCommands';
 import PhonePopupBoundary from './PhonePopupBoundary';
 import DateTimeField from './DateTimeField';
 import ResidenceLocations from './ResidenceLocations';
@@ -188,6 +190,16 @@ const today = () => {
 };
 export default function App() {
   const [tab, setTab] = useState<Tab>("home");
+  const [billVoiceRequest, setBillVoiceRequest] = useState(0);
+  const [voiceLocation, setVoiceLocation] = useState<{ target: string; id: number } | null>(null);
+  useEffect(() => {
+    if (!voiceLocation) return;
+    const frame = requestAnimationFrame(() => {
+      const element = document.querySelector<HTMLElement>(voiceLocation.target === "routes" ? ".res-map-section" : ".screen");
+      if (element) { element.tabIndex = -1; element.focus({ preventScroll: true }); if (voiceLocation.target === "routes") element.scrollIntoView({ block: "start" }); else element.scrollTop = 0; }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [voiceLocation]);
   const [requestTarget, setRequestTarget] = useState<string | undefined>();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [toast, setToast] = useState("");
@@ -371,6 +383,21 @@ export default function App() {
     else setTab("market");
   };
 
+  function navigateByVoice(command: VoiceCommand, transcript: string) {
+    setRequestTarget(undefined);
+    setSheet(null);
+    if (command.target === 'bills') {
+      setTab('home'); setBillVoiceRequest(value => value + 1);
+    } else if (['home', 'community', 'market', 'safety', 'routes'].includes(command.target)) {
+      setTab(command.target as Tab);
+      setVoiceLocation({ target: command.target, id: Date.now() });
+    } else {
+      if (command.target === 'booking') setFacility(command.facility || 'Gym');
+      setSheet(command.target as Sheet);
+    }
+    notify(`Heard “${transcript}” · Opening ${command.label}`);
+  }
+
   return (
     <div className="stage">
       <div className={`phone-app ${profile.largeText ? "large-text" : ""} ${profile.contrast ? "high-contrast" : ""}`}>
@@ -390,6 +417,7 @@ export default function App() {
             <span>CommunityCare</span>
           </div>
           <div className="header-actions">
+            <VoiceNavigation onNavigate={navigateByVoice} />
             <Button className="round-button" label={`Notifications${data.notifications.some(n => !n.readAt) ? `, ${data.notifications.filter(n => !n.readAt).length} unread` : ""}`} onClick={() => setSheet("notifications")}>
               <Icon name="bell" size="sm" />
               {data.notifications.some(n => !n.readAt) && <span className="notification-badge">{data.notifications.filter(n => !n.readAt).length}</span>}
@@ -422,7 +450,7 @@ export default function App() {
                 <span className="live-dot" />
               </section>
 
-              <HouseholdHome />
+              <HouseholdHome voiceRequest={billVoiceRequest} />
 
               <section>
                 <div className="section-title-row">

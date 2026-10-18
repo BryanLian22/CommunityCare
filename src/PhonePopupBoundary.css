@@ -1,4 +1,5 @@
 /* Scope only to the resident app. Admin dialogs retain their normal layout. */
+html[data-phone-popups] dialog.voice-dialog,
 html[data-phone-popups] dialog.demo-checkout,
 html[data-phone-popups] dialog.unified-picker,
 html[data-phone-popups] dialog.res-route-dialog {
@@ -20,6 +21,7 @@ html[data-phone-popups] dialog.res-route-dialog {
   scrollbar-width: none;
   animation: none;
 }
+html[data-phone-popups] dialog.voice-dialog::backdrop,
 html[data-phone-popups] dialog.demo-checkout::backdrop,
 html[data-phone-popups] dialog.unified-picker::backdrop,
 html[data-phone-popups] dialog.res-route-dialog::backdrop {

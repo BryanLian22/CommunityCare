@@ -1,0 +1,17 @@
+.round-button.voice-launch { flex-shrink: 0; width: 44px; height: 44px; }
+.voice-dialog { width: min(390px, calc(100% - 24px)); max-height: calc(100dvh - 32px); margin: auto; overflow-y: auto; padding: 20px; border: 1px solid #b8cabe; border-radius: 20px; background: #f7faf7; color: #183e30; font-size: 14px; line-height: 1.5; }
+.voice-dialog::backdrop { background: #102c3c99; }
+.voice-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.voice-heading h2 { font-size: 20px; margin: 0; }
+.voice-dialog button { min-height: 44px; padding: 10px 14px; border: 1px solid #b8cabe; border-radius: 12px; background: white; color: #183e30; }
+.voice-dialog .voice-status { padding: 12px; background: #e2eee5; border-radius: 12px; font-weight: 600; }
+.voice-heard { overflow-wrap: anywhere; }
+.voice-dialog ul { padding-left: 22px; list-style: disc; }
+.voice-dialog li { margin: 7px 0; }
+.voice-dialog .voice-listen { width: 100%; background: #17644c; color: white; }
+.voice-dialog .voice-note { font-size: 12px; color: #435b4e; }
+.large-text .voice-dialog { font-size: 17px; }
+.large-text .voice-dialog .voice-note { font-size: 14px; }
+.high-contrast .voice-dialog { border-color: #183e30; color: #10271c; }
+.high-contrast .voice-dialog .voice-note { color: #243e30; }
+@media(max-width:360px) { .app-header { padding-inline: 12px; } .header-actions { gap: 5px; } .brand-lockup { gap: 6px; } }
