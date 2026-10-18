@@ -2,6 +2,8 @@
 
 > Route layout update: the route popup has been removed and step controls now appear below the map. The bundled frontend has been rebuilt with this update.
 
+> Route layout update: the route popup has been removed and step controls now appear below the map. The bundled frontend has been rebuilt with this update.
+
 # CommunityCare — login, database and admin dashboard
 
 React + TypeScript frontend with a Node.js API and SQLite database. The existing five-tab resident interface is retained. Sign-up creates a resident; administrator accounts are created using a local management command.
