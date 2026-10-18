@@ -1,3 +1,5 @@
+> Route layout update: the route popup has been removed and step controls now appear below the map. The bundled frontend has been rebuilt with this update.
+
 # CommunityCare — login, database and admin dashboard
 
 React + TypeScript frontend with a Node.js API and SQLite database. The existing five-tab resident interface is retained. Sign-up creates a resident; administrator accounts are created using a local management command.
@@ -263,9 +265,9 @@ Verification: `npm run build` and `node --test tests/household.test.mjs` passed.
 
 ## Animated residential route preview
 
-Choose **A · Your position** and **B · Destination** above the schematic, then select **Preview route**. The confirmed path has a thick green outline, animated direction marks, static arrows and numbered landmarks; unrelated paths are dimmed. **Expand** reopens the larger preview. The popup shows the selected step in amber with Previous/Next controls and numbered step buttons. Lift steps include floor changes.
+Choose **A · Your position** and **B · Destination** above the schematic, then select **Show route**. The confirmed path has a thick green outline, animated direction marks, static arrows and numbered landmarks; unrelated paths are dimmed. The step card, Previous/Next controls and numbered step buttons appear below the main map. The selected step is highlighted in amber on that map. Lift steps include floor changes. No route-preview popup opens.
 
-The animated path is an explanatory preview, not the user's movement. Animation can be paused and is disabled when the device requests reduced motion. The dialog supports Escape, keyboard focus containment and a close button. Live status changes still recalculate routes; a closed/unknown route is replaced by an unavailable message. Route setup is now above the map so residents see how to select a journey before inspecting the drawing.
+The animated path is an explanatory preview, not the user's movement. Animation can be paused and is disabled when the device requests reduced motion. Live status changes still recalculate routes; a closed/unknown route is replaced by an unavailable message.
 
 Files changed for this presentation update: `src/ResidentialMap.tsx`, `src/ResidentialMap.css`, `README.md`, `CHANGES.md`, rebuilt `dist/`. No database or routing algorithm changes. Production build passed; full device testing remains for the final phase.
 
