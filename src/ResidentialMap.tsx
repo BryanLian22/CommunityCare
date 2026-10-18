@@ -1,4 +1,3 @@
-import CloseButton from './CloseButton';
 import { useEffect, useRef, useState } from 'react';
 import { api } from './api';
 import { effectiveStatus, residentialRoute } from '../shared/residential-routing.mjs';
@@ -58,15 +57,9 @@ export default function ResidentialMap() {
   const activeNodes = new Set(route?.nodes || []), activeEdges = new Set(route?.edges || []);
   const availableLifts = data?.nodes.filter(n => n.kind === 'lift' && effectiveStatus(n, now) === 'open').length || 0;
   const routeKey = route ? wheelchair + ':' + route.nodes.join('|') + ':' + route.edges.join('|') : 'unavailable';
-  const [preview, setPreview] = useState(false);
   const [animated, setAnimated] = useState(true);
   const [step, setStep] = useState(0);
-  const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => { setStep(0); }, [routeKey]);
-  useEffect(() => {
-    if (preview && dialog.current && !dialog.current.open) dialog.current.showModal();
-    if (!preview && dialog.current?.open) dialog.current.close();
-  }, [preview]);
   const routePoints = route?.nodes.map(id => data!.nodes.find(n => n.id === id)!) || [];
   const pathData = routePoints.map((n, i) => `${i ? 'L' : 'M'}${n.x},${n.y}`).join(' ');
   const stepIndex = Math.min(step, Math.max(0, (route?.edges.length || 0) - 1));
@@ -74,7 +67,7 @@ export default function ResidentialMap() {
   const fromNode = routePoints[stepIndex], toNode = routePoints[stepIndex + 1];
   const startName = data?.nodes.find(n => n.id === start)?.name;
   const endName = data?.nodes.find(n => n.id === destination)?.name;
-  function openPreview() { setRequested(true); setChanged(false); setStep(0); setPreview(true); }
+  function showRoute() { setRequested(true); setChanged(false); setStep(0); }
   const previousRoute = useRef('');
   const previousInputs = useRef('');
   const [changed, setChanged] = useState(false);
@@ -92,12 +85,12 @@ export default function ResidentialMap() {
     setChanged(false);
   }
 
-  function renderMap(large = false) {
+  function renderMap() {
     if (!data) return null;
     return <div className={`res-canvas ${route ? "has-route" : ""} ${animated ? "" : "motion-paused"}`}>
         <svg viewBox="0 0 380 440" role="group" aria-label="Schematic residential map showing landmarks, lifts, paths and selected route">
-          <defs><pattern id={large ? "res-grid-preview" : "res-grid"} width="38" height="40" patternUnits="userSpaceOnUse"><path d="M38 0H0V40" fill="none" stroke="#d8e2d9" strokeWidth="1" /></pattern></defs>
-          <rect width="380" height="440" fill="#eaf0e8" /><rect width="380" height="440" fill={large ? "url(#res-grid-preview)" : "url(#res-grid)"} />
+          <defs><pattern id="res-grid" width="38" height="40" patternUnits="userSpaceOnUse"><path d="M38 0H0V40" fill="none" stroke="#d8e2d9" strokeWidth="1" /></pattern></defs>
+          <rect width="380" height="440" fill="#eaf0e8" /><rect width="380" height="440" fill="url(#res-grid)" />
           <path d="M245 440Q260 335 380 342V440Z" fill="#d0e1cc" />
           <rect x="26" y="22" width="90" height="66" rx="12" fill="#d8e0d9" stroke="white" strokeWidth="3" />
           <rect x="269" y="22" width="90" height="66" rx="12" fill="#d8e0d9" stroke="white" strokeWidth="3" />
@@ -111,13 +104,13 @@ export default function ResidentialMap() {
             <path d={pathData} fill="none" stroke="white" strokeWidth="16" strokeLinejoin="round" strokeLinecap="round" />
             <path d={pathData} fill="none" stroke="#126c51" strokeWidth="10" strokeLinejoin="round" strokeLinecap="round" />
             <path className="res-flow-line" d={pathData} fill="none" stroke="#a5f4ce" strokeWidth="4" strokeDasharray="3 15" strokeLinecap="round" />
-            {large && fromNode && toNode && <path d={`M${fromNode.x},${fromNode.y}L${toNode.x},${toNode.y}`} fill="none" stroke="#ec9a24" strokeWidth="6" strokeLinecap="round" />}
+            {fromNode && toNode && <path d={`M${fromNode.x},${fromNode.y}L${toNode.x},${toNode.y}`} fill="none" stroke="#ec9a24" strokeWidth="6" strokeLinecap="round" />}
             {routePoints.slice(1).map((n, i) => {
               const a = routePoints[i], angle = Math.atan2(n.y - a.y, n.x - a.x) * 180 / Math.PI;
               return <path key={i} d="M-5,-5L1,0L-5,5" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" transform={`translate(${(a.x + n.x) / 2},${(a.y + n.y) / 2}) rotate(${angle})`} />;
             })}
           </g>}
-          {data!.nodes.map(n => <g key={n.id} role={large ? undefined : "button"} tabIndex={large ? undefined : 0} aria-label={`${n.name}, ${statusNames[effectiveStatus(n, now)]}. Show details`} onClick={() => { if (!large) setSelected(n.id); }} onKeyDown={e => { if (!large && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSelected(n.id); } }} className="res-marker" opacity={route && !activeNodes.has(n.id) ? .55 : 1}>
+          {data!.nodes.map(n => <g key={n.id} role="button" tabIndex={0} aria-label={`${n.name}, ${statusNames[effectiveStatus(n, now)]}. Show details`} onClick={() => { setSelected(n.id); }} onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setSelected(n.id); } }} className="res-marker" opacity={route && !activeNodes.has(n.id) ? .55 : 1}>
             {activeNodes.has(n.id) && <circle cx={n.x} cy={n.y} r="25" fill="#b9d8c5" />}
             <rect x={n.x - 20} y={n.y - 20} width="40" height="40" rx="12" fill={selected === n.id ? '#153f32' : '#fff'} stroke={selected === n.id ? '#153f32' : '#c6d7cc'} strokeWidth="2" />
             <text x={n.x} y={n.y + 6} textAnchor="middle" fill={selected === n.id ? '#fff' : '#235b45'} fontSize="23">{route && activeNodes.has(n.id) ? (n.id === start ? 'A' : n.id === destination ? 'B' : String(route.nodes.indexOf(n.id))) : (symbols[n.kind] || '●')}</text>
@@ -140,36 +133,25 @@ export default function ResidentialMap() {
       {stale && <p className="res-warning" role="alert">Live status is unavailable. Cached markers are shown for reference; routes are paused. {error}</p>}
       <div className="res-trip-fields"><label>A · Your position<select value={start} onChange={e => setHere(e.target.value)}><option value="">Choose where you are</option>{data.nodes.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label><label>B · Destination<select value={destination} onChange={e => { setDestination(e.target.value); setRequested(true); setChanged(false); }}><option value="">Choose a destination</option>{data.nodes.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}</select></label></div>
       {start && <p className="res-location-label">● {locationLabel}</p>}
-      <div className="res-trip-actions"><button className="res-primary" disabled={!start || !destination || stale} onClick={openPreview}>Preview route ↗</button></div>
-      {route && <div className="res-route-banner"><span><b>A → B · {wheelchair ? 'Wheelchair route' : 'Standard route'}</b><small>{startName} → {endName}</small></span><button onClick={openPreview}>Expand ↗</button></div>}
-      {renderMap(false)}
+      <div className="res-trip-actions"><button className="res-primary" disabled={!start || !destination || stale} onClick={showRoute}>Show route ↓</button></div>
+      {route && <div className="res-route-banner"><span><b>A → B · {wheelchair ? 'Wheelchair route' : 'Standard route'}</b><small>{startName} → {endName}</small></span></div>}
+      {renderMap()}
       {route && <div className="res-motion-controls"><span>A Start · B Destination · Arrows show direction</span><button aria-pressed={animated} onClick={() => setAnimated(!animated)}>{animated ? 'Pause animation' : 'Animate route'}</button></div>}
 
+      {route && <section className="res-inline-steps" aria-label="Route step instructions">
+          {stepEdge && fromNode && toNode ? <section className="res-step-card" aria-live="polite"><span className="res-step-icon">{stepEdge.kind === 'lift' ? '↕' : stepEdge.kind === 'stairs' ? '↗' : '→'}</span><div><small>STEP {stepIndex + 1} OF {route.edges.length} · HIGHLIGHTED IN AMBER</small><h3>{stepEdge.kind === 'lift' ? 'Take ' : stepEdge.kind === 'stairs' ? 'Use ' : 'Follow '}{stepEdge.name}</h3><p>{fromNode.name} → {toNode.name}</p>{stepEdge.kind === 'lift' && <p>Level {fromNode.floor} → Level {toNode.floor}. Lift status confirmed by management.</p>}</div></section> : <p className="res-route-hint">Your selected start and destination are the same landmark.</p>}
+          <div className="res-step-navigation"><button disabled={stepIndex === 0} onClick={() => setStep(stepIndex - 1)}>← Previous</button><button disabled={!route.edges.length || stepIndex >= route.edges.length - 1} onClick={() => setStep(stepIndex + 1)}>Next step →</button></div>
+          <div className="res-step-chips" aria-label="Choose a route step">{route.edges.map((id, i) => <button key={id} aria-label={`Show step ${i + 1}`} aria-pressed={i === stepIndex} onClick={() => setStep(i)}>{i + 1}</button>)}</div>
+          <p className="res-preview-note">Review the route using Next step. This does not update your location. Check the surroundings and current access conditions as you travel.</p>
+      </section>}
+
       <div className="res-legend"><span>🟢 Available</span><span>🟠 Repair / closed</span><span>◌ Unconfirmed</span><span>🔵 Your position</span></div>
-      {selectedNode && <div className="res-detail"><div><b>{selectedNode.name}</b><span className={`res-status status-${effectiveStatus(selectedNode, now)}`}>{stale ? 'Status unavailable' : statusNames[effectiveStatus(selectedNode, now)]}</span></div><p>{selectedNode.note || (selectedNode.kind === 'lift' ? 'Connects ground floor and Level 1.' : `Level ${selectedNode.floor} landmark.`)}</p><small>Management update: {selectedNode.updated ? new Date(selectedNode.updated).toLocaleString() : 'Not yet checked'}</small><div className="res-detail-actions"><button onClick={() => setHere(selectedNode.id)}>I’m here</button><button onClick={() => { setDestination(selectedNode.id); setRequested(true); setChanged(false); if (start) { setStep(0); setPreview(true); } }}>Go here →</button></div></div>}
+      {selectedNode && <div className="res-detail"><div><b>{selectedNode.name}</b><span className={`res-status status-${effectiveStatus(selectedNode, now)}`}>{stale ? 'Status unavailable' : statusNames[effectiveStatus(selectedNode, now)]}</span></div><p>{selectedNode.note || (selectedNode.kind === 'lift' ? 'Connects ground floor and Level 1.' : `Level ${selectedNode.floor} landmark.`)}</p><small>Management update: {selectedNode.updated ? new Date(selectedNode.updated).toLocaleString() : 'Not yet checked'}</small><div className="res-detail-actions"><button onClick={() => setHere(selectedNode.id)}>I’m here</button><button onClick={() => { setDestination(selectedNode.id); setRequested(true); setChanged(false); setStep(0); }}>Go here →</button></div></div>}
       {requested && start && destination && <div className="res-route-result" aria-live="polite">
         {changed && <p className="res-warning">Availability changed. Your route has been recalculated.</p>}
         {route ? <><b>{start === destination ? 'You selected your current landmark' : wheelchair ? 'Wheelchair route' : 'Standard route'}</b><p>{wheelchair ? 'Step-free connections confirmed by management.' : 'Follow the listed connections.'}</p><ol>{route.edges.map((id, i) => { const e = data.edges.find(e => e.id === id)!; return <li key={id}>{e.kind === 'lift' ? 'Take ' : e.kind === 'stairs' ? 'Use ' : 'Follow '}{e.name}<small>Continue to {data.nodes.find(n => n.id === route.nodes[i + 1])?.name}</small></li>; })}</ol></> : <><b>{stale ? 'Waiting for current status' : 'No confirmed route available'}</b><p>{stale ? 'Refresh to reconnect.' : 'A required lift, landmark or path is closed or unconfirmed. Contact management for assistance; an unsafe route will not be suggested.'}</p></>}
       </div>}
     </>}
-    <dialog ref={dialog} className="res-route-dialog" aria-labelledby="res-preview-title" onCancel={() => setPreview(false)} onClose={() => setPreview(false)} onClick={e => { if (e.target === e.currentTarget) setPreview(false); }}>
-      <div className="res-preview-content">
-        <header className="res-preview-header"><div><span className="res-eyebrow">YOUR ROUTE, STEP BY STEP</span><h2 id="res-preview-title">{wheelchair ? 'Wheelchair route' : 'Residential route'}</h2></div><CloseButton autoFocus label="Close route preview" onClick={() => setPreview(false)} /></header>
-        <div className="res-preview-body" tabIndex={0} role="region" aria-label="Route map and instructions">
-        <div className="res-preview-endpoints"><p><span>A</span>{startName || 'Choose your position'}</p><p><span>B</span>{endName || 'Choose a destination'}</p></div>
-        {changed && <p className="res-warning" role="status">Availability changed. Review the updated route before continuing.</p>}
-        {route ? <>
-          <div className="res-preview-map">{renderMap(true)}</div>
-          <div className="res-motion-controls"><span>Animated route preview · not live movement</span><button aria-pressed={animated} onClick={() => setAnimated(!animated)}>{animated ? 'Pause' : 'Animate'}</button></div>
-          {stepEdge && fromNode && toNode ? <section className="res-step-card" aria-live="polite"><span className="res-step-icon">{stepEdge.kind === 'lift' ? '↕' : stepEdge.kind === 'stairs' ? '↗' : '→'}</span><div><small>STEP {stepIndex + 1} OF {route.edges.length} · HIGHLIGHTED IN AMBER</small><h3>{stepEdge.kind === 'lift' ? 'Take ' : stepEdge.kind === 'stairs' ? 'Use ' : 'Follow '}{stepEdge.name}</h3><p>{fromNode.name} → {toNode.name}</p>{stepEdge.kind === 'lift' && <p>Level {fromNode.floor} → Level {toNode.floor}. Lift status confirmed by management.</p>}</div></section> : <p className="res-route-hint">Your selected start and destination are the same landmark.</p>}
-          <div className="res-step-navigation"><button disabled={stepIndex === 0} onClick={() => setStep(stepIndex - 1)}>← Previous</button><button disabled={!route.edges.length || stepIndex >= route.edges.length - 1} onClick={() => setStep(stepIndex + 1)}>Next step →</button></div>
-          <div className="res-step-chips" aria-label="Choose a route step">{route.edges.map((id, i) => <button key={id} aria-label={`Show step ${i + 1}`} aria-pressed={i === stepIndex} onClick={() => setStep(i)}>{i + 1}</button>)}</div>
-          <p className="res-preview-note">Review the route using Next step. This does not update your location. Check the surroundings and current access conditions as you travel.</p>
-        </> : <div className="res-preview-unavailable" role="status"><span>!</span><h3>{stale ? 'Waiting for live status' : 'No confirmed route available'}</h3><p>{stale ? 'The preview is paused until status reconnects.' : 'A required path or lift is closed or unconfirmed. Try a different destination or contact management for assistance.'}</p><button onClick={refresh}>Refresh status</button></div>}
-        </div>
-        <button className="res-preview-done" onClick={() => setPreview(false)}>Back to residential map</button>
-      </div>
-    </dialog>
     <details className="res-explainer"><summary>About this live map</summary><p>This is a starter schematic, not a surveyed floor plan. Management must adapt landmark names/positions and verify each connection against the actual property before residents rely on it. Level 1 is drawn above ground-floor landmarks.</p><p>Status is entered by management and refreshed every 10 seconds, not received from lift sensors. “Available” expires after 24 hours without confirmation. A blue marker shows the position you selected; it does not track indoor movement or identify your floor. Update your position as you move. Your position is not stored in the database.</p></details>
   </section>;
 }
